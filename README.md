@@ -25,7 +25,7 @@ exchange API:
 
 Then you can generate your tax report with:
 
-    buchfink report --from=2019-01-01 --to=2019-31-01
+    buchfink report --from=2019-01-01 --to=2020-01-01
 
 ## Configuration
 
@@ -41,7 +41,8 @@ accounts:
     secret: ...
 ```
 
-You can add multiple accounts for each exchange. Buchfink supports all exchanges that Rotki supports, namely:
+You can add multiple accounts for each exchange. Buchfink supports all
+exchanges that Rotki supports, namely:
 
   * kraken
   * coinbase
@@ -66,6 +67,9 @@ accounts:
   ...
 ```
 
+Note: Currently, Buchfink and Rotki will not yet fetch your DEX trades, but
+they will be able to in the future.
+
 ### Add manual trades
 
 Adding manual trades is easy, just create a new YAML file containing your
@@ -77,7 +81,7 @@ accounts:
     file: otc.yaml
 ```
 
-otc.yaml:
+The file `otc.yaml` may look like this:
 
 ```yaml
 trades:
@@ -92,3 +96,7 @@ trades:
   link: '2'
   timestamp: '2017-11-15T19:51:26'
 ```
+
+Note: This is exactly the same serialization format that the `fetch` command
+generates for your exchanges trades. So you can easily amend missing trades by
+copy and pasting and changing the relevant lines.
