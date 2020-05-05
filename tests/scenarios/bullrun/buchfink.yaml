@@ -1,0 +1,11 @@
+accounts:
+  - name: exchange1
+    file: exchange1.yaml
+  - name: exchange2
+    file: exchange2.yaml
+
+settings:
+  main_currency: USD
+  taxfree_after_period: 31536000
+  include_gas_costs: True
+  include_crypto2crypto: True
