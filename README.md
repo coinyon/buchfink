@@ -7,10 +7,16 @@ your crypto trades and generate profit/loss statements and tax reports.
 Under the hood, Buchfink uses algorithms and data structures from
 [Rotki](https://github.com/rotki/rotki), the open source portfolio tracker. But
 instead of a GUI, user accounts and an encrypted database, Buchfink uses the
-CLI and plain text files for configuration and trade storage.
+CLI and plain text files for declarative configuration and trade storage.
 
 Note: Buchfink is early alpha. Do NOT use it for tax or trading purposes.
 But feel free to report bugs and missing features.
+
+## Installation
+
+Install Buchfink like this (you may want to create a virtualenv):
+
+    pip install buchfink
 
 ## Usage
 
@@ -18,8 +24,8 @@ Create a new directory where you want to store your data and initialize Buchfink
 
     buchfink init
 
-Then, edit `buchfink.yaml` to fit your needs. You can add exchange API keys and
-change accounting settings like the main currency.
+Then, edit `buchfink.yaml` to fit your needs. You can add your accounts (see
+below) and change accounting settings like the main currency.
 
 After that, run the following command to retrieve all your trades from the
 exchange API:
