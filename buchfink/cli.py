@@ -23,7 +23,7 @@ logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 epoch_start_ts = datetime(2015, 1, 1).timestamp()
-epoch_end_ts = datetime(2021, 1, 1).timestamp() # utcnow().timestamp() 
+epoch_end_ts = datetime(2021, 1, 1).timestamp()
 
 
 @click.group()
