@@ -1,18 +1,14 @@
 import logging
-import coloredlogs
 import os.path
 import shutil
 from datetime import date, datetime
 
 import click
+import coloredlogs
 import yaml
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_trade, serialize_trades
-from rotkehlchen.accounting.accountant import Accountant
-from rotkehlchen.db.dbhandler import DBHandler
-from rotkehlchen.db.settings import db_settings_from_dict
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitmex import Bitmex
 from rotkehlchen.exchanges.bittrex import Bittrex
@@ -21,10 +17,6 @@ from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
-from rotkehlchen.externalapis.cryptocompare import Cryptocompare
-from rotkehlchen.history import PriceHistorian
-from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.user_messages import MessagesAggregator
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +47,6 @@ def init(directory):
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None)
 def fetch(keyword):
-    msg_aggregator = MessagesAggregator()
     buchfink_db = BuchfinkDB()
 
     for account in buchfink_db.get_all_accounts():
@@ -72,56 +63,56 @@ def fetch(keyword):
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'binance':
             exchange = Binance(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'coinbase':
             exchange = Coinbase(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'coinbasepro':
             exchange = Coinbasepro(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'gemini':
             exchange = Gemini(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'bitmex':
             exchange = Bitmex(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'bittrex':
             exchange = Bittrex(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         elif account['exchange'] == 'poloniex':
             exchange = Poloniex(
                     str(account['api_key']),
                     str(account['secret']).encode(),
                     buchfink_db,
-                    msg_aggregator
+                    buchfink_db.msg_aggregator
                 )
         else:
             raise ValueError("Unknown exchange: " + account['exchange'])
