@@ -1,6 +1,7 @@
 import logging
 import os.path
 from datetime import date, datetime
+from pathlib import Path
 from typing import List
 
 import click
@@ -20,11 +21,23 @@ from rotkehlchen.user_messages import MessagesAggregator
 
 class BuchfinkDB(DBHandler):
     def __init__(self, data_directory='.'):
-        self.data_directory = data_directory
-        self.config = yaml.load(open(os.path.join(self.data_directory, 'buchfink.yaml'), 'r'), Loader=yaml.SafeLoader)
-        self.cryptocompare = Cryptocompare(os.path.join(data_directory, 'cryptocompare'), self)
-        self.historian = PriceHistorian(os.path.join(data_directory, 'history'), '01/01/2015', self.cryptocompare)
-        self.inquirer = Inquirer(os.path.join(data_directory, 'inquirer'), self.cryptocompare)
+        self.data_directory = Path(data_directory)
+        self.config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
+
+        self.reports_directory = self.data_directory / "reports"
+        self.trades_directory = self.data_directory / "trades"
+        self.cache_directory = self.data_directory / "cache"
+
+        self.reports_directory.mkdir(exist_ok=True)
+        self.trades_directory.mkdir(exist_ok=True)
+        self.cache_directory.mkdir(exist_ok=True)
+        (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
+        (self.cache_directory / 'history').mkdir(exist_ok=True)
+        (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
+
+        self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
+        self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2015', self.cryptocompare)
+        self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare)
         self.msg_aggregator = MessagesAggregator()
 
     def __del__(self):
@@ -46,7 +59,7 @@ class BuchfinkDB(DBHandler):
         return None
 
     def get_accountant(self):
-        return Accountant(self, None, self.msg_aggregator, False)
+        return Accountant(self, None, self.msg_aggregator, True)
 
     def get_local_trades_for_account(self, account: str) -> List[Trade]:
 

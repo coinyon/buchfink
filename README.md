@@ -34,7 +34,7 @@ exchange API:
 
 Then you can generate your tax report with:
 
-    buchfink report --from=2019-01-01 --to=2020-01-01
+    buchfink report -n my_tax_2019 --from=2019-01-01 --to=2020-01-01
 
 ## Configuration
 

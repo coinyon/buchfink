@@ -17,6 +17,7 @@ from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +42,10 @@ def init(directory):
 
     initial_config = os.path.join(os.path.dirname(__file__), 'data', 'buchfink.initial.yaml')
     shutil.copyfile(initial_config, target_config)
+
+    buchfink_db = BuchfinkDB(directory)
+    buchfink_db.create_directories()
+
     click.echo(click.style('Successfully initialized. Edit buchfink.yaml to fit your needs.', fg='green'))
 
 
@@ -131,9 +136,10 @@ def fetch(keyword):
 
 
 @buchfink.command()
+@click.option('--name', '-n', type=str, required=True)
 @click.option('--from', '-f', 'from_', type=str, required=True)
 @click.option('--to', '-t', type=str, required=True)
-def report(from_, to):
+def report(name, from_, to):
     "Run an ad-hoc report on your data"
 
     start_ts = datetime.fromisoformat(from_).timestamp()
@@ -146,13 +152,16 @@ def report(from_, to):
     for account in buchfink_db.get_all_accounts():
         all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
 
+    logger.info('Generating report "%s"...', name)
+
     click.echo("Collected {0} trades from {1} exchange account(s)"
             .format(len(all_trades), len(buchfink_db.get_all_accounts())))
 
     accountant = buchfink_db.get_accountant()
-    overview = accountant.process_history(start_ts, end_ts, all_trades, [], [], [])
+    result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [])
+    accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
 
-    print(overview)
+    logger.info("Overview: %s", result['overview'])
 
 
 if __name__ == '__main__':
