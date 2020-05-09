@@ -1,4 +1,5 @@
 import logging
+import coloredlogs
 import os.path
 import shutil
 from datetime import date, datetime
@@ -25,8 +26,6 @@ from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.user_messages import MessagesAggregator
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
 logger = logging.getLogger(__name__)
 
 epoch_start_ts = datetime(2015, 1, 1).timestamp()
@@ -34,8 +33,9 @@ epoch_end_ts = datetime(2021, 1, 1).timestamp()
 
 
 @click.group()
-def buchfink():
-    pass
+@click.option('--log-level', '-l', type=str, default='INFO')
+def buchfink(log_level):
+    coloredlogs.install(level=log_level, fmt='%(asctime)s %(name)s %(levelname)s %(message)s')
 
 
 @buchfink.command()

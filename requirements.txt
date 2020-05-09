@@ -1,3 +1,4 @@
-rotkehlchen @ git+https://github.com/coinyon/rotki.git@setup#egg=rotkehlchen
-PyYAML>=5.0
+coloredlogs
 python-dateutil
+PyYAML>=5.0
+rotkehlchen @ git+https://github.com/coinyon/rotki.git@setup#egg=rotkehlchen
