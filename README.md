@@ -110,3 +110,10 @@ trades:
 Note: This is exactly the same serialization format that the `fetch` command
 generates for your exchanges trades. So you can easily amend missing trades by
 copy and pasting and changing the relevant lines.
+
+## Donation
+
+If you find this useful and want to contribute to further development, consider a
+ETH or ERC-20 donation at [coinyon.eth](https://etherscan.io/address/coinyon.eth).
+I also encourage you to support [Rotki](https://github.com/rotki/rotki). Buchfink
+would not be possible without it
