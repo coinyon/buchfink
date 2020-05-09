@@ -53,13 +53,14 @@ accounts:
 You can add multiple accounts for each exchange. Buchfink supports all
 exchanges that Rotki supports, namely:
 
-  * kraken
-  * coinbase
-  * poloniex
-  * gemini
+  * binance
   * bitmex
   * bittrex
+  * coinbase
   * coinbasepro
+  * gemini
+  * kraken
+  * poloniex
 
 ### Adding blockchain accounts
 
