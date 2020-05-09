@@ -153,7 +153,7 @@ def report(from_, to):
     all_trades = []
 
     for account in buchfink_db.get_all_accounts():
-        all_trades.extend(buchfink_db.get_local_trades_for_account(account))
+        all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
 
     click.echo("Collected {0} trades from {1} exchange account(s)"
             .format(len(all_trades), len(buchfink_db.get_all_accounts())))
