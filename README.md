@@ -113,7 +113,8 @@ copy and pasting and changing the relevant lines.
 
 ## Donation
 
-If you find this useful and want to contribute to further development, consider a
+If you find this useful and want to contribute to further development, consider an
 ETH or ERC-20 donation at [coinyon.eth](https://etherscan.io/address/coinyon.eth).
-I also encourage you to support [Rotki](https://github.com/rotki/rotki). Buchfink
-would not be possible without it
+
+I also encourage you to try out and support
+[Rotki](https://github.com/rotki/rotki). Buchfink would not be possible without it.
