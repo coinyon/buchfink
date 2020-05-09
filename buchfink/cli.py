@@ -44,9 +44,8 @@ def init(directory):
     shutil.copyfile(initial_config, target_config)
 
     buchfink_db = BuchfinkDB(directory)
-    buchfink_db.create_directories()
 
-    click.echo(click.style('Successfully initialized. Edit buchfink.yaml to fit your needs.', fg='green'))
+    click.echo(click.style('Successfully initialized in {0}.'.format(buchfink_db.data_directory.absolute()), fg='green'))
 
 
 @buchfink.command()
