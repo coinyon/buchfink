@@ -32,6 +32,9 @@ setup(
     keywords='accounting tax-report portfolio asset-management cryptocurrencies commandline',
     url='https://github.com/coinyon/buchfink',
     packages=['buchfink'],
+    package_data={
+        "buchfink": ["data/*.yaml"],
+    },
     install_requires=install_requirements,
     use_scm_version=True,
     setup_requires=['setuptools_scm'],

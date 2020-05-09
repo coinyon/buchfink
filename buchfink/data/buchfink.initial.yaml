@@ -1,0 +1,36 @@
+accounts:
+  # Exchange accounts
+  # -------------------------------------------------------------------------
+  # Modify the entry below or add more exchange accounts.
+  # The field `exchange` can be any from:
+  #  * kraken
+  #  * coinbase
+  #  * poloniex
+  #  * gemini
+  #  * bitmex
+  #  * bittrex
+  #  * coinbasepro
+  - name: kraken1
+    exchange: kraken
+    api_key: ...
+    secret: ...
+
+  # Blockchain accounts
+  # -------------------------------------------------------------------------
+  #- name: donation-address
+  #  ethereum: 0xFa2C0AbdaeDc8099887914Ab25AD11B3846655B9
+  #
+  #- name: random-btc-address
+  #  bitcoin: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+
+  # Manual trades
+  # -------------------------------------------------------------------------
+  #- name: otc
+  #  file: otc.yaml
+
+settings:
+  # The base currency that is used for accounting and reports
+  main_currency: USD
+  taxfree_after_period: 31536000
+  include_gas_costs: True
+  include_crypto2crypto: True

@@ -1,4 +1,6 @@
 import logging
+import os.path
+import shutil
 from datetime import date, datetime
 
 import click
@@ -32,8 +34,17 @@ def buchfink():
 
 
 @buchfink.command()
-def init():
-    pass
+@click.option('--directory', '-d', type=str, default='.')
+def init(directory):
+    target_config = os.path.join(directory, 'buchfink.yaml')
+
+    if os.path.exists(target_config):
+        click.echo(click.style('Already initialized (buchfink.yaml exists), aborting.', fg='red'))
+        return
+
+    initial_config = os.path.join(os.path.dirname(__file__), 'data', 'buchfink.initial.yaml')
+    shutil.copyfile(initial_config, target_config)
+    click.echo(click.style('Successfully initialized. Edit buchfink.yaml to fit your needs.', fg='green'))
 
 
 @buchfink.command()
