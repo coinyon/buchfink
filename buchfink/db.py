@@ -1,25 +1,21 @@
 import logging
 import os.path
 from datetime import date, datetime
+from typing import List
 
 import click
 import yaml
 
+from buchfink.datatypes import Asset, FVal, Trade, TradeType
+from buchfink.serialization import deserialize_trade
 from rotkehlchen.accounting.accountant import Accountant
-from rotkehlchen.assets.asset import Asset
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import db_settings_from_dict
-from rotkehlchen.exchanges.data_structures import Trade
-from rotkehlchen.exchanges.kraken import Kraken
-from rotkehlchen.exchanges.binance import Binance
-from rotkehlchen.exchanges.coinbase import Coinbase
-from rotkehlchen.typing import TradeType
-from rotkehlchen.fval import FVal
+from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.externalapis.cryptocompare import Cryptocompare
+from rotkehlchen.typing import TradeType
 from rotkehlchen.user_messages import MessagesAggregator
-from buchfink.serialization import deserialize_trade
 
 
 class BuchfinkDB(DBHandler):
@@ -52,7 +48,7 @@ class BuchfinkDB(DBHandler):
     def get_accountant(self):
         return Accountant(self, None, self.msg_aggregator, False)
 
-    def get_local_trades_for_account(self, account: str):
+    def get_local_trades_for_account(self, account: str) -> List[Trade]:
 
         account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
 
