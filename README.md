@@ -27,8 +27,12 @@ Create a new directory where you want to store your data and initialize Buchfink
 Then, edit `buchfink.yaml` to fit your needs. You can add your accounts (see
 below) and change accounting settings like the main currency.
 
-After that, run the following command to retrieve all your trades from the
-exchange API:
+You can then check your balances by running:
+
+    buchfink balance
+
+In order to prepare your tax or profit/loss report, you need to to retrieve your
+individual trades. Do this by running:
 
     buchfink fetch
 
@@ -54,6 +58,7 @@ You can add multiple accounts for each exchange. Buchfink supports all
 exchanges that Rotki supports, namely:
 
   * binance
+  * bitcoinde (Bitcoin.de)
   * bitmex
   * bittrex
   * coinbase

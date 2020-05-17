@@ -6,17 +6,26 @@ from typing import List
 
 import click
 import yaml
-
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
-from buchfink.serialization import deserialize_trade
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import db_settings_from_dict
+from rotkehlchen.exchanges.binance import Binance
+from rotkehlchen.exchanges.bitcoinde import Bitcoinde
+from rotkehlchen.exchanges.bitmex import Bitmex
+from rotkehlchen.exchanges.bittrex import Bittrex
+from rotkehlchen.exchanges.coinbase import Coinbase
+from rotkehlchen.exchanges.coinbasepro import Coinbasepro
+from rotkehlchen.exchanges.gemini import Gemini
+from rotkehlchen.exchanges.kraken import Kraken
+from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.typing import TradeType
 from rotkehlchen.user_messages import MessagesAggregator
+
+from buchfink.datatypes import Asset, FVal, Trade, TradeType
+from buchfink.serialization import deserialize_trade
 
 
 class BuchfinkDB(DBHandler):
@@ -77,3 +86,75 @@ class BuchfinkDB(DBHandler):
 
         else:
             raise ValueError('Unable to parse account')
+
+    def get_exchange(self, account: str):
+
+        account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
+
+        if account_info['exchange'] == 'kraken':
+            exchange = Kraken(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'binance':
+            exchange = Binance(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'coinbase':
+            exchange = Coinbase(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'coinbasepro':
+            exchange = Coinbasepro(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'gemini':
+            exchange = Gemini(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'bitmex':
+            exchange = Bitmex(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'bittrex':
+            exchange = Bittrex(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'poloniex':
+            exchange = Poloniex(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'bitcoinde':
+            exchange = Bitcoinde(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        else:
+            raise ValueError("Unknown exchange: " + account_info['exchange'])
+
+        return exchange

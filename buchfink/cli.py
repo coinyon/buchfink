@@ -2,33 +2,27 @@ import logging
 import os.path
 import shutil
 from datetime import date, datetime
+from pathlib import Path
 
 import click
 import coloredlogs
+from prettytable import PrettyTable
 import yaml
 
+from buchfink.datatypes import FVal
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_trade, serialize_trades
-from rotkehlchen.exchanges.binance import Binance
-from rotkehlchen.exchanges.bitmex import Bitmex
-from rotkehlchen.exchanges.bittrex import Bittrex
-from rotkehlchen.exchanges.coinbase import Coinbase
-from rotkehlchen.exchanges.coinbasepro import Coinbasepro
-from rotkehlchen.exchanges.gemini import Gemini
-from rotkehlchen.exchanges.kraken import Kraken
-from rotkehlchen.exchanges.poloniex import Poloniex
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-epoch_start_ts = datetime(2015, 1, 1).timestamp()
-epoch_end_ts = datetime(2021, 1, 1).timestamp()
+epoch_start_ts = datetime(2011, 1, 1).timestamp()
+epoch_end_ts = datetime(2031, 1, 1).timestamp()
 
 
 @click.group()
 @click.option('--log-level', '-l', type=str, default='INFO')
 def buchfink(log_level):
-    coloredlogs.install(level=log_level, fmt='%(asctime)s %(name)s %(levelname)s %(message)s')
+    coloredlogs.install(level=log_level, fmt='%(asctime)s %(levelname)s %(message)s')
 
 
 @buchfink.command()
@@ -50,6 +44,36 @@ def init(directory):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None)
+def balance(keyword):
+    buchfink_db = BuchfinkDB()
+
+    balances_sum = {}
+
+    for account in buchfink_db.get_all_accounts():
+        if keyword is not None and keyword not in account['name']:
+            continue
+
+        if 'exchange' not in account:
+            continue
+
+        exchange = buchfink_db.get_exchange(account['name'])
+        balances, error = exchange.query_balances()
+
+        if not error:
+            logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account['name'])
+            for asset, balance in balances.items():
+                amount = balance['amount']
+                balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+
+    table = PrettyTable()
+    table.field_names = ['Asset', 'Amount', 'Symbol']
+    for asset, balance in balances_sum.items():
+        table.add_row([asset, balance, asset.symbol])
+    print(table)
+
+
+@buchfink.command()
+@click.option('--keyword', '-k', type=str, default=None)
 def fetch(keyword):
     buchfink_db = BuchfinkDB()
 
@@ -62,64 +86,7 @@ def fetch(keyword):
 
         click.echo('Fetching trades for ' + account['name'])
 
-        if account['exchange'] == 'kraken':
-            exchange = Kraken(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'binance':
-            exchange = Binance(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'coinbase':
-            exchange = Coinbase(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'coinbasepro':
-            exchange = Coinbasepro(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'gemini':
-            exchange = Gemini(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'bitmex':
-            exchange = Bitmex(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'bittrex':
-            exchange = Bittrex(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        elif account['exchange'] == 'poloniex':
-            exchange = Poloniex(
-                    str(account['api_key']),
-                    str(account['secret']).encode(),
-                    buchfink_db,
-                    buchfink_db.msg_aggregator
-                )
-        else:
-            raise ValueError("Unknown exchange: " + account['exchange'])
+        exchange = buchfink_db.get_exchange(account['name'])
 
         name = account.get('name')
 
