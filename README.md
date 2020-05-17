@@ -29,7 +29,7 @@ below) and change accounting settings like the main currency.
 
 You can then check your balances by running:
 
-    buchfink balance
+    buchfink balances
 
 In order to prepare your tax or profit/loss report, you need to to retrieve your
 individual trades. Do this by running:

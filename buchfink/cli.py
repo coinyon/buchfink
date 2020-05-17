@@ -28,6 +28,8 @@ def buchfink(log_level):
 @buchfink.command()
 @click.option('--directory', '-d', type=str, default='.')
 def init(directory):
+    "Initialize new Buchfink directory"
+
     target_config = os.path.join(directory, 'buchfink.yaml')
 
     if os.path.exists(target_config):
@@ -44,9 +46,10 @@ def init(directory):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None)
-def balance(keyword):
-    buchfink_db = BuchfinkDB()
+def balances(keyword):
+    "Show balances across all accounts"
 
+    buchfink_db = BuchfinkDB()
     balances_sum = {}
 
     for account in buchfink_db.get_all_accounts():
@@ -75,6 +78,8 @@ def balance(keyword):
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None)
 def fetch(keyword):
+    "Fetch trades for configured accounts"
+
     buchfink_db = BuchfinkDB()
 
     for account in buchfink_db.get_all_accounts():
