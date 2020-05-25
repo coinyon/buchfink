@@ -108,9 +108,10 @@ def fetch(keyword):
 
 @buchfink.command()
 @click.option('--name', '-n', type=str, required=True)
+@click.option('--keyword', '-k', type=str, required=True)
 @click.option('--from', '-f', 'from_', type=str, required=True)
 @click.option('--to', '-t', type=str, required=True)
-def report(name, from_, to):
+def report(name, keyword, from_, to):
     "Run an ad-hoc report on your data"
 
     start_ts = datetime.fromisoformat(from_).timestamp()
@@ -119,14 +120,18 @@ def report(name, from_, to):
     buchfink_db = BuchfinkDB()
 
     all_trades = []
+    num_matched_accounts = 0
 
     for account in buchfink_db.get_all_accounts():
+        if keyword is not None and keyword not in account['name']:
+            continue
+        num_matched_accounts += 1
         all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
 
     logger.info('Generating report "%s"...', name)
 
     click.echo("Collected {0} trades from {1} exchange account(s)"
-            .format(len(all_trades), len(buchfink_db.get_all_accounts())))
+            .format(len(all_trades), num_matched_accounts))
 
     accountant = buchfink_db.get_accountant()
     result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [])
