@@ -15,7 +15,7 @@ def test_bullrun_full_taxes():
     assert len(trades) == 2
 
     accountant = buchfink_db.get_accountant()
-    result = accountant.process_history(start_ts, end_ts, trades, [], [], [])
+    result = accountant.process_history(start_ts, end_ts, trades, [], [], [], [])
 
     assert result['overview']['general_trade_profit_loss'] == '15000'
     assert result['overview']['taxable_trade_profit_loss'] == '15000'
@@ -33,7 +33,7 @@ def test_bullrun_no_taxes():
     assert len(trades) == 2
 
     accountant = buchfink_db.get_accountant()
-    result = accountant.process_history(start_ts, end_ts, trades, [], [], [])
+    result = accountant.process_history(start_ts, end_ts, trades, [], [], [], [])
 
     assert result['overview']['general_trade_profit_loss'] == '7000'
     assert result['overview']['taxable_trade_profit_loss'] == '0'

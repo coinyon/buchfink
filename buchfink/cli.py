@@ -134,7 +134,7 @@ def report(name, keyword, from_, to):
             .format(len(all_trades), num_matched_accounts))
 
     accountant = buchfink_db.get_accountant()
-    result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [])
+    result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [])
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
 
     logger.info("Overview: %s", result['overview'])

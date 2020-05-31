@@ -67,7 +67,7 @@ class BuchfinkDB(DBHandler):
     def get_external_service_credentials(self, service_name: str):
         return None
 
-    def get_accountant(self):
+    def get_accountant(self) -> Accountant:
         return Accountant(self, None, self.msg_aggregator, True)
 
     def get_local_trades_for_account(self, account: str) -> List[Trade]:
