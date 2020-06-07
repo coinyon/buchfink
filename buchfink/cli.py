@@ -9,7 +9,7 @@ import coloredlogs
 import yaml
 from prettytable import PrettyTable
 
-from buchfink.datatypes import FVal
+from buchfink.datatypes import FVal, Asset
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_trade, serialize_trades
 
@@ -59,23 +59,35 @@ def balances(keyword):
         if keyword is not None and keyword not in account['name']:
             continue
 
-        if 'exchange' not in account:
-            continue
+        if 'exchange' in account:
+            exchange = buchfink_db.get_exchange(account['name'])
 
-        exchange = buchfink_db.get_exchange(account['name'])
+            api_key_is_valid, error = exchange.validate_api_key()
 
-        api_key_is_valid, error = exchange.validate_api_key()
+            if not api_key_is_valid:
+                logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
+                continue
 
-        if not api_key_is_valid:
-            logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
-            continue
+            balances, error = exchange.query_balances()
 
-        balances, error = exchange.query_balances()
+            if not error:
+                logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account['name'])
+                for asset, balance in balances.items():
+                    amount = balance['amount']
+                    balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
 
-        if not error:
-            logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account['name'])
-            for asset, balance in balances.items():
-                amount = balance['amount']
+        elif 'btc' in account or 'eth' in account:
+            manager = buchfink_db.get_chain_manager(account)
+            manager.query_balances()
+
+            for eth_balance in manager.balances.eth.values():
+                for asset, balance in eth_balance.asset_balances.items():
+                    amount = balance.amount
+                    balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+
+            for balance in manager.balances.btc.values():
+                amount = balance.amount
+                asset = Asset('BTC')
                 balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
 
     table = PrettyTable()

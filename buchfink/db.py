@@ -12,6 +12,7 @@ from buchfink.serialization import deserialize_trade
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import db_settings_from_dict
+from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
@@ -30,6 +31,32 @@ from rotkehlchen.typing import TradeType
 from rotkehlchen.user_messages import MessagesAggregator
 
 from .config import ReportConfig
+
+from rotkehlchen.chain.ethereum.manager import EthereumManager
+from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
+from rotkehlchen.constants.assets import A_USD
+from rotkehlchen.data.importer import DataImporter
+from rotkehlchen.data_handler import DataHandler
+from rotkehlchen.db.settings import DBSettings, ModifiableDBSettings
+from rotkehlchen.errors import (
+    EthSyncError,
+    InputError,
+    PremiumAuthenticationError,
+    RemoteError,
+    SystemPermissionError,
+)
+from rotkehlchen.exchanges.manager import ExchangeManager
+from rotkehlchen.externalapis.alethio import Alethio
+from rotkehlchen.externalapis.cryptocompare import Cryptocompare
+from rotkehlchen.externalapis.etherscan import Etherscan
+from rotkehlchen.fval import FVal
+from rotkehlchen.greenlets import GreenletManager
+from rotkehlchen.history import PriceHistorian, TradesHistorian
+from rotkehlchen.inquirer import Inquirer
+from rotkehlchen.logging import DEFAULT_ANONYMIZED_LOGS, LoggingSettings, RotkehlchenLogsAdapter
+from rotkehlchen.premium.premium import Premium, PremiumCredentials, premium_create_and_verify
+from rotkehlchen.premium.sync import PremiumSyncManager
+from rotkehlchen.transactions import EthereumAnalyzer
 
 
 class BuchfinkDB(DBHandler):
@@ -60,12 +87,50 @@ class BuchfinkDB(DBHandler):
         self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2015', self.cryptocompare)
         self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare)
         self.msg_aggregator = MessagesAggregator()
+        self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
+
+        # Initialize blockchain querying modules
+        self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
+        self.alethio = Alethio(
+            database=self,
+            msg_aggregator=self.msg_aggregator,
+            all_eth_tokens=[],
+        )
+        self.ethereum_manager = EthereumManager(
+            ethrpc_endpoint=self.get_eth_rpc_endpoint(),
+            etherscan=self.etherscan,
+            msg_aggregator=self.msg_aggregator,
+        )
+        #self.chain_manager = ChainManager(
+        #    blockchain_accounts=[],
+        #    owned_eth_tokens=[],
+        #    ethereum_manager=self.ethereum_manager,
+        #    msg_aggregator=self.msg_aggregator,
+        #    alethio=alethio,
+        #    greenlet_manager=self.greenlet_manager,
+        #    premium=False,
+        #    eth_modules=ethereum_modules,
+        #)
+        self.ethereum_analyzer = EthereumAnalyzer(
+            ethereum_manager=self.ethereum_manager,
+            database=self,
+        )
+        #self.trades_historian = TradesHistorian(
+        #    user_directory=self.cache_directory,
+        #    db=self,
+        #    msg_aggregator=self.msg_aggregator,
+        #    exchange_manager=None,
+        #    chain_manager=self.chain_manager,
+        #)
 
     def __del__(self):
         pass
 
     def get_main_currency(self):
         return Asset(self.config['settings']['main_currency'])
+
+    def get_eth_rpc_endpoint(self):
+        return self.config['settings'].get('eth_rpc_endpoint', None)
 
     def get_all_accounts(self) -> List[Any]:
         return self.config['accounts']
@@ -106,6 +171,25 @@ class BuchfinkDB(DBHandler):
 
         else:
             raise ValueError('Unable to parse account')
+
+    def get_chain_manager(self, account: Any) -> ChainManager:
+        if 'eth' in account:
+            accounts = BlockchainAccounts(eth=[account['eth']], btc=[])
+        elif 'btc' in account:
+            accounts = BlockchainAccounts(eth=[], btc=[account['btc']])
+        else:
+            raise ValueError('Invalid account')
+
+        return ChainManager(
+            blockchain_accounts=accounts,
+            owned_eth_tokens=[],
+            ethereum_manager=self.ethereum_manager,
+            msg_aggregator=self.msg_aggregator,
+            alethio=self.alethio,
+            greenlet_manager=self.greenlet_manager,
+            premium=False,
+            eth_modules=[],
+        )
 
     def get_exchange(self, account: str) -> ExchangeInterface:
 
