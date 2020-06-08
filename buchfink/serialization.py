@@ -70,10 +70,12 @@ def serialize_trade(trade: Trade):
     ser_trade = trade.serialize()
     ser_trade = {
         'timestamp': datetime.fromtimestamp(trade.timestamp, tz=timezone.utc).isoformat(),
-        'fee': serialize_amount(trade.fee, trade.fee_currency),
         'for': serialize_amount(trade.rate * trade.amount, trade.quote_asset),
         'link': trade.link
     }
+
+    if trade.fee and trade.fee > 0:
+        ser_trade['fee'] = serialize_amount(trade.fee, trade.fee_currency)
 
     if trade.trade_type == TradeType.BUY:
         ser_trade['buy'] = serialize_amount(trade.amount, trade.base_asset)
