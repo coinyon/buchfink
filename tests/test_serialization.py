@@ -34,6 +34,16 @@ def test_trade_serialization(dummy_trade):
     assert dummy_trade == trade
 
 
+def test_trade_deserialization_with_fee(dummy_trade):
+    ser_trade = serialize_trade(dummy_trade)
+
+    del ser_trade['fee']
+
+    trade = deserialize_trade(ser_trade)
+
+    assert trade.fee is None
+
+
 def test_datetime_deserialization():
     ts = deserialize_timestamp_from_date('2020-05-05T09:48:52Z', 'iso8601', 'coinbase')
     dt = datetime.fromtimestamp(ts, timezone.utc)

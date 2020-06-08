@@ -102,12 +102,10 @@ The file `otc.yaml` may look like this:
 trades:
 - buy: 1 BTC
   for: 1000 USD
-  fee: 0 USD
   link: '1'
   timestamp: '2017-01-15T19:49:27'
 - sell: 1 BTC
   for: 16000 USD
-  fee: 0 USD
   link: '2'
   timestamp: '2017-11-15T19:51:26'
 ```
