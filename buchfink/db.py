@@ -18,6 +18,7 @@ from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
+from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
@@ -149,6 +150,13 @@ class BuchfinkDB(DBHandler):
                 )
         elif account_info['exchange'] == 'bitcoinde':
             exchange = Bitcoinde(
+                    str(account_info['api_key']),
+                    str(account_info['secret']).encode(),
+                    self,
+                    self.msg_aggregator
+                )
+        elif account_info['exchange'] == 'iconomi':
+            exchange = Iconomi(
                     str(account_info['api_key']),
                     str(account_info['secret']).encode(),
                     self,
