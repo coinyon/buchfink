@@ -32,12 +32,13 @@ def deserialize_trade(trade_dict) -> Trade:
             amount, base_asset = deserialize_amount(trade_dict['sell'])
         else:
             raise ValueError('Invalid trade: ' + str(trade_dict))
+
+        quote_amount, quote_asset = deserialize_amount(trade_dict['for'])
+
         if 'fee' in trade_dict:
             fee, fee_currency = deserialize_amount(trade_dict['fee'])
         else:
-            fee, fee_currency = None, None
-
-        quote_amount, quote_asset = deserialize_amount(trade_dict['for'])
+            fee, fee_currency = FVal('0'), quote_asset
 
         return Trade(
             dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),

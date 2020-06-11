@@ -41,7 +41,7 @@ def test_trade_deserialization_with_fee(dummy_trade):
 
     trade = deserialize_trade(ser_trade)
 
-    assert trade.fee is None
+    assert trade.fee == 0
 
 
 def test_datetime_deserialization():
