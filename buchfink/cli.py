@@ -140,5 +140,51 @@ def report(name, keyword, from_, to):
     logger.info("Overview: %s", result['overview'])
 
 
+@buchfink.command()
+@click.option('--keyword', '-k', type=str, default=None)
+def run(keyword):
+    "Generate reports for all report definition and output overview table"
+
+    buchfink_db = BuchfinkDB()
+
+    num_matched_reports = 0
+    results = {}
+
+    for report in buchfink_db.get_all_reports():
+        name = str(report['name'])
+
+        if keyword is not None and keyword not in name:
+            continue
+        num_matched_reports += 1
+
+
+        all_trades = []
+        num_matched_accounts = 0
+
+        start_ts = datetime.fromisoformat(report['from']).timestamp()
+        end_ts = datetime.fromisoformat(report['to']).timestamp()
+
+        for account in buchfink_db.get_all_accounts():
+            num_matched_accounts += 1
+            all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
+
+        logger.info('Generating report "%s"...', name)
+
+        click.echo("Collected {0} trades from {1} exchange account(s)"
+                .format(len(all_trades), num_matched_accounts))
+
+        accountant = buchfink_db.get_accountant()
+        result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [])
+        accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
+
+        results[name] = result
+
+    table = PrettyTable()
+    table.field_names = ['Report', 'Profit/Loss', 'Taxable P/L']
+    for report_name, result in results.items():
+        table.add_row([report_name, result['overview']['total_profit_loss'], result['overview']['total_taxable_profit_loss']])
+    print(table)
+
+
 if __name__ == '__main__':
     buchfink()

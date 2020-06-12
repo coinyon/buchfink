@@ -59,6 +59,9 @@ class BuchfinkDB(DBHandler):
     def get_all_accounts(self):
         return self.config['accounts']
 
+    def get_all_reports(self):
+        return self.config['reports']
+
     def get_settings(self):
         return db_settings_from_dict({}, None)
 
