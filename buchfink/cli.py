@@ -60,6 +60,13 @@ def balances(keyword):
             continue
 
         exchange = buchfink_db.get_exchange(account['name'])
+
+        api_key_is_valid, error = exchange.validate_api_key()
+
+        if not api_key_is_valid:
+            logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
+            continue
+
         balances, error = exchange.query_balances()
 
         if not error:
@@ -92,6 +99,12 @@ def fetch(keyword):
         click.echo('Fetching trades for ' + account['name'])
 
         exchange = buchfink_db.get_exchange(account['name'])
+
+        api_key_is_valid, error = exchange.validate_api_key()
+
+        if not api_key_is_valid:
+            logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
+            continue
 
         name = account.get('name')
 
