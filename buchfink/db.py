@@ -121,7 +121,8 @@ class BuchfinkDB(DBHandler):
                     str(account_info['api_key']),
                     str(account_info['secret']).encode(),
                     self,
-                    self.msg_aggregator
+                    self.msg_aggregator,
+                    str(account_info['passphrase'])
                 )
         elif account_info['exchange'] == 'gemini':
             exchange = Gemini(
