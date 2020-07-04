@@ -150,6 +150,10 @@ def report(name, keyword, from_, to):
     result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [])
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
 
+    with (buchfink_db.reports_directory / Path(name) / 'report.yaml').open('w') as report_file:
+        yaml.dump({ 'overview': result['overview'] }, stream=report_file)
+
+
     logger.info("Overview: %s", result['overview'])
 
 
@@ -170,7 +174,6 @@ def run(keyword):
             continue
         num_matched_reports += 1
 
-
         all_trades = []
         num_matched_accounts = 0
 
@@ -189,6 +192,9 @@ def run(keyword):
         accountant = buchfink_db.get_accountant()
         result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [])
         accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
+
+        with (buchfink_db.reports_directory / Path(name) / 'report.yaml').open('w') as report_file:
+            yaml.dump({ 'overview': result['overview'] }, stream=report_file)
 
         results[name] = result
 
