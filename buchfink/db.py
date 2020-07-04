@@ -2,13 +2,17 @@ import logging
 import os.path
 from datetime import date, datetime
 from pathlib import Path
-from typing import List
+from typing import Dict, List, Any, Iterable
 
 import click
 import yaml
+
+from buchfink.datatypes import Asset, FVal, Trade, TradeType
+from buchfink.serialization import deserialize_trade
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import db_settings_from_dict
+from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
@@ -16,20 +20,27 @@ from rotkehlchen.exchanges.bittrex import Bittrex
 from rotkehlchen.exchanges.coinbase import Coinbase
 from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
+from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
-from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.typing import TradeType
 from rotkehlchen.user_messages import MessagesAggregator
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
-from buchfink.serialization import deserialize_trade
+from .config import ReportConfig
 
 
 class BuchfinkDB(DBHandler):
+    """
+    This class is not very thought out and might need a refactor. Currently it
+    does three things, namely:
+    1) preparing classes from Rotki to be used by higher-level functions
+    2) function as a Rotki DBHandler and provide data to Rotki classes
+    3) load and parse Buchfink config
+    """
+
     def __init__(self, data_directory='.'):
         self.data_directory = Path(data_directory)
         self.config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
@@ -56,11 +67,16 @@ class BuchfinkDB(DBHandler):
     def get_main_currency(self):
         return Asset(self.config['settings']['main_currency'])
 
-    def get_all_accounts(self):
+    def get_all_accounts(self) -> List[Any]:
         return self.config['accounts']
 
-    def get_all_reports(self):
-        return self.config['reports']
+    def get_all_reports(self) -> Iterable[ReportConfig]:
+        for report_info in self.config['reports']:
+            yield ReportConfig(
+                name=str(report_info['name']),
+                from_dt=datetime.fromisoformat(str(report_info['from'])),
+                to_dt=datetime.fromisoformat(str(report_info['to']))
+            )
 
     def get_settings(self):
         return db_settings_from_dict({}, None)
@@ -91,7 +107,7 @@ class BuchfinkDB(DBHandler):
         else:
             raise ValueError('Unable to parse account')
 
-    def get_exchange(self, account: str):
+    def get_exchange(self, account: str) -> ExchangeInterface:
 
         account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
 

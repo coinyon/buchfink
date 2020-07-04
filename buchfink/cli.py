@@ -6,12 +6,15 @@ from pathlib import Path
 
 import click
 import coloredlogs
-from prettytable import PrettyTable
 import yaml
+from prettytable import PrettyTable
 
 from buchfink.datatypes import FVal
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_trade, serialize_trades
+
+from .config import ReportConfig
+from .report import run_report
 
 logger = logging.getLogger(__name__)
 
@@ -121,10 +124,9 @@ def fetch(keyword):
 
 @buchfink.command()
 @click.option('--name', '-n', type=str, required=True)
-@click.option('--keyword', '-k', type=str, required=True)
 @click.option('--from', '-f', 'from_', type=str, required=True)
 @click.option('--to', '-t', type=str, required=True)
-def report(name, keyword, from_, to):
+def report(name, from_, to):
     "Run an ad-hoc report on your data"
 
     start_ts = datetime.fromisoformat(from_).timestamp()
@@ -132,27 +134,11 @@ def report(name, keyword, from_, to):
 
     buchfink_db = BuchfinkDB()
 
-    all_trades = []
-    num_matched_accounts = 0
-
-    for account in buchfink_db.get_all_accounts():
-        if keyword is not None and keyword not in account['name']:
-            continue
-        num_matched_accounts += 1
-        all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
-
-    logger.info('Generating report "%s"...', name)
-
-    click.echo("Collected {0} trades from {1} exchange account(s)"
-            .format(len(all_trades), num_matched_accounts))
-
-    accountant = buchfink_db.get_accountant()
-    result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [])
-    accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
-
-    with (buchfink_db.reports_directory / Path(name) / 'report.yaml').open('w') as report_file:
-        yaml.dump({ 'overview': result['overview'] }, stream=report_file)
-
+    result = run_report(buchfink_db, ReportConfig(
+        name=name,
+        from_dt=datetime.fromisoformat(from_),
+        to_dt=datetime.fromisoformat(to)
+    ))
 
     logger.info("Overview: %s", result['overview'])
 
@@ -168,35 +154,13 @@ def run(keyword):
     results = {}
 
     for report in buchfink_db.get_all_reports():
-        name = str(report['name'])
+        name = str(report.name)
 
         if keyword is not None and keyword not in name:
             continue
         num_matched_reports += 1
 
-        all_trades = []
-        num_matched_accounts = 0
-
-        start_ts = datetime.fromisoformat(report['from']).timestamp()
-        end_ts = datetime.fromisoformat(report['to']).timestamp()
-
-        for account in buchfink_db.get_all_accounts():
-            num_matched_accounts += 1
-            all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
-
-        logger.info('Generating report "%s"...', name)
-
-        click.echo("Collected {0} trades from {1} exchange account(s)"
-                .format(len(all_trades), num_matched_accounts))
-
-        accountant = buchfink_db.get_accountant()
-        result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [])
-        accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
-
-        with (buchfink_db.reports_directory / Path(name) / 'report.yaml').open('w') as report_file:
-            yaml.dump({ 'overview': result['overview'] }, stream=report_file)
-
-        results[name] = result
+        results[name] = run_report(buchfink_db, report)
 
     table = PrettyTable()
     table.field_names = ['Report', 'Profit/Loss', 'Taxable P/L']
