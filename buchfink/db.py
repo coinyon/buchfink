@@ -169,8 +169,12 @@ class BuchfinkDB(DBHandler):
             exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
             return [deserialize_trade(trade) for trade in exchange['trades']]
 
+        elif 'ethereum' in account_info or 'bitcoin' in account_info:
+            # Currently buchfink is not able to fetch trades for blockchain accounts
+            return []
+
         else:
-            raise ValueError('Unable to parse account')
+            raise ValueError('Invalid account: ' + account)
 
     def get_chain_manager(self, account: Any) -> ChainManager:
         if 'ethereum' in account:
