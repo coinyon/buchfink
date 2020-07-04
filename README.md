@@ -76,10 +76,11 @@ To add your Ethereum and Bitcoin blockchain accounts, add them to your
 ```yaml
 accounts:
   - name: donation-address
-    ethereum: 0xFa2C0AbdaeDc8099887914Ab25AD11B3846655B9
+    ethereum: '0xFa2C0AbdaeDc8099887914Ab25AD11B3846655B9'
 
   - name: random-btc-address
-    bitcoin: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
+    bitcoin: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
+
   ...
 ```
 

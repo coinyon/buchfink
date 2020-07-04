@@ -76,7 +76,7 @@ def balances(keyword):
                     amount = balance['amount']
                     balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
 
-        elif 'btc' in account or 'eth' in account:
+        elif 'bitcoin' in account or 'ethereum' in account:
             manager = buchfink_db.get_chain_manager(account)
             manager.query_balances()
 

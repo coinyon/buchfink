@@ -173,10 +173,10 @@ class BuchfinkDB(DBHandler):
             raise ValueError('Unable to parse account')
 
     def get_chain_manager(self, account: Any) -> ChainManager:
-        if 'eth' in account:
-            accounts = BlockchainAccounts(eth=[account['eth']], btc=[])
-        elif 'btc' in account:
-            accounts = BlockchainAccounts(eth=[], btc=[account['btc']])
+        if 'ethereum' in account:
+            accounts = BlockchainAccounts(eth=[account['ethereum']], btc=[])
+        elif 'bitcoin' in account:
+            accounts = BlockchainAccounts(eth=[], btc=[account['bitcoin']])
         else:
             raise ValueError('Invalid account')
 
