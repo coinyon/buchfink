@@ -28,6 +28,12 @@ accounts:
   #- name: otc
   #  file: otc.yaml
 
+# Reports
+#reports:
+#  - name: all
+#    from: 2015-01-01
+#    to: 2021-01-01
+
 settings:
   # The base currency that is used for accounting and reports
   main_currency: USD

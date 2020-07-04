@@ -36,9 +36,11 @@ individual trades. Do this by running:
 
     buchfink fetch
 
-Then you can generate your tax report with:
+Then you can generate ad-hoc tax report like this:
 
     buchfink report -n my_tax_2019 --from=2019-01-01 --to=2020-01-01
+
+You can also declare reports in your `buchfink.yaml`.
 
 ## Configuration
 
