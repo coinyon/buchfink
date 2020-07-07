@@ -181,5 +181,30 @@ def run(keyword):
     print(table)
 
 
+@buchfink.command()
+def allowances():
+    "Show the amount of each asset that you could sell tax-free"
+
+    buchfink_db = BuchfinkDB()
+
+    num_matched_accounts = 0
+    all_trades = []
+
+    for account in buchfink_db.get_all_accounts():
+        num_matched_accounts += 1
+        all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
+
+    logger.info('Collected %d trades from %d exchange account(s)',
+            len(all_trades), num_matched_accounts)
+
+    accountant = buchfink_db.get_accountant()
+    result = accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [])
+    table = PrettyTable()
+    table.field_names = ['Symbol', 'Average buy price', 'Tax-free allowance', 'Tax-free amount']
+    for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
+        table.add_row([symbol, buy_price, _allowance, 'TBD'])
+    print(table)
+
+
 if __name__ == '__main__':
     buchfink()

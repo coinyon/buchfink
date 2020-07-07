@@ -27,9 +27,13 @@ Create a new directory where you want to store your data and initialize Buchfink
 Then, edit `buchfink.yaml` to fit your needs. You can add your accounts (see
 below) and change accounting settings like the main currency.
 
+### Check balances
+
 You can then check your balances by running:
 
     buchfink balances
+
+### Tax reports
 
 In order to prepare your tax or profit/loss report, you need to to retrieve your
 individual trades. Do this by running:
@@ -41,6 +45,14 @@ Then you can generate an ad-hoc tax report like this:
     buchfink report -n my_tax_2019 --from=2019-01-01 --to=2020-01-01
 
 You can also declare reports in your `buchfink.yaml`.
+
+Buchfink also allows you to print out the "tax-free allowances", i.e. the
+amounts of each asset that you are able to sell tax-free at this point in time:
+
+    buchfink allowances
+
+Of course, this only applies to a jurisdiction where crypto assets are tax-free
+after a certain period.
 
 ## Configuration
 
@@ -117,6 +129,20 @@ trades:
 Note: This is exactly the same serialization format that the `fetch` command
 generates for your exchanges trades. So you can easily amend missing trades by
 copy and pasting and changing the relevant lines.
+
+### Settings
+
+Global settings can be configured in `buchfink.yaml` in the `settings` section:
+
+```yaml
+settings:
+
+  # The base currency that is used for accounting and reports
+  main_currency: USD
+
+  # Seconds after which an asset can be sold tax-free
+  taxfree_after_period: 31536000
+```
 
 ## Donation
 

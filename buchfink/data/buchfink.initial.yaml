@@ -37,6 +37,9 @@ accounts:
 settings:
   # The base currency that is used for accounting and reports
   main_currency: USD
+
+  # Seconds after which an asset can be sold tax-free
   taxfree_after_period: 31536000
+
   include_gas_costs: True
   include_crypto2crypto: True
