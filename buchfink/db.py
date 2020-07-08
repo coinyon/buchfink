@@ -2,7 +2,7 @@ import logging
 import os.path
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, List, Any, Iterable
+from typing import Any, Dict, Iterable, List
 
 import click
 import yaml
@@ -10,9 +10,19 @@ import yaml
 from buchfink.datatypes import Asset, FVal, Trade, TradeType
 from buchfink.serialization import deserialize_trade
 from rotkehlchen.accounting.accountant import Accountant
+from rotkehlchen.assets.resolver import AssetResolver
+from rotkehlchen.chain.ethereum.manager import EthereumManager
+from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
+from rotkehlchen.constants.assets import A_USD
+from rotkehlchen.data.importer import DataImporter
+from rotkehlchen.data_handler import DataHandler
 from rotkehlchen.db.dbhandler import DBHandler
-from rotkehlchen.db.settings import db_settings_from_dict
+from rotkehlchen.db.settings import (DBSettings, ModifiableDBSettings,
+                                     db_settings_from_dict)
 from rotkehlchen.db.utils import BlockchainAccounts
+from rotkehlchen.errors import (EthSyncError, InputError,
+                                PremiumAuthenticationError, RemoteError,
+                                SystemPermissionError)
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
@@ -23,29 +33,8 @@ from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
-from rotkehlchen.exchanges.poloniex import Poloniex
-from rotkehlchen.externalapis.cryptocompare import Cryptocompare
-from rotkehlchen.history import PriceHistorian
-from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.typing import TradeType
-from rotkehlchen.user_messages import MessagesAggregator
-
-from .config import ReportConfig
-
-from rotkehlchen.chain.ethereum.manager import EthereumManager
-from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
-from rotkehlchen.constants.assets import A_USD
-from rotkehlchen.data.importer import DataImporter
-from rotkehlchen.data_handler import DataHandler
-from rotkehlchen.db.settings import DBSettings, ModifiableDBSettings
-from rotkehlchen.errors import (
-    EthSyncError,
-    InputError,
-    PremiumAuthenticationError,
-    RemoteError,
-    SystemPermissionError,
-)
 from rotkehlchen.exchanges.manager import ExchangeManager
+from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.alethio import Alethio
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
@@ -53,10 +42,16 @@ from rotkehlchen.fval import FVal
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history import PriceHistorian, TradesHistorian
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.logging import DEFAULT_ANONYMIZED_LOGS, LoggingSettings, RotkehlchenLogsAdapter
-from rotkehlchen.premium.premium import Premium, PremiumCredentials, premium_create_and_verify
+from rotkehlchen.logging import (DEFAULT_ANONYMIZED_LOGS, LoggingSettings,
+                                 RotkehlchenLogsAdapter)
+from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
+                                         premium_create_and_verify)
 from rotkehlchen.premium.sync import PremiumSyncManager
 from rotkehlchen.transactions import EthereumAnalyzer
+from rotkehlchen.typing import TradeType
+from rotkehlchen.user_messages import MessagesAggregator
+
+from .config import ReportConfig
 
 
 class BuchfinkDB(DBHandler):
@@ -91,10 +86,11 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
+        self.all_eth_tokens = AssetResolver().get_all_eth_tokens()
         self.alethio = Alethio(
             database=self,
             msg_aggregator=self.msg_aggregator,
-            all_eth_tokens=[],
+            all_eth_tokens=self.all_eth_tokens,
         )
         self.ethereum_manager = EthereumManager(
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
