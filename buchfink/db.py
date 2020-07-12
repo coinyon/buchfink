@@ -79,7 +79,7 @@ class BuchfinkDB(DBHandler):
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
 
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
-        self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2015', self.cryptocompare)
+        self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2014', self.cryptocompare)
         self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare)
         self.msg_aggregator = MessagesAggregator()
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
