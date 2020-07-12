@@ -123,7 +123,7 @@ class BuchfinkDB(DBHandler):
         pass
 
     def get_main_currency(self):
-        return Asset(self.config['settings']['main_currency'])
+        return self.get_settings().main_currency
 
     def get_eth_rpc_endpoint(self):
         return self.config['settings'].get('eth_rpc_endpoint', None)
@@ -140,7 +140,7 @@ class BuchfinkDB(DBHandler):
             )
 
     def get_settings(self):
-        return db_settings_from_dict({}, None)
+        return db_settings_from_dict(self.config['settings'], None)
 
     def get_ignored_assets(self):
         return []
