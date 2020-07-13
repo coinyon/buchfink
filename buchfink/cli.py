@@ -2,14 +2,15 @@ import logging
 import os.path
 import shutil
 from datetime import date, datetime
+from operator import itemgetter
 from pathlib import Path
 
 import click
 import coloredlogs
+from tabulate import tabulate
 import yaml
-from prettytable import PrettyTable
 
-from buchfink.datatypes import FVal, Asset
+from buchfink.datatypes import Asset, FVal
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_trade, serialize_trades
 
@@ -54,6 +55,7 @@ def balances(keyword):
 
     buchfink_db = BuchfinkDB()
     balances_sum = {}
+    usd_value_sum = {}
 
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account['name']:
@@ -75,8 +77,10 @@ def balances(keyword):
                 for asset, balance in balances.items():
                     amount = balance['amount']
                     balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+                    if 'usd_value' in balance:
+                        usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance['usd_value']
 
-        elif 'bitcoin' in account or 'ethereum' in account:
+        elif 'ethereum' in account:
             manager = buchfink_db.get_chain_manager(account)
             manager.query_balances()
 
@@ -84,17 +88,25 @@ def balances(keyword):
                 for asset, balance in eth_balance.asset_balances.items():
                     amount = balance.amount
                     balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+                    usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
+
+        elif 'bitcoin' in account:
+            manager = buchfink_db.get_chain_manager(account)
+            manager.query_balances()
 
             for balance in manager.balances.btc.values():
                 amount = balance.amount
                 asset = Asset('BTC')
-                balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+                balances_sum[asset] = usd_value_sum.get(asset, FVal(0)) + amount
+                usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
 
-    table = PrettyTable()
-    table.field_names = ['Asset', 'Amount', 'Symbol']
-    for asset, balance in balances_sum.items():
-        table.add_row([asset, balance, asset.symbol])
-    print(table)
+    table = []
+    assets = [obj[0] for obj in sorted(usd_value_sum.items(), key=itemgetter(1), reverse=True)]
+    for asset in assets:
+        balance = balances_sum[asset]
+        table.append([asset, balance, asset.symbol, round(float(usd_value_sum.get(asset, FVal(0))), 2)])
+    table.append(['Total', None, None, round(float(sum(usd_value_sum.values())), 2)])
+    print(tabulate(table, headers=['Asset', 'Amount', 'Symbol', 'USD Value']))
 
 
 @buchfink.command()
@@ -174,11 +186,14 @@ def run(keyword):
 
         results[name] = run_report(buchfink_db, report)
 
-    table = PrettyTable()
-    table.field_names = ['Report', 'Profit/Loss', 'Taxable P/L']
+    table = []
     for report_name, result in results.items():
-        table.add_row([report_name, result['overview']['total_profit_loss'], result['overview']['total_taxable_profit_loss']])
-    print(table)
+        table.append([
+            report_name,
+            result['overview']['total_profit_loss'],
+            result['overview']['total_taxable_profit_loss']
+        ])
+    print(tabulate(table, headers=['Report', 'Profit/Loss', 'Taxable P/L']))
 
 
 @buchfink.command()
@@ -199,11 +214,15 @@ def allowances():
 
     accountant = buchfink_db.get_accountant()
     result = accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [])
-    table = PrettyTable()
-    table.field_names = ['Symbol', 'Average buy price', 'Tax-free allowance', 'Tax-free amount']
+    table = []
     for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
-        table.add_row([symbol, buy_price, _allowance, 'TBD'])
-    print(table)
+        table.append([
+            symbol,
+            _allowance,
+            'TBD',
+            buy_price
+        ])
+    print(tabulate(table, headers=['Asset', 'Tax-free allowance', 'Tax-free amount', 'Average buy price']))
 
 
 if __name__ == '__main__':
