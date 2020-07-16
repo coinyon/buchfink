@@ -97,7 +97,7 @@ def balances(keyword):
             for balance in manager.balances.btc.values():
                 amount = balance.amount
                 asset = Asset('BTC')
-                balances_sum[asset] = usd_value_sum.get(asset, FVal(0)) + amount
+                balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
                 usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
 
     table = []
