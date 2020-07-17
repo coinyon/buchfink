@@ -1,7 +1,9 @@
+import datetime
 import logging
 from pathlib import Path
 
 import yaml
+from jinja2 import Environment, FileSystemLoader
 
 from buchfink.db import BuchfinkDB
 
@@ -36,4 +38,29 @@ def run_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     logger.info('Report information has been written to: %s',
             buchfink_db.reports_directory / Path(name)
     )
+
+    if report_config.template:
+        # Look for templates relative to the data_directory, that is the directory where
+        # the buchfink.yaml is residing.
+        env = Environment(loader=FileSystemLoader(buchfink_db.data_directory))
+        env.globals['datetime'] = datetime
+        env.globals['float'] = float
+        env.globals['str'] = str
+        template = env.get_template(report_config.template)
+        rendered_report = template.render({
+            "name": report_config.name,
+            "title": report_config.title,
+            "overview": result['overview'],
+            "events": result['all_events']
+        })
+
+        # TODO: get ext from template path. could also be json, csv, ...
+        ext = '.html'
+
+        # to save the results
+        with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as fh:
+            fh.write(rendered_report)
+
+        logger.info("Rendered temmplate to 'report%s'.", ext)
+
     return result

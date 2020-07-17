@@ -135,6 +135,8 @@ class BuchfinkDB(DBHandler):
         for report_info in self.config['reports']:
             yield ReportConfig(
                 name=str(report_info['name']),
+                title=report_info.get('title'),
+                template=report_info.get('template'),
                 from_dt=datetime.fromisoformat(str(report_info['from'])),
                 to_dt=datetime.fromisoformat(str(report_info['to']))
             )
@@ -163,7 +165,7 @@ class BuchfinkDB(DBHandler):
         elif 'file' in account_info:
             trades_file = os.path.join(self.data_directory, account_info['file'])
             exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
-            return [deserialize_trade(trade) for trade in exchange['trades']]
+            return [deserialize_trade(trade) for trade in exchange.get('trades', [])]
 
         elif 'ethereum' in account_info or 'bitcoin' in account_info:
             # Currently buchfink is not able to fetch trades for blockchain accounts
