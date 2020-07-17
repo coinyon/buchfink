@@ -93,12 +93,24 @@ def balances(keyword):
         elif 'bitcoin' in account:
             manager = buchfink_db.get_chain_manager(account)
             manager.query_balances()
+            asset = Asset('BTC')
 
             for balance in manager.balances.btc.values():
                 amount = balance.amount
-                asset = Asset('BTC')
                 balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
                 usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
+
+        elif 'file' in account:
+
+            account = yaml.load(open(account['file'], 'r'), Loader=yaml.SafeLoader)
+            if 'balances' in account:
+                for balance in account['balances']:
+                    amount = FVal(balance['amount'])
+                    asset = Asset(balance['asset'])
+                    usd_value = amount * buchfink_db.inquirer.find_usd_price(asset)
+                    balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+                    usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + usd_value
+
 
     table = []
     assets = [obj[0] for obj in sorted(usd_value_sum.items(), key=itemgetter(1), reverse=True)]

@@ -82,7 +82,10 @@ exchanges that Rotki supports, namely:
   * kraken
   * poloniex
 
-### Adding blockchain accounts
+If your exchange is not supported yet, see the section "Add manual accounts"
+below and add your data manually.
+
+### Add blockchain accounts
 
 To add your Ethereum and Bitcoin blockchain accounts, add them to your
 `buchfink.yaml` as well:
@@ -101,18 +104,18 @@ accounts:
 Note: Currently, Buchfink and Rotki will not yet fetch your DEX trades, but
 they will be able to in the future.
 
-### Add manual trades
+### Add manual accounts
 
-Adding manual trades is easy, just create a new YAML file containing your
-trades and at this to your `buchfink.yaml`.
+Adding manual accounts is easy, just create a new YAML file containing your
+trades (and/or balances) and at this to your `buchfink.yaml`.
 
 ```yaml
 accounts:
   - name: otc
-    file: otc.yaml
+    file: accounts/otc.yaml
 ```
 
-The file `otc.yaml` may look like this:
+The file `accounts/otc.yaml` may look like this:
 
 ```yaml
 trades:
@@ -129,6 +132,17 @@ trades:
 Note: This is exactly the same serialization format that the `fetch` command
 generates for your exchanges trades. So you can easily amend missing trades by
 copy and pasting and changing the relevant lines.
+
+The manual account YAML file can also contain balances that will be respected
+by the `buchfink balances` command:
+
+```yaml
+balances:
+- amount: 0.5
+  asset: ETH
+- amount: 10
+  asset: KNC
+```
 
 ### Settings
 

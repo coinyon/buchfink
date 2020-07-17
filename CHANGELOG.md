@@ -1,3 +1,10 @@
+master
+------
+
+* Manual file-based accounts can now also contain balances for any asset
+* New table output with better number formatting
+* Bugfix: Fiat currency setting was not correctly used in reports
+
 0.0.3
 -----
 
