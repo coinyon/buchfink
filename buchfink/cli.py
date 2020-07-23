@@ -111,14 +111,20 @@ def balances(keyword):
                     balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
                     usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + usd_value
 
+    currency = buchfink_db.get_main_currency()
+    currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
 
     table = []
     assets = [obj[0] for obj in sorted(usd_value_sum.items(), key=itemgetter(1), reverse=True)]
+    balance_in_currency_sum = 0
+
     for asset in assets:
         balance = balances_sum[asset]
-        table.append([asset, balance, asset.symbol, round(float(usd_value_sum.get(asset, FVal(0))), 2)])
-    table.append(['Total', None, None, round(float(sum(usd_value_sum.values())), 2)])
-    print(tabulate(table, headers=['Asset', 'Amount', 'Symbol', 'USD Value']))
+        balance_in_currency = usd_value_sum.get(asset, FVal(0)) / currency_in_usd
+        balance_in_currency_sum += balance_in_currency
+        table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
+    table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
+    print(tabulate(table, headers=['Asset', 'Amount', 'Symbol', 'Fiat Value (%s)' % currency.symbol]))
 
 
 @buchfink.command()
