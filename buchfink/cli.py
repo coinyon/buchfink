@@ -231,16 +231,30 @@ def allowances():
             len(all_trades), num_matched_accounts)
 
     accountant = buchfink_db.get_accountant()
+    currency = buchfink_db.get_main_currency()
+    currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
+
     result = accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [])
+    total_usd = FVal(0)
     table = []
     for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
+        symbol_usd = buchfink_db.inquirer.find_usd_price(symbol)
+        total_usd += _allowance * symbol_usd
         table.append([
             symbol,
             _allowance,
-            'TBD',
+            round(float(_allowance * symbol_usd / currency_in_usd), 2),
+            symbol_usd / currency_in_usd,
             buy_price
         ])
-    print(tabulate(table, headers=['Asset', 'Tax-free allowance', 'Tax-free amount', 'Average buy price']))
+    table.append(['Total', None, round(float(total_usd / currency_in_usd), 2), None, None])
+    print(tabulate(table, headers=[
+        'Asset',
+        'Tax-free allowance',
+        'Tax-free amount (%s)' % currency.symbol,
+        'Current price (%s)' % currency.symbol,
+        'Average buy price (%s)' % currency.symbol
+    ]))
 
 
 if __name__ == '__main__':
