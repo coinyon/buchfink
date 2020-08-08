@@ -35,7 +35,6 @@ from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.manager import ExchangeManager
 from rotkehlchen.exchanges.poloniex import Poloniex
-from rotkehlchen.externalapis.alethio import Alethio
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.fval import FVal
@@ -86,23 +85,19 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
-        self.all_eth_tokens = AssetResolver().get_all_eth_tokens()
-        self.alethio = Alethio(
-            database=self,
-            msg_aggregator=self.msg_aggregator,
-            all_eth_tokens=self.all_eth_tokens,
-        )
+        self.all_eth_tokens = AssetResolver().get_all_eth_token_info()
         self.ethereum_manager = EthereumManager(
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
             etherscan=self.etherscan,
             msg_aggregator=self.msg_aggregator,
+            greenlet_manager=self.greenlet_manager,
+            connect_at_start=[]
         )
         #self.chain_manager = ChainManager(
         #    blockchain_accounts=[],
         #    owned_eth_tokens=[],
         #    ethereum_manager=self.ethereum_manager,
         #    msg_aggregator=self.msg_aggregator,
-        #    alethio=alethio,
         #    greenlet_manager=self.greenlet_manager,
         #    premium=False,
         #    eth_modules=ethereum_modules,
@@ -183,11 +178,10 @@ class BuchfinkDB(DBHandler):
             raise ValueError('Invalid account')
 
         return ChainManager(
+            database=self,
             blockchain_accounts=accounts,
-            owned_eth_tokens=[],
             ethereum_manager=self.ethereum_manager,
             msg_aggregator=self.msg_aggregator,
-            alethio=self.alethio,
             greenlet_manager=self.greenlet_manager,
             premium=False,
             eth_modules=[],
@@ -272,3 +266,9 @@ class BuchfinkDB(DBHandler):
             raise ValueError("Unknown exchange: " + account_info['exchange'])
 
         return exchange
+
+    def get_tokens_for_address_if_time(self, address, current_time):
+        return None
+
+    def save_tokens_for_address(self, address, tokens):
+        pass
