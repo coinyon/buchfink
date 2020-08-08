@@ -25,13 +25,21 @@ from rotkehlchen.errors import (EthSyncError, InputError,
                                 SystemPermissionError)
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
-from rotkehlchen.exchanges.bitcoinde import Bitcoinde
+try:
+    # Bitcoinde module is not yet merged in Rotki, so we will make this optional
+    from rotkehlchen.exchanges.bitcoinde import Bitcoinde
+except ImportError:
+    Bitcoinde = None
+try:
+    # Iconomi module is not yet merged in Rotki, so we will make this optional
+    from rotkehlchen.exchanges.iconomi import Iconomi
+except ImportError:
+    Iconomi = None
 from rotkehlchen.exchanges.bitmex import Bitmex
 from rotkehlchen.exchanges.bittrex import Bittrex
 from rotkehlchen.exchanges.coinbase import Coinbase
 from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
-from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.manager import ExchangeManager
 from rotkehlchen.exchanges.poloniex import Poloniex
