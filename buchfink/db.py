@@ -54,7 +54,6 @@ from rotkehlchen.logging import (DEFAULT_ANONYMIZED_LOGS, LoggingSettings,
 from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
                                          premium_create_and_verify)
 from rotkehlchen.premium.sync import PremiumSyncManager
-from rotkehlchen.transactions import EthereumAnalyzer
 from rotkehlchen.typing import TradeType
 from rotkehlchen.user_messages import MessagesAggregator
 
@@ -110,10 +109,10 @@ class BuchfinkDB(DBHandler):
         #    premium=False,
         #    eth_modules=ethereum_modules,
         #)
-        self.ethereum_analyzer = EthereumAnalyzer(
-            ethereum_manager=self.ethereum_manager,
-            database=self,
-        )
+        #self.ethereum_analyzer = EthereumAnalyzer(
+        #    ethereum_manager=self.ethereum_manager,
+        #    database=self,
+        #)
         #self.trades_historian = TradesHistorian(
         #    user_directory=self.cache_directory,
         #    db=self,
