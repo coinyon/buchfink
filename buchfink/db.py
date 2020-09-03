@@ -94,12 +94,14 @@ class BuchfinkDB(DBHandler):
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
         self.all_eth_tokens = AssetResolver().get_all_eth_token_info()
         self.ethereum_manager = EthereumManager(
+            database=self,
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
             etherscan=self.etherscan,
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
             connect_at_start=[]
         )
+        self.inquirer.inject_ethereum(self.ethereum_manager)
         #self.chain_manager = ChainManager(
         #    blockchain_accounts=[],
         #    owned_eth_tokens=[],
