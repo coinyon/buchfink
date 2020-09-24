@@ -2,7 +2,7 @@ import logging
 import os.path
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 import click
 import yaml
@@ -25,16 +25,6 @@ from rotkehlchen.errors import (EthSyncError, InputError,
                                 SystemPermissionError)
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
-try:
-    # Bitcoinde module is not yet merged in Rotki, so we will make this optional
-    from rotkehlchen.exchanges.bitcoinde import Bitcoinde
-except ImportError:
-    Bitcoinde = None
-try:
-    # Iconomi module is not yet merged in Rotki, so we will make this optional
-    from rotkehlchen.exchanges.iconomi import Iconomi
-except ImportError:
-    Iconomi = None
 from rotkehlchen.exchanges.bitmex import Bitmex
 from rotkehlchen.exchanges.bittrex import Bittrex
 from rotkehlchen.exchanges.coinbase import Coinbase
@@ -54,10 +44,23 @@ from rotkehlchen.logging import (DEFAULT_ANONYMIZED_LOGS, LoggingSettings,
 from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
                                          premium_create_and_verify)
 from rotkehlchen.premium.sync import PremiumSyncManager
-from rotkehlchen.typing import TradeType
+from rotkehlchen.typing import (ExternalService, ExternalServiceApiCredentials,
+                                TradeType)
 from rotkehlchen.user_messages import MessagesAggregator
 
 from .config import ReportConfig
+
+try:
+    # Bitcoinde module is not yet merged in Rotki, so we will make this optional
+    from rotkehlchen.exchanges.bitcoinde import Bitcoinde
+except ImportError:
+    Bitcoinde = None
+try:
+    # Iconomi module is not yet merged in Rotki, so we will make this optional
+    from rotkehlchen.exchanges.iconomi import Iconomi
+except ImportError:
+    Iconomi = None
+
 
 
 class BuchfinkDB(DBHandler):
@@ -146,13 +149,28 @@ class BuchfinkDB(DBHandler):
             )
 
     def get_settings(self):
-        return db_settings_from_dict(self.config['settings'], None)
+        clean_settings = dict(self.config['settings'])
+        if 'external_services' in clean_settings:
+            del clean_settings['external_services']
+        return db_settings_from_dict(self.config['settings'], self.msg_aggregator)
 
     def get_ignored_assets(self):
         return []
 
-    def get_external_service_credentials(self, service_name: str):
-        return None
+    @property
+    def last_write_ts(self):
+        return 0
+
+    def get_external_service_credentials(
+            self,
+            service_name: ExternalService,
+    ) -> Optional[ExternalServiceApiCredentials]:
+        """If existing it returns the external service credentials for the given service"""
+        short_name = service_name.name.lower()
+        api_key = self.config['settings'].get('external_services', {}).get(short_name)
+        if not api_key:
+            return None
+        return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
     def get_accountant(self) -> Accountant:
         return Accountant(self, None, self.msg_aggregator, True)

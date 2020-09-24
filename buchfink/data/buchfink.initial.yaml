@@ -43,3 +43,8 @@ settings:
 
   include_gas_costs: True
   include_crypto2crypto: True
+
+  # Here you add can credentials for external services
+  external_services:
+    etherscan: ~
+    cryptocompare: ~
