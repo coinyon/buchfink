@@ -152,7 +152,7 @@ class BuchfinkDB(DBHandler):
         clean_settings = dict(self.config['settings'])
         if 'external_services' in clean_settings:
             del clean_settings['external_services']
-        return db_settings_from_dict(self.config['settings'], self.msg_aggregator)
+        return db_settings_from_dict(clean_settings, self.msg_aggregator)
 
     def get_ignored_assets(self):
         return []
