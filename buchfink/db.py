@@ -35,6 +35,7 @@ from rotkehlchen.exchanges.manager import ExchangeManager
 from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
+from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.fval import FVal
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history import PriceHistorian, TradesHistorian
@@ -88,8 +89,9 @@ class BuchfinkDB(DBHandler):
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
 
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
+        self.coingecko = Coingecko()
         self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2014', self.cryptocompare)
-        self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare)
+        self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare, self.coingecko)
         self.msg_aggregator = MessagesAggregator()
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
