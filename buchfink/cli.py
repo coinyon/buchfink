@@ -49,8 +49,8 @@ def init(directory):
 
 
 @buchfink.command()
-@click.option('--keyword', '-k', type=str, default=None)
-@click.option('--minimum-balance', '-m', type=float, default=0.0)
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--minimum-balance', '-m', type=float, default=0.0, help='Hide balances smaller than this amount (default 0)')
 def balances(keyword, minimum_balance):
     "Show balances across all accounts"
 
@@ -130,7 +130,7 @@ def balances(keyword, minimum_balance):
 
 
 @buchfink.command()
-@click.option('--keyword', '-k', type=str, default=None)
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 def fetch(keyword):
     "Fetch trades for configured accounts"
 
@@ -188,7 +188,7 @@ def report(name, from_, to):
 
 
 @buchfink.command()
-@click.option('--keyword', '-k', type=str, default=None)
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 def run(keyword):
     "Generate reports for all report definition and output overview table"
 
