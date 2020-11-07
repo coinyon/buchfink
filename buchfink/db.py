@@ -50,6 +50,7 @@ from rotkehlchen.typing import (ExternalService, ExternalServiceApiCredentials,
 from rotkehlchen.user_messages import MessagesAggregator
 
 from .config import ReportConfig
+from .schema import config_schema
 
 try:
     # Bitcoinde module is not yet merged in Rotki, so we will make this optional
@@ -75,7 +76,8 @@ class BuchfinkDB(DBHandler):
 
     def __init__(self, data_directory='.'):
         self.data_directory = Path(data_directory)
-        self.config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
+        yaml_config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
+        self.config = config_schema(yaml_config)
 
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
