@@ -50,7 +50,8 @@ def init(directory):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None)
-def balances(keyword):
+@click.option('--minimum-balance', '-m', type=float, default=0.0)
+def balances(keyword, minimum_balance):
     "Show balances across all accounts"
 
     buchfink_db = BuchfinkDB()
@@ -121,8 +122,9 @@ def balances(keyword):
     for asset in assets:
         balance = balances_sum[asset]
         balance_in_currency = usd_value_sum.get(asset, FVal(0)) / currency_in_usd
-        balance_in_currency_sum += balance_in_currency
-        table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
+        if balance_in_currency >= FVal(minimum_balance):
+            balance_in_currency_sum += balance_in_currency
+            table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
     table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
     print(tabulate(table, headers=['Asset', 'Amount', 'Symbol', 'Fiat Value (%s)' % currency.symbol]))
 
