@@ -2,13 +2,10 @@ import logging
 import os.path
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import click
 import yaml
-
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
-from buchfink.serialization import deserialize_trade
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.chain.ethereum.manager import EthereumManager
@@ -33,9 +30,9 @@ from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.manager import ExchangeManager
 from rotkehlchen.exchanges.poloniex import Poloniex
+from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
-from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.fval import FVal
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history import PriceHistorian, TradesHistorian
@@ -45,9 +42,13 @@ from rotkehlchen.logging import (DEFAULT_ANONYMIZED_LOGS, LoggingSettings,
 from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
                                          premium_create_and_verify)
 from rotkehlchen.premium.sync import PremiumSyncManager
-from rotkehlchen.typing import (ExternalService, ExternalServiceApiCredentials,
-                                TradeType)
+from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
+                                ExternalService, ExternalServiceApiCredentials,
+                                Timestamp, TradeType)
 from rotkehlchen.user_messages import MessagesAggregator
+
+from buchfink.datatypes import Asset, FVal, Trade, TradeType
+from buchfink.serialization import deserialize_trade
 
 from .config import ReportConfig
 from .schema import config_schema
@@ -303,3 +304,27 @@ class BuchfinkDB(DBHandler):
 
     def save_tokens_for_address(self, address, tokens):
         pass
+
+    def update_used_query_range(self, name: str, start_ts: Timestamp, end_ts: Timestamp) -> None:
+        pass
+
+    def update_used_block_query_range(self, name: str, from_block: int, to_block: int) -> None:
+        pass
+
+    def get_used_query_range(self, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
+        return None
+
+    def add_ethereum_transactions(
+            self,
+            ethereum_transactions: List[EthereumTransaction],
+            from_etherscan: bool,
+    ) -> None:
+        pass
+
+    def get_ethereum_transactions(
+            self,
+            from_ts: Optional[Timestamp] = None,
+            to_ts: Optional[Timestamp] = None,
+            address: Optional[ChecksumEthAddress] = None,
+    ) -> List[EthereumTransaction]:
+        return []

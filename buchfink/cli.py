@@ -86,7 +86,7 @@ def balances(keyword, minimum_balance):
             manager.query_balances()
 
             for eth_balance in manager.balances.eth.values():
-                for asset, balance in eth_balance.asset_balances.items():
+                for asset, balance in eth_balance.assets.items():
                     amount = balance.amount
                     balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
                     usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
