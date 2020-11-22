@@ -8,6 +8,7 @@ import click
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
+from rotkehlchen.chain.ethereum.eth2 import Eth2Deposit
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
 from rotkehlchen.constants.assets import A_USD
@@ -212,12 +213,21 @@ class BuchfinkDB(DBHandler):
         return ChainManager(
             database=self,
             blockchain_accounts=accounts,
+            data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
             premium=False,
             eth_modules=[],
         )
+
+    def get_eth2_deposits(
+            self,
+            from_ts: Optional[Timestamp] = None,
+            to_ts: Optional[Timestamp] = None,
+            address: Optional[ChecksumEthAddress] = None,
+    ) -> List[Eth2Deposit]:
+        return []
 
     def get_exchange(self, account: str) -> ExchangeInterface:
 
