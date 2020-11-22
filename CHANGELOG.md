@@ -1,7 +1,7 @@
 master
 ------
 
-...
+* Can also show liabilities for certain Ethereum protocols
 
 0.0.4
 -----
