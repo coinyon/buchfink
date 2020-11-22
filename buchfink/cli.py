@@ -55,8 +55,10 @@ def balances(keyword, minimum_balance):
     "Show balances across all accounts"
 
     buchfink_db = BuchfinkDB()
-    balances_sum = {}
-    usd_value_sum = {}
+    assets_sum = {}
+    assets_usd_sum = {}
+    liabilities_sum = {}
+    liabilities_usd_sum = {}
 
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account['name']:
@@ -77,9 +79,9 @@ def balances(keyword, minimum_balance):
                 logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account['name'])
                 for asset, balance in balances.items():
                     amount = balance['amount']
-                    balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
+                    assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
                     if 'usd_value' in balance:
-                        usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance['usd_value']
+                        assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance['usd_value']
 
         elif 'ethereum' in account:
             manager = buchfink_db.get_chain_manager(account)
@@ -88,8 +90,12 @@ def balances(keyword, minimum_balance):
             for eth_balance in manager.balances.eth.values():
                 for asset, balance in eth_balance.assets.items():
                     amount = balance.amount
-                    balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
-                    usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
+                    assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
+                    assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance.usd_value
+                for liability, balance in eth_balance.liabilities.items():
+                    amount = balance.amount
+                    liabilities_sum[liability] = liabilities_sum.get(asset, FVal(0)) + amount
+                    liabilities_usd_sum[liability] = liabilities_usd_sum.get(asset, FVal(0)) + balance.usd_value
 
         elif 'bitcoin' in account:
             manager = buchfink_db.get_chain_manager(account)
@@ -98,8 +104,8 @@ def balances(keyword, minimum_balance):
 
             for balance in manager.balances.btc.values():
                 amount = balance.amount
-                balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
-                usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + balance.usd_value
+                assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
+                assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance.usd_value
 
         elif 'file' in account:
 
@@ -109,24 +115,37 @@ def balances(keyword, minimum_balance):
                     amount = FVal(balance['amount'])
                     asset = Asset(balance['asset'])
                     usd_value = amount * buchfink_db.inquirer.find_usd_price(asset)
-                    balances_sum[asset] = balances_sum.get(asset, FVal(0)) + amount
-                    usd_value_sum[asset] = usd_value_sum.get(asset, FVal(0)) + usd_value
+                    assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
+                    assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + usd_value
 
     currency = buchfink_db.get_main_currency()
     currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
 
     table = []
-    assets = [obj[0] for obj in sorted(usd_value_sum.items(), key=itemgetter(1), reverse=True)]
+    assets = [obj[0] for obj in sorted(assets_usd_sum.items(), key=itemgetter(1), reverse=True)]
     balance_in_currency_sum = 0
 
     for asset in assets:
-        balance = balances_sum[asset]
-        balance_in_currency = usd_value_sum.get(asset, FVal(0)) / currency_in_usd
+        balance = assets_sum[asset]
+        balance_in_currency = assets_usd_sum.get(asset, FVal(0)) / currency_in_usd
         if balance_in_currency >= FVal(minimum_balance):
             balance_in_currency_sum += balance_in_currency
             table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
     table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
     print(tabulate(table, headers=['Asset', 'Amount', 'Symbol', 'Fiat Value (%s)' % currency.symbol]))
+
+    if liabilities_sum:
+        table = []
+        assets = [obj[0] for obj in sorted(liabilities_usd_sum.items(), key=itemgetter(1), reverse=True)]
+        for asset in assets:
+            balance = liabilities_sum[asset]
+            balance_in_currency = liabilities_usd_sum.get(asset, FVal(0)) / currency_in_usd
+            if balance_in_currency >= FVal(minimum_balance):
+                balance_in_currency_sum += balance_in_currency
+                table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
+        table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
+        print()
+        print(tabulate(table, headers=['Liability', 'Amount', 'Symbol', 'Fiat Value (%s)' % currency.symbol]))
 
 
 @buchfink.command()
