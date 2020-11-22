@@ -181,6 +181,9 @@ class BuchfinkDB(DBHandler):
     def get_accountant(self) -> Accountant:
         return Accountant(self, None, self.msg_aggregator, True)
 
+    def get_blockchain_accounts(self) -> BlockchainAccounts:
+        return BlockchainAccounts(eth=[], btc=[])
+
     def get_local_trades_for_account(self, account: str) -> List[Trade]:
 
         account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
@@ -218,7 +221,7 @@ class BuchfinkDB(DBHandler):
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
             premium=False,
-            eth_modules=[],
+            eth_modules=self.get_settings().active_modules
         )
 
     def get_eth2_deposits(
