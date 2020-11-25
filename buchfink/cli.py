@@ -136,6 +136,7 @@ def balances(keyword, minimum_balance):
 
     if liabilities_sum:
         table = []
+        balance_in_currency_sum = 0
         assets = [obj[0] for obj in sorted(liabilities_usd_sum.items(), key=itemgetter(1), reverse=True)]
         for asset in assets:
             balance = liabilities_sum[asset]
