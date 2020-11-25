@@ -160,25 +160,40 @@ def fetch(keyword):
         if keyword is not None and keyword not in account['name']:
             continue
 
-        if 'exchange' not in account:
-            continue
-
-        click.echo('Fetching trades for ' + account['name'])
-
-        exchange = buchfink_db.get_exchange(account['name'])
-
-        api_key_is_valid, error = exchange.validate_api_key()
-
-        if not api_key_is_valid:
-            logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
-            continue
-
         name = account.get('name')
 
-        trades = exchange.query_online_trade_history(
-            start_ts=epoch_start_ts,
-            end_ts=epoch_end_ts
-        )
+        if 'ethereum' in account:
+
+            click.echo('Fetching uniswap trades for ' + name)
+
+            manager = buchfink_db.get_chain_manager(account)
+
+            trades = manager.eth_modules['uniswap'].get_trades(
+                    addresses=manager.accounts.eth,
+                    from_timestamp=int(epoch_start_ts),
+                    to_timestamp=int(epoch_end_ts)
+                )
+
+        elif 'exchange' in account:
+
+            click.echo('Fetching trades for ' + name)
+
+            exchange = buchfink_db.get_exchange(name)
+
+            api_key_is_valid, error = exchange.validate_api_key()
+
+            if not api_key_is_valid:
+                logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
+                continue
+
+            trades = exchange.query_online_trade_history(
+                start_ts=epoch_start_ts,
+                end_ts=epoch_end_ts
+            )
+
+        else:
+            logger.debug('No way to retrieve trades for %s, yet', name)
+            continue
 
         logger.info('Fetched %d trades from %s', len(trades), name)
 

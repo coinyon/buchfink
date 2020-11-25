@@ -1,12 +1,12 @@
 import logging
 from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple, Union
 
 import dateutil.parser
 import yaml
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
+from buchfink.datatypes import Asset, FVal, Trade, TradeType, AMMTrade
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
 
@@ -67,13 +67,17 @@ def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
     return amount, asset
 
 
-def serialize_trade(trade: Trade):
+def serialize_trade(trade: Union[Trade, AMMTrade]):
     ser_trade = trade.serialize()
     ser_trade = {
         'timestamp': datetime.fromtimestamp(trade.timestamp, tz=timezone.utc).isoformat(),
         'for': serialize_amount(trade.rate * trade.amount, trade.quote_asset),
-        'link': trade.link
     }
+
+    if isinstance(trade, AMMTrade):
+        ser_trade['link'] = trade.tx_hash
+    else:
+        ser_trade['link'] = trade.link
 
     if trade.fee and trade.fee > 0:
         ser_trade['fee'] = serialize_amount(trade.fee, trade.fee_currency)

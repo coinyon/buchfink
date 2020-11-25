@@ -10,6 +10,7 @@ from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.chain.ethereum.eth2 import Eth2Deposit
 from rotkehlchen.chain.ethereum.manager import EthereumManager
+from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
 from rotkehlchen.constants.assets import A_USD
 from rotkehlchen.data.importer import DataImporter
@@ -45,7 +46,7 @@ from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
 from rotkehlchen.premium.sync import PremiumSyncManager
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
-                                Timestamp, TradeType)
+                                Location, Timestamp, TradeType)
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import Asset, FVal, Trade, TradeType
@@ -92,6 +93,7 @@ class BuchfinkDB(DBHandler):
         (self.cache_directory / 'history').mkdir(exist_ok=True)
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
 
+        self._amm_swaps = []  # type: List[AMMSwap]
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko()
         self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2014', self.cryptocompare)
@@ -317,6 +319,19 @@ class BuchfinkDB(DBHandler):
 
     def save_tokens_for_address(self, address, tokens):
         pass
+
+    def get_amm_swaps(
+            self,
+            from_ts: Optional[Timestamp] = None,
+            to_ts: Optional[Timestamp] = None,
+            location: Optional[Location] = None,
+            address: Optional[ChecksumEthAddress] = None,
+    ) -> List[AMMSwap]:
+        return self._amm_swaps
+
+    def add_amm_swaps(self, swaps: List[AMMSwap]) -> None:
+        self._amm_swaps = []
+        self._amm_swaps.extend(swaps)
 
     def update_used_query_range(self, name: str, start_ts: Timestamp, end_ts: Timestamp) -> None:
         pass

@@ -2,6 +2,7 @@ master
 ------
 
 * Can also show liabilities for certain Ethereum protocols
+* Can fetch uniswap trades
 
 0.0.4
 -----
