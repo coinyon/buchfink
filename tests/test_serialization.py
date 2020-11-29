@@ -44,6 +44,16 @@ def test_trade_deserialization_with_fee(dummy_trade):
     assert trade.fee == 0
 
 
+@pytest.mark.skip
+def test_trade_deserialization_various_assets(dummy_trade):
+    "test if some assets are correctly detected"
+    trade = deserialize_trade({'buy': '1 BCH', 'for': '1 ETH', 'timestamp': '2017-01-01'})
+    assert trade.fee == 0
+
+    trade = deserialize_trade({'buy': '1 BLX', 'for': '1 ETH', 'timestamp': '2017-01-01'})
+    assert trade.fee == 0
+
+
 def test_datetime_deserialization():
     ts = deserialize_timestamp_from_date('2020-05-05T09:48:52Z', 'iso8601', 'coinbase')
     dt = datetime.fromtimestamp(ts, timezone.utc)
