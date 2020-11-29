@@ -32,6 +32,7 @@ from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.manager import ExchangeManager
 from rotkehlchen.exchanges.poloniex import Poloniex
+from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
@@ -113,6 +114,7 @@ class BuchfinkDB(DBHandler):
             connect_at_start=[]
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
+        self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
         #self.chain_manager = ChainManager(
         #    blockchain_accounts=[],
         #    owned_eth_tokens=[],
@@ -218,6 +220,7 @@ class BuchfinkDB(DBHandler):
         return ChainManager(
             database=self,
             blockchain_accounts=accounts,
+            beaconchain=self.beaconchain,
             data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
             msg_aggregator=self.msg_aggregator,
