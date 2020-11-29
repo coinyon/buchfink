@@ -1,8 +1,14 @@
 master
 ------
 
+...
+
+0.0.5
+------
+
 * Can also show liabilities for certain Ethereum protocols
 * Can fetch uniswap trades
+* Add "buchfink list" command
 
 0.0.4
 -----
