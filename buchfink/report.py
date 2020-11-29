@@ -23,7 +23,7 @@ def run_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
 
     for account in buchfink_db.get_all_accounts():
         num_matched_accounts += 1
-        all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
+        all_trades.extend(buchfink_db.get_local_trades_for_account(account.name))
 
     logger.info('Collected %d trades from %d exchange account(s)',
             len(all_trades), num_matched_accounts)

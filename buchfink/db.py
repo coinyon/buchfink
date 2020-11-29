@@ -53,6 +53,7 @@ from rotkehlchen.user_messages import MessagesAggregator
 from buchfink.datatypes import Asset, FVal, Trade, TradeType
 from buchfink.serialization import deserialize_trade
 
+from .account import Account, accounts_from_config
 from .config import ReportConfig
 from .schema import config_schema
 
@@ -82,6 +83,7 @@ class BuchfinkDB(DBHandler):
         self.data_directory = Path(data_directory)
         yaml_config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
         self.config = config_schema(yaml_config)
+        self.accounts = accounts_from_config(self.config)  # type: List[Account]
 
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
@@ -145,8 +147,8 @@ class BuchfinkDB(DBHandler):
     def get_eth_rpc_endpoint(self):
         return self.config['settings'].get('eth_rpc_endpoint', None)
 
-    def get_all_accounts(self) -> List[Any]:
-        return self.config['accounts']
+    def get_all_accounts(self) -> List[Account]:
+        return self.accounts
 
     def get_all_reports(self) -> Iterable[ReportConfig]:
         for report_info in self.config['reports']:
@@ -209,13 +211,13 @@ class BuchfinkDB(DBHandler):
         else:
             raise ValueError('Invalid account: ' + account)
 
-    def get_chain_manager(self, account: Any) -> ChainManager:
-        if 'ethereum' in account:
-            accounts = BlockchainAccounts(eth=[account['ethereum']], btc=[])
-        elif 'bitcoin' in account:
-            accounts = BlockchainAccounts(eth=[], btc=[account['bitcoin']])
+    def get_chain_manager(self, account: Account) -> ChainManager:
+        if account.account_type == "ethereum":
+            accounts = BlockchainAccounts(eth=[account.address], btc=[])
+        elif account.account_type == "bitcoin":
+            accounts = BlockchainAccounts(eth=[], btc=[account.address])
         else:
-            raise ValueError('Invalid account')
+            raise ValueError('Unable to create chain manager for account')
 
         return ChainManager(
             database=self,

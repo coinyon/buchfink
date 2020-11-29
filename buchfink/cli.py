@@ -61,29 +61,29 @@ def balances(keyword, minimum_balance):
     liabilities_usd_sum = {}
 
     for account in buchfink_db.get_all_accounts():
-        if keyword is not None and keyword not in account['name']:
+        if keyword is not None and keyword not in account.name:
             continue
 
-        if 'exchange' in account:
-            exchange = buchfink_db.get_exchange(account['name'])
+        if account.account_type == "exchange":
+            exchange = buchfink_db.get_exchange(account.name)
 
             api_key_is_valid, error = exchange.validate_api_key()
 
             if not api_key_is_valid:
-                logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
+                logger.critical('Skipping exchange %s because API key is not valid (%s)', account.name, error)
                 continue
 
             balances, error = exchange.query_balances()
 
             if not error:
-                logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account['name'])
+                logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account.name)
                 for asset, balance in balances.items():
                     amount = balance['amount']
                     assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
                     if 'usd_value' in balance:
                         assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance['usd_value']
 
-        elif 'ethereum' in account:
+        elif account.account_type == "ethereum":
             manager = buchfink_db.get_chain_manager(account)
             manager.query_balances()
 
@@ -97,7 +97,7 @@ def balances(keyword, minimum_balance):
                     liabilities_sum[liability] = liabilities_sum.get(asset, FVal(0)) + amount
                     liabilities_usd_sum[liability] = liabilities_usd_sum.get(asset, FVal(0)) + balance.usd_value
 
-        elif 'bitcoin' in account:
+        elif account.account_type == "bitcoin":
             manager = buchfink_db.get_chain_manager(account)
             manager.query_balances()
             asset = Asset('BTC')
@@ -107,9 +107,9 @@ def balances(keyword, minimum_balance):
                 assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
                 assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance.usd_value
 
-        elif 'file' in account:
+        elif account.account_type == "file":
 
-            account = yaml.load(open(account['file'], 'r'), Loader=yaml.SafeLoader)
+            account = yaml.load(open(account.config['file'], 'r'), Loader=yaml.SafeLoader)
             if 'balances' in account:
                 for balance in account['balances']:
                     amount = FVal(balance['amount'])
@@ -157,12 +157,12 @@ def fetch(keyword):
     buchfink_db = BuchfinkDB()
 
     for account in buchfink_db.get_all_accounts():
-        if keyword is not None and keyword not in account['name']:
+        if keyword is not None and keyword not in account.name:
             continue
 
-        name = account.get('name')
+        name = account.name
 
-        if 'ethereum' in account:
+        if account.account_type == "ethereum":
 
             click.echo('Fetching uniswap trades for ' + name)
 
@@ -174,7 +174,7 @@ def fetch(keyword):
                     to_timestamp=int(epoch_end_ts)
                 )
 
-        elif 'exchange' in account:
+        elif account.account_type == "exchange":
 
             click.echo('Fetching trades for ' + name)
 
@@ -183,7 +183,7 @@ def fetch(keyword):
             api_key_is_valid, error = exchange.validate_api_key()
 
             if not api_key_is_valid:
-                logger.critical('Skipping exchange %s because API key is not valid (%s)', account['name'], error)
+                logger.critical('Skipping exchange %s because API key is not valid (%s)', account.name, error)
                 continue
 
             trades = exchange.query_online_trade_history(
@@ -262,7 +262,7 @@ def allowances():
 
     for account in buchfink_db.get_all_accounts():
         num_matched_accounts += 1
-        all_trades.extend(buchfink_db.get_local_trades_for_account(account['name']))
+        all_trades.extend(buchfink_db.get_local_trades_for_account(account.name))
 
     logger.info('Collected %d trades from %d exchange account(s)',
             len(all_trades), num_matched_accounts)

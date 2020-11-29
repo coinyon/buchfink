@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
-from voluptuous import Required, All, Length, Range, Any, Schema
+
+from voluptuous import All, Any, Length, Range, Required, Schema
 
 exchange_account = Schema({
   Required('name'): str,
