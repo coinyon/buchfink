@@ -50,6 +50,23 @@ def init(directory):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+def list(keyword):
+    "List accounts"
+    buchfink_db = BuchfinkDB()
+    assets_sum = {}
+    assets_usd_sum = {}
+    liabilities_sum = {}
+    liabilities_usd_sum = {}
+
+    for account in buchfink_db.get_all_accounts():
+        if keyword is not None and keyword not in account.name:
+            continue
+
+        click.echo('{0}: {1}'.format(account.account_type, click.style(account.name, fg='green')))
+
+
+@buchfink.command()
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--minimum-balance', '-m', type=float, default=0.0, help='Hide balances smaller than this amount (default 0)')
 def balances(keyword, minimum_balance):
     "Show balances across all accounts"
