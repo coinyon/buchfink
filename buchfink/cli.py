@@ -50,7 +50,9 @@ def init(directory):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-def list(keyword):
+@click.option('--type', '-t', type=str, default=None, help='Filter by account type')
+@click.option('--output', '-o', type=str, default=None, help='Output field')
+def list(keyword, type, output):
     "List accounts"
     buchfink_db = BuchfinkDB()
     assets_sum = {}
@@ -62,7 +64,13 @@ def list(keyword):
         if keyword is not None and keyword not in account.name:
             continue
 
-        click.echo('{0}: {1}'.format(account.account_type, click.style(account.name, fg='green')))
+        if type is not None and type not in account.account_type:
+            continue
+
+        if output is None:
+            click.echo('{0}: {1}'.format(account.account_type, click.style(account.name, fg='green')))
+        else:
+            click.echo('{0}'.format(getattr(account, output)))
 
 
 @buchfink.command()
