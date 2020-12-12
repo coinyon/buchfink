@@ -16,6 +16,22 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
+      - name: Setup SQLCipher
+        run: |
+          if [ ${{ matrix.os }} == 'ubuntu-latest' ];
+          then
+            sudo apt-get update
+            sudo apt-get install libxml2-utils wget
+            wget -q https://raw.githubusercontent.com/rotki/rotki/develop/install_deps.sh -O install_deps.sh
+            chmod u+x install_deps.sh
+            ./install_deps.sh
+            rm install_deps.sh
+            sudo ldconfig
+          fi
+          if [ ${{ matrix.os }} == 'macos-latest' ];
+          then
+            brew install sqlcipher
+          fi
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
