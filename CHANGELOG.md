@@ -1,7 +1,7 @@
 master
 ------
 
-...
+* Add "buchfink trades" command to list/filter trades
 
 0.0.5
 ------

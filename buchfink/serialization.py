@@ -10,6 +10,10 @@ from buchfink.datatypes import Asset, FVal, Trade, TradeType, AMMTrade
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
 
+def serialize_timestamp(timestamp: int) -> str:
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+
+
 def deserialize_trade(trade_dict) -> Trade:
     if 'pair' in trade_dict:
         return Trade(
@@ -70,7 +74,7 @@ def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
 def serialize_trade(trade: Union[Trade, AMMTrade]):
     ser_trade = trade.serialize()
     ser_trade = {
-        'timestamp': datetime.fromtimestamp(trade.timestamp, tz=timezone.utc).isoformat(),
+        'timestamp': serialize_timestamp(trade.timestamp),
         'for': serialize_amount(trade.rate * trade.amount, trade.quote_asset),
     }
 

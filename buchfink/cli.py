@@ -1,8 +1,9 @@
 import logging
+from typing import List
 import os.path
 import shutil
 from datetime import date, datetime
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 from pathlib import Path
 
 import click
@@ -10,9 +11,9 @@ import coloredlogs
 from tabulate import tabulate
 import yaml
 
-from buchfink.datatypes import Asset, FVal
+from buchfink.datatypes import Asset, FVal, Trade
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import deserialize_trade, serialize_trades
+from buchfink.serialization import deserialize_trade, serialize_trades, serialize_timestamp
 
 from .config import ReportConfig
 from .report import run_report
@@ -245,6 +246,42 @@ def report(name, from_, to):
     ))
 
     logger.info("Overview: %s", result['overview'])
+
+
+@buchfink.command()
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
+def trades(keyword, asset):
+    "Show trades"
+
+    buchfink_db = BuchfinkDB()
+
+    trades = []  # List[Trade]
+    for account in buchfink_db.get_all_accounts():
+        if keyword is not None and keyword not in account.name:
+            continue
+
+        trades.extend(buchfink_db.get_local_trades_for_account(account.name))
+
+    if asset is not None:
+        the_asset = Asset(asset)
+        trades = [trade for trade in trades if trade.base_asset == the_asset or trade.quote_asset == the_asset]
+
+    trades = sorted(trades, key=attrgetter('timestamp'))
+
+    if trades:
+        table = []
+        for trade in trades:
+            table.append([
+                serialize_timestamp(trade.timestamp),
+                str(trade.trade_type),
+                str(trade.amount),
+                str(trade.base_asset.symbol),
+                str(trade.amount * trade.rate),
+                str(trade.quote_asset.symbol),
+                str(trade.rate),
+            ])
+        print(tabulate(table, headers=['Time', 'Type', 'Amount', 'Quote Asset', 'Amount', 'Base Asset', 'Rate']))
 
 
 @buchfink.command()
