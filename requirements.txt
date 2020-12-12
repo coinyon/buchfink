@@ -1,6 +1,5 @@
 voluptuous
 typing_extensions
-dataclasses
 tabulate
 # if you change the following, please also update the reference in .github/workflows/ci.yml
 rotkehlchen @ git+https://github.com/coinyon/rotki.git@bitcoinde#egg=rotkehlchen
