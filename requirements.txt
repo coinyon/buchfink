@@ -1,7 +1,8 @@
-coloredlogs
-jinja2
-python-dateutil
-PyYAML>=5.0
-rotkehlchen @ git+https://github.com/coinyon/rotki.git@bitcoinde#egg=rotkehlchen
-tabulate
 voluptuous
+typing_extensions
+tabulate
+rotkehlchen @ git+https://github.com/coinyon/rotki.git@bitcoinde#egg=rotkehlchen
+python-dateutil
+jinja2
+coloredlogs
+PyYAML>=5.0

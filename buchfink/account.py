@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, Literal, Optional, Union
+from typing import Any, Dict, Optional, Union
+from typing_extensions import Literal
 
 from rotkehlchen.typing import ChecksumEthAddress
 
@@ -8,7 +9,7 @@ from rotkehlchen.typing import ChecksumEthAddress
 @dataclass
 class Account:
     name: str
-    account_type: Union[Literal["ethereum"]]
+    account_type: Union[Literal["ethereum"], Literal["bitcoin"]]
     address: Optional[Union[ChecksumEthAddress, str]]
     config: Dict[str, Any]
 
