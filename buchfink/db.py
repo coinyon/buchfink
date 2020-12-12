@@ -21,7 +21,7 @@ from rotkehlchen.db.settings import (DBSettings, ModifiableDBSettings,
 from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.errors import (EthSyncError, InputError,
                                 PremiumAuthenticationError, RemoteError,
-                                SystemPermissionError)
+                                SystemPermissionError, UnknownAsset)
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitmex import Bitmex
@@ -68,6 +68,7 @@ try:
 except ImportError:
     Iconomi = None
 
+logger = logging.getLogger(__name__)
 
 
 class BuchfinkDB(DBHandler):
@@ -192,24 +193,32 @@ class BuchfinkDB(DBHandler):
 
     def get_local_trades_for_account(self, account: str) -> List[Trade]:
 
-        account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
+        def safe_deserialize_trade(trade):
+            try:
+                return deserialize_trade(trade)
+            except UnknownAsset:
+                logger.warning('Ignoring trade with unknown asset: %s', trade)
+                return None
 
-        if 'exchange' in account_info:
-            trades_file = os.path.join(self.data_directory, 'trades', account_info['name'] + '.yaml')
+        account = [a for a in self.accounts if a.name == account][0]  # type: Account
+
+        if account.account_type == 'file':
+            trades_file = os.path.join(self.data_directory, account.config['file'])
             exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
-            return [deserialize_trade(trade) for trade in exchange['trades']]
-
-        elif 'file' in account_info:
-            trades_file = os.path.join(self.data_directory, account_info['file'])
-            exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
-            return [deserialize_trade(trade) for trade in exchange.get('trades', [])]
-
-        elif 'ethereum' in account_info or 'bitcoin' in account_info:
-            # Currently buchfink is not able to fetch trades for blockchain accounts
-            return []
+            return [ser_trade
+                    for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
+                    if ser_trade is not None]
 
         else:
-            raise ValueError('Invalid account: ' + account)
+            trades_file = os.path.join(self.data_directory, 'trades', account.name + '.yaml')
+
+            if os.path.exists(trades_file):
+                exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
+                return [ser_trade
+                        for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
+                        if ser_trade is not None]
+            else:
+                return []
 
     def get_chain_manager(self, account: Account) -> ChainManager:
         if account.account_type == "ethereum":
