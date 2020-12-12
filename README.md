@@ -1,6 +1,8 @@
 Buchfink - Plaintext Crypto Taxes
 =================================
 
+![Tests](https://github.com/coinyon/buchfink/workflows/Tests/badge.svg)
+
 Buchfink is a commandline application that you can use for keeping book over
 your crypto trades and generate profit/loss statements and tax reports.
 
