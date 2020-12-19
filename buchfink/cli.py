@@ -69,7 +69,9 @@ def list(keyword, type, output):
             continue
 
         if output is None:
-            click.echo('{0}: {1}'.format(account.account_type, click.style(account.name, fg='green')))
+            type_and_name = '{0}: {1}'.format(account.account_type, click.style(account.name, fg='green'))
+            address = ' ({0})'.format(account.address) if account.address is not None else ''
+            click.echo(type_and_name + address)
         else:
             click.echo('{0}'.format(getattr(account, output)))
 
