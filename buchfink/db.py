@@ -191,7 +191,7 @@ class BuchfinkDB(DBHandler):
     def get_blockchain_accounts(self) -> BlockchainAccounts:
         return BlockchainAccounts(eth=[], btc=[])
 
-    def get_local_trades_for_account(self, account: str) -> List[Trade]:
+    def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
 
         def safe_deserialize_trade(trade):
             try:
@@ -200,7 +200,7 @@ class BuchfinkDB(DBHandler):
                 logger.warning('Ignoring trade with unknown asset: %s', trade)
                 return None
 
-        account = [a for a in self.accounts if a.name == account][0]  # type: Account
+        account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
 
         if account.account_type == 'file':
             trades_file = os.path.join(self.data_directory, account.config['file'])

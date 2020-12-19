@@ -39,6 +39,12 @@ def deserialize_trade(trade_dict) -> Trade:
 
         quote_amount, quote_asset = deserialize_amount(trade_dict['for'])
 
+        if base_asset is None:
+            raise ValueError('No base asset provided')
+
+        if quote_asset is None:
+            raise ValueError('No quote asset provided')
+
         if 'fee' in trade_dict:
             fee, fee_currency = deserialize_amount(trade_dict['fee'])
         else:
