@@ -56,10 +56,6 @@ def init(directory):
 def list(keyword, type, output):
     "List accounts"
     buchfink_db = BuchfinkDB()
-    assets_sum = {}
-    assets_usd_sum = {}
-    liabilities_sum = {}
-    liabilities_usd_sum = {}
 
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
@@ -236,9 +232,6 @@ def fetch(keyword):
 def report(name, from_, to):
     "Run an ad-hoc report on your data"
 
-    start_ts = datetime.fromisoformat(from_).timestamp()
-    end_ts = datetime.fromisoformat(to).timestamp()
-
     buchfink_db = BuchfinkDB()
 
     result = run_report(buchfink_db, ReportConfig(
@@ -335,7 +328,7 @@ def allowances():
     currency = buchfink_db.get_main_currency()
     currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
 
-    result = accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [])
+    accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [])
     total_usd = FVal(0)
     table = []
     for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
