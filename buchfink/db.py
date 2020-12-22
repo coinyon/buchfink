@@ -70,6 +70,8 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+PREMIUM_ONLY_ETH_MODULES = ['adex']
+
 
 class BuchfinkDB(DBHandler):
     """
@@ -228,6 +230,13 @@ class BuchfinkDB(DBHandler):
         else:
             raise ValueError('Unable to create chain manager for account')
 
+        premium = False  # TODO allow premium key in config file
+        eth_modules = self.get_settings().active_modules
+        if not premium:
+            eth_modules = [mod for mod in eth_modules if mod not in PREMIUM_ONLY_ETH_MODULES]
+
+        logger.debug('Creating ChainManager with modules: %s', eth_modules)
+
         return ChainManager(
             database=self,
             blockchain_accounts=accounts,
@@ -236,8 +245,8 @@ class BuchfinkDB(DBHandler):
             ethereum_manager=self.ethereum_manager,
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
-            premium=False,
-            eth_modules=self.get_settings().active_modules
+            premium=premium,
+            eth_modules=eth_modules
         )
 
     def get_eth2_deposits(
