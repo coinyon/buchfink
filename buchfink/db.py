@@ -244,6 +244,7 @@ class BuchfinkDB(DBHandler):
             data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
             msg_aggregator=self.msg_aggregator,
+            btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
             premium=premium,
             eth_modules=eth_modules
