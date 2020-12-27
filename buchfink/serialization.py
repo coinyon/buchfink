@@ -1,13 +1,10 @@
-import logging
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, List, Optional, Tuple, Union
 
 import dateutil.parser
-import yaml
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType, AMMTrade
-from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
+from buchfink.datatypes import AMMTrade, Asset, FVal, Trade, TradeType
 
 
 def serialize_timestamp(timestamp: int) -> str:
