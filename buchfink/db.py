@@ -1,4 +1,6 @@
 import logging
+import operator
+from functools import reduce
 import os.path
 from datetime import date, datetime
 from pathlib import Path
@@ -50,8 +52,9 @@ from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 Location, Timestamp, TradeType)
 from rotkehlchen.user_messages import MessagesAggregator
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
-from buchfink.serialization import deserialize_trade
+from buchfink.datatypes import (Asset, Balance, BalanceSheet, FVal, Trade,
+                                TradeType)
+from buchfink.serialization import deserialize_trade, serialize_balance
 
 from .account import Account, accounts_from_config
 from .config import ReportConfig
@@ -91,9 +94,11 @@ class BuchfinkDB(DBHandler):
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
         self.cache_directory = self.data_directory / "cache"
+        self.balances_directory = self.data_directory / "balances"
 
         self.reports_directory.mkdir(exist_ok=True)
         self.trades_directory.mkdir(exist_ok=True)
+        self.balances_directory.mkdir(exist_ok=True)
         self.cache_directory.mkdir(exist_ok=True)
         (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
         (self.cache_directory / 'history').mkdir(exist_ok=True)
@@ -343,6 +348,111 @@ class BuchfinkDB(DBHandler):
 
     def save_tokens_for_address(self, address, tokens):
         pass
+
+    def query_balances(self, account) -> BalanceSheet:
+        if account.account_type == "exchange":
+            exchange = self.get_exchange(account.name)
+
+            api_key_is_valid, error = exchange.validate_api_key()
+
+            if not api_key_is_valid:
+                raise RuntimeError(error)
+
+            balances, error = exchange.query_balances()
+
+            if not error:
+                logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account.name)
+                assets = {
+                    asset: Balance(
+                        amount=bal['amount'],
+                        usd_value=bal.get('usd_value')
+                    )
+                    for asset, bal in balances.items()
+                }
+                return BalanceSheet(assets=assets, liabilities={})
+
+            raise RuntimeError(error)
+
+        elif account.account_type == "ethereum":
+            manager = self.get_chain_manager(account)
+            manager.query_balances()
+
+            return reduce(operator.add, manager.balances.eth.values())
+
+        elif account.account_type == "bitcoin":
+            manager = self.get_chain_manager(account)
+            manager.query_balances()
+            btc = Asset('BTC')
+
+            return BalanceSheet(assets={
+                btc: reduce(operator.add, manager.balances.btc.values())
+            }, liabilities={})
+
+        elif account.account_type == "file":
+            return self.get_balances_from_file(account.config['file'])
+
+    def get_balances(self, account) -> BalanceSheet:
+        path = self.balances_directory / (account.name + '.yaml')
+        if path.exists():
+            return self.get_balances_from_file(path)
+        else:
+            return BalanceSheet(assets={}, liabilities={})
+
+    def get_balances_from_file(self, path) -> BalanceSheet:
+        account = yaml.load(open(path, 'r'), Loader=yaml.SafeLoader)
+        assets = {}  # type: Dict[Asset, Balance]
+        liabilities = {}  # type: Dict[Asset, Balance]
+
+        if 'balances' in account:
+            logger.warning('Found deprecated key "balances", please use "assets" instead.')
+            for balance in account['balances']:
+                amount = FVal(balance['amount'])
+                asset = Asset(balance['asset'])
+                usd_value = amount * self.inquirer.find_usd_price(asset)
+                balance = Balance(amount=amount, usd_value=usd_value)
+                if asset in assets:
+                    assets[asset] += balance
+                else:
+                    assets[asset] = balance
+
+        if 'assets' in account:
+            for balance in account['assets']:
+                amount = FVal(balance['amount'])
+                asset = Asset(balance['asset'])
+                usd_value = amount * self.inquirer.find_usd_price(asset)
+                balance = Balance(amount=amount, usd_value=usd_value)
+                if asset in assets:
+                    assets[asset] += balance
+                else:
+                    assets[asset] = balance
+
+        if 'liabilities' in account:
+            for balance in account['liabilities']:
+                amount = FVal(balance['amount'])
+                asset = Asset(balance['asset'])
+                usd_value = amount * self.inquirer.find_usd_price(asset)
+                balance = Balance(amount=amount, usd_value=usd_value)
+                if asset in liabilities:
+                    liabilities[asset] += balance
+                else:
+                    liabilities[asset] = balance
+
+        return BalanceSheet(assets=assets, liabilities=liabilities)
+
+    def write_balances(self, account: Account, balances: BalanceSheet):
+        path = self.balances_directory / (account.name + '.yaml')
+
+        with path.open('w') as balances_file:
+            yaml.dump({
+                'assets': [
+                    serialize_balance(bal, asset)
+                    for asset, bal in balances.assets.items()
+                ],
+                'liabilities': [
+                    serialize_balance(bal, asset)
+                    for asset, bal in balances.liabilities.items()
+                ]
+            }, stream=balances_file)
 
     def get_amm_swaps(
             self,

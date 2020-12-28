@@ -2,6 +2,7 @@ master
 ------
 
 * Add "buchfink trades" command to list/filter trades
+* "buchfink balances" will now save balances to local file
 
 0.0.5
 ------

@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Tuple, Union
 
 import dateutil.parser
 
-from buchfink.datatypes import AMMTrade, Asset, FVal, Trade, TradeType
+from buchfink.datatypes import AMMTrade, Asset, Balance, FVal, Trade, TradeType
 
 
 def serialize_timestamp(timestamp: int) -> str:
@@ -65,6 +65,13 @@ QUANT_DECIMAL = Decimal('0.00000000000001')
 
 def serialize_amount(amount: FVal, asset: Asset) -> str:
     return str(amount.num.quantize(QUANT_DECIMAL)).rstrip('0').rstrip('.') + ' ' + str(asset.symbol)
+
+
+def serialize_balance(balance: Balance, asset: Asset) -> dict:
+    return {
+        'amount': str(balance.amount.num.quantize(QUANT_DECIMAL)).rstrip('0').rstrip('.'),
+        'asset': asset.symbol
+    }
 
 
 def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:

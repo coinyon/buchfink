@@ -1,3 +1,4 @@
+from rotkehlchen.accounting.structures import Balance, BalanceSheet
 from rotkehlchen.assets.asset import Asset
 from rotkehlchen.chain.ethereum.uniswap.typing import AMMTrade
 from rotkehlchen.exchanges.data_structures import Trade
