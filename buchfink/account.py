@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Dict, Optional, Union
 from typing_extensions import Literal
 
@@ -29,7 +28,12 @@ def account_from_config(config_account):
         address = None
     else:
         raise ValueError("Invalid account")
-    return Account(name=config_account["name"], account_type=account_type, address=address, config=config_account)
+    return Account(
+        name=config_account["name"],
+        account_type=account_type,
+        address=address,
+        config=config_account
+    )
 
 
 def accounts_from_config(config):

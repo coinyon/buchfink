@@ -1,8 +1,8 @@
 import logging
 import operator
-from functools import reduce
 import os.path
 from datetime import date, datetime
+from functools import reduce
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -38,7 +38,6 @@ from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
-from rotkehlchen.fval import FVal
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history import PriceHistorian, TradesHistorian
 from rotkehlchen.inquirer import Inquirer
@@ -49,7 +48,7 @@ from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
 from rotkehlchen.premium.sync import PremiumSyncManager
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
-                                Location, Timestamp, TradeType)
+                                Location, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (Asset, Balance, BalanceSheet, FVal, Trade,

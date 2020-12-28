@@ -24,40 +24,40 @@ def deserialize_trade(trade_dict) -> Trade:
             deserialize_asset(trade_dict['fee_currency']),
             trade_dict['link']
         )
+
+    if 'buy' in trade_dict:
+        trade_type = TradeType.BUY
+        amount, base_asset = deserialize_amount(trade_dict['buy'])
+    elif 'sell' in trade_dict:
+        trade_type = TradeType.SELL
+        amount, base_asset = deserialize_amount(trade_dict['sell'])
     else:
-        if 'buy' in trade_dict:
-            trade_type = TradeType.BUY
-            amount, base_asset = deserialize_amount(trade_dict['buy'])
-        elif 'sell' in trade_dict:
-            trade_type = TradeType.SELL
-            amount, base_asset = deserialize_amount(trade_dict['sell'])
-        else:
-            raise ValueError('Invalid trade: ' + str(trade_dict))
+        raise ValueError('Invalid trade: ' + str(trade_dict))
 
-        quote_amount, quote_asset = deserialize_amount(trade_dict['for'])
+    quote_amount, quote_asset = deserialize_amount(trade_dict['for'])
 
-        if base_asset is None:
-            raise ValueError('No base asset provided')
+    if base_asset is None:
+        raise ValueError('No base asset provided')
 
-        if quote_asset is None:
-            raise ValueError('No quote asset provided')
+    if quote_asset is None:
+        raise ValueError('No quote asset provided')
 
-        if 'fee' in trade_dict:
-            fee, fee_currency = deserialize_amount(trade_dict['fee'])
-        else:
-            fee, fee_currency = FVal('0'), quote_asset
+    if 'fee' in trade_dict:
+        fee, fee_currency = deserialize_amount(trade_dict['fee'])
+    else:
+        fee, fee_currency = FVal('0'), quote_asset
 
-        return Trade(
-            dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
-            trade_dict.get('location', ''),
-            '{0}_{1}'.format(base_asset.symbol, quote_asset.symbol),
-            trade_type,
-            amount,
-            quote_amount / amount,
-            fee,
-            fee_currency,
-            trade_dict.get('link', '')
-        )
+    return Trade(
+        dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
+        trade_dict.get('location', ''),
+        '{0}_{1}'.format(base_asset.symbol, quote_asset.symbol),
+        trade_type,
+        amount,
+        quote_amount / amount,
+        fee,
+        fee_currency,
+        trade_dict.get('link', '')
+    )
 
 
 QUANT_DECIMAL = Decimal('0.00000000000001')
@@ -119,10 +119,11 @@ def serialize_trades(trades: List[Trade]) -> List[Any]:
 def deserialize_tradetype(trade_type: str) -> TradeType:
     if trade_type == "sell":
         return TradeType.SELL
-    elif trade_type == "buy":
+
+    if trade_type == "buy":
         return TradeType.BUY
-    else:
-        raise ValueError(trade_type)
+
+    raise ValueError(trade_type)
 
 
 def deserialize_fval(val: str) -> FVal:

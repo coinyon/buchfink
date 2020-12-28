@@ -41,7 +41,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install .
           pip install pytest mypy==0.790
-      - name: Typecheck
-        run: mypy buchfink
+      - name: Typecheck & Lint
+        run: make lint typecheck
       - name: Test with pytest
         run: pytest -vv
