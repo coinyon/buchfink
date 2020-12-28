@@ -135,15 +135,18 @@ Note: This is exactly the same serialization format that the `fetch` command
 generates for your exchanges trades. So you can easily amend missing trades by
 copy and pasting and changing the relevant lines.
 
-The manual account YAML file can also contain balances that will be respected
-by the `buchfink balances` command:
+The manual account YAML file can also contain assets or liablities that will be
+respected by the `buchfink balances` command:
 
 ```yaml
-balances:
+assets:
 - amount: 0.5
   asset: ETH
 - amount: 10
   asset: KNC
+liablities:
+- amount: 100
+  asset: DAI
 ```
 
 ### Settings
