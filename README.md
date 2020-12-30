@@ -103,8 +103,9 @@ accounts:
   ...
 ```
 
-Note: Currently, Buchfink and Rotki will not yet fetch your DEX trades, but
-they will be able to in the future.
+Buchfink is able to fetch the account balances for blockchain accounts and
+supports a variety of Ethereum protocols (see Rotki for more information).
+On-chain trades are also supported for some protocols (e.g. Uniswap).
 
 ### Add manual accounts
 
