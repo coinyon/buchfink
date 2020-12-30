@@ -1,8 +1,9 @@
-master
-------
+0.0.6
+-----
 
 * Add "buchfink trades" command to list/filter trades
-* "buchfink balances" will now save balances to local file
+* "buchfink balances" will now save balances to local files
+* Allow cryptocompare API key credential
 
 0.0.5
 ------
