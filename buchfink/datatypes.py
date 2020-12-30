@@ -1,3 +1,4 @@
+# pylint: disable=unused-import
 from rotkehlchen.accounting.structures import Balance, BalanceSheet
 from rotkehlchen.assets.asset import Asset
 from rotkehlchen.chain.ethereum.uniswap.typing import AMMTrade
