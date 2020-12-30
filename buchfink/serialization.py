@@ -63,13 +63,21 @@ def deserialize_trade(trade_dict) -> Trade:
 QUANT_DECIMAL = Decimal('0.00000000000001')
 
 
+def serialize_decimal(dec: Decimal) -> str:
+    'return a nice, non-scientific, non-trailing-zero number representation'
+    ser_amount = str(dec.quantize(QUANT_DECIMAL))
+    if 'E' in ser_amount or 'e' in ser_amount:
+        ser_amount = '{0:.14f}'.format(float(dec))
+    return ser_amount.rstrip('0').rstrip('.')
+
+
 def serialize_amount(amount: FVal, asset: Asset) -> str:
-    return str(amount.num.quantize(QUANT_DECIMAL)).rstrip('0').rstrip('.') + ' ' + str(asset.symbol)
+    return '{0} {1}'.format(serialize_decimal(amount.num), str(asset.symbol))
 
 
 def serialize_balance(balance: Balance, asset: Asset) -> dict:
     return {
-        'amount': str(balance.amount.num.quantize(QUANT_DECIMAL)).rstrip('0').rstrip('.'),
+        'amount': serialize_decimal(balance.amount.num),
         'asset': asset.symbol
     }
 

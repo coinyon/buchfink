@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 import pytest
+from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
 from buchfink.datatypes import Asset, FVal, Trade, TradeType
-from buchfink.serialization import deserialize_trade, serialize_trade
-from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
+from buchfink.serialization import (deserialize_trade, serialize_decimal, serialize_trade)
 
 
 @pytest.fixture
@@ -32,6 +33,11 @@ def test_trade_serialization(dummy_trade):
     trade = deserialize_trade(ser_trade)
 
     assert dummy_trade == trade
+
+
+def test_trade_serialization(dummy_trade):
+    assert serialize_decimal(Decimal('1234.234e-10')) == '0.0000001234234'
+    assert serialize_decimal(Decimal('1234.23410')) == '1234.2341'
 
 
 def test_trade_deserialization_with_fee(dummy_trade):
