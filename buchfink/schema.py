@@ -37,7 +37,8 @@ settings_schema = Schema({
   'include_gas_costs': bool,
   'include_crypto2crypto': bool,
   'external_services': {
-    'etherscan': str
+    'etherscan': str,
+    'cryptocompare': str
   }
 })
 
