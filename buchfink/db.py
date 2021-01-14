@@ -102,10 +102,11 @@ class BuchfinkDB(DBHandler):
         (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
         (self.cache_directory / 'history').mkdir(exist_ok=True)
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
+        (self.cache_directory / 'coingecko').mkdir(exist_ok=True)
 
         self._amm_swaps = []  # type: List[AMMSwap]
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
-        self.coingecko = Coingecko()
+        self.coingecko = Coingecko(self.cache_directory / 'coingecko')
         self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2014', self.cryptocompare)
         self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare, self.coingecko)
         self.msg_aggregator = MessagesAggregator()
@@ -474,6 +475,9 @@ class BuchfinkDB(DBHandler):
 
     def get_used_query_range(self, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
         return None
+
+    def get_ignored_action_ids(self) -> List[str]:
+        return []
 
     def add_ethereum_transactions(
             self,
