@@ -195,6 +195,11 @@ def fetch(keyword):
         with open("trades/" + name + ".yaml", "w") as f:
             yaml.dump({"trades": serialize_trades(trades)}, stream=f)
 
+        sheet = buchfink_db.query_balances(account)
+        buchfink_db.write_balances(account, sheet)
+
+        logger.info('Fetched balances from %s', name)
+
 
 @buchfink.command()
 @click.option('--name', '-n', type=str, required=True)
