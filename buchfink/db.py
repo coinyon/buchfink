@@ -51,8 +51,8 @@ from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 Location, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
-from buchfink.datatypes import (Asset, Balance, BalanceSheet, FVal, Trade,
-                                TradeType)
+from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet, FVal,
+                                Trade, TradeType)
 from buchfink.serialization import deserialize_trade, serialize_balance
 
 from .account import Account, accounts_from_config
@@ -476,8 +476,11 @@ class BuchfinkDB(DBHandler):
     def get_used_query_range(self, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
         return None
 
-    def get_ignored_action_ids(self) -> List[str]:
-        return []
+    def get_ignored_action_ids(
+            self,
+            action_type: Optional[ActionType],
+            ) -> Dict[ActionType, List[str]]:
+        return {}
 
     def add_ethereum_transactions(
             self,
