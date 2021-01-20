@@ -1,0 +1,5 @@
+accounts:
+  - name: whale
+    ethereum: '0xD57479B8287666B44978255F1677E412d454d4f0'
+
+settings: {}
