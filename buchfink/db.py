@@ -39,7 +39,7 @@ from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.greenlets import GreenletManager
-from rotkehlchen.history import PriceHistorian, TradesHistorian
+from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.logging import (DEFAULT_ANONYMIZED_LOGS, LoggingSettings,
                                  RotkehlchenLogsAdapter)
@@ -137,13 +137,6 @@ class BuchfinkDB(DBHandler):
         #self.ethereum_analyzer = EthereumAnalyzer(
         #    ethereum_manager=self.ethereum_manager,
         #    database=self,
-        #)
-        #self.trades_historian = TradesHistorian(
-        #    user_directory=self.cache_directory,
-        #    db=self,
-        #    msg_aggregator=self.msg_aggregator,
-        #    exchange_manager=None,
-        #    chain_manager=self.chain_manager,
         #)
 
     def __del__(self):
