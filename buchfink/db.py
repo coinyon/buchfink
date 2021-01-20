@@ -196,7 +196,7 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, None, self.msg_aggregator, True)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
-        return BlockchainAccounts(eth=[], btc=[])
+        return BlockchainAccounts(eth=[], btc=[], ksm=[])
 
     def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
 
@@ -229,9 +229,9 @@ class BuchfinkDB(DBHandler):
 
     def get_chain_manager(self, account: Account) -> ChainManager:
         if account.account_type == "ethereum":
-            accounts = BlockchainAccounts(eth=[account.address], btc=[])
+            accounts = BlockchainAccounts(eth=[account.address], btc=[], ksm=[])
         elif account.account_type == "bitcoin":
-            accounts = BlockchainAccounts(eth=[], btc=[account.address])
+            accounts = BlockchainAccounts(eth=[], btc=[account.address], ksm=[])
         else:
             raise ValueError('Unable to create chain manager for account')
 
@@ -248,6 +248,7 @@ class BuchfinkDB(DBHandler):
             beaconchain=self.beaconchain,
             data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
+            kusama_manager=None,
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
