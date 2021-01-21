@@ -356,14 +356,7 @@ class BuchfinkDB(DBHandler):
 
             if not error:
                 logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account.name)
-                assets = {
-                    asset: Balance(
-                        amount=bal['amount'],
-                        usd_value=bal.get('usd_value')
-                    )
-                    for asset, bal in balances.items()
-                }
-                return BalanceSheet(assets=assets, liabilities={})
+                return BalanceSheet(assets=balances, liabilities={})
 
             raise RuntimeError(error)
 
