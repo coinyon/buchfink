@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 
@@ -50,7 +50,7 @@ def deserialize_trade(trade_dict) -> Trade:
     return Trade(
         dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
         trade_dict.get('location', ''),
-        '{0}_{1}'.format(base_asset.symbol, quote_asset.symbol),
+        '{0}_{1}'.format(base_asset.identifier, quote_asset.identifier),
         trade_type,
         amount,
         quote_amount / amount,
@@ -72,14 +72,23 @@ def serialize_decimal(dec: Decimal) -> str:
 
 
 def serialize_amount(amount: FVal, asset: Asset) -> str:
-    return '{0} {1}'.format(serialize_decimal(amount.num), str(asset.symbol))
+    return '{0} {1}'.format(serialize_decimal(amount.num), str(asset.identifier))
 
 
 def serialize_balance(balance: Balance, asset: Asset) -> dict:
     return {
         'amount': serialize_decimal(balance.amount.num),
-        'asset': asset.symbol
+        'asset': asset.identifier
     }
+
+
+def deserialize_balance(balance: Dict[str, Any], inquirer: Optional[Any] = None) -> Tuple[Balance, Asset]:
+    amount = FVal(balance['amount'])
+    asset = Asset(balance['asset'])
+    if inquirer:
+        usd_value = amount * inquirer.find_usd_price(asset)
+        return Balance(amount, usd_value), asset
+    return Balance(amount), asset
 
 
 def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:

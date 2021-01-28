@@ -4,8 +4,9 @@ from decimal import Decimal
 import pytest
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType
-from buchfink.serialization import (deserialize_trade, serialize_decimal, serialize_trade)
+from buchfink.datatypes import Asset, FVal, Trade, TradeType, Balance
+from buchfink.serialization import (deserialize_balance, deserialize_trade, serialize_balance, serialize_decimal,
+                                    serialize_trade)
 
 
 @pytest.fixture
@@ -66,3 +67,17 @@ def test_datetime_deserialization():
     assert dt.year == 2020
     assert dt.month == 5
     assert dt.day == 5
+
+
+def test_serialize_deserialize_balance():
+    bal = serialize_balance(Balance(FVal('0.5')), Asset('ETH'))
+    balance, asset = deserialize_balance(bal)
+    assert str(balance.amount) == '0.5'
+    assert asset == Asset('ETH')
+
+
+def test_serialize_deserialize_balance_secondary():
+    bal = serialize_balance(Balance(FVal('1.5')), Asset('SDT-2'))
+    balance, asset = deserialize_balance(bal)
+    assert str(balance.amount) == '1.5'
+    assert asset == Asset('SDT-2')

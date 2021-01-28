@@ -53,7 +53,7 @@ from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet, FVal,
                                 Trade, TradeType)
-from buchfink.serialization import deserialize_trade, serialize_balance
+from buchfink.serialization import deserialize_balance, deserialize_trade, serialize_balance
 
 from .account import Account, accounts_from_config
 from .config import ReportConfig
@@ -393,10 +393,7 @@ class BuchfinkDB(DBHandler):
         if 'balances' in account:
             logger.warning('Found deprecated key "balances", please use "assets" instead.')
             for balance in account['balances']:
-                amount = FVal(balance['amount'])
-                asset = Asset(balance['asset'])
-                usd_value = amount * self.inquirer.find_usd_price(asset)
-                balance = Balance(amount=amount, usd_value=usd_value)
+                balance, asset = deserialize_balance(balance, inquirer=self.inquirer)
                 if asset in assets:
                     assets[asset] += balance
                 else:
@@ -404,10 +401,7 @@ class BuchfinkDB(DBHandler):
 
         if 'assets' in account:
             for balance in account['assets']:
-                amount = FVal(balance['amount'])
-                asset = Asset(balance['asset'])
-                usd_value = amount * self.inquirer.find_usd_price(asset)
-                balance = Balance(amount=amount, usd_value=usd_value)
+                balance, asset = deserialize_balance(balance, inquirer=self.inquirer)
                 if asset in assets:
                     assets[asset] += balance
                 else:
@@ -415,10 +409,7 @@ class BuchfinkDB(DBHandler):
 
         if 'liabilities' in account:
             for balance in account['liabilities']:
-                amount = FVal(balance['amount'])
-                asset = Asset(balance['asset'])
-                usd_value = amount * self.inquirer.find_usd_price(asset)
-                balance = Balance(amount=amount, usd_value=usd_value)
+                balance, asset = deserialize_balance(balance, inquirer=self.inquirer)
                 if asset in liabilities:
                     liabilities[asset] += balance
                 else:
