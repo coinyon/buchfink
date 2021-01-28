@@ -124,6 +124,7 @@ class BuchfinkDB(DBHandler):
             connect_at_start=[]
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
+        self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
         #self.chain_manager = ChainManager(
         #    blockchain_accounts=[],
