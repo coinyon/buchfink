@@ -22,7 +22,7 @@ jobs:
           then
             sudo apt-get update
             sudo apt-get install libxml2-utils wget
-            wget -q https://raw.githubusercontent.com/coinyon/rotki/develop/install_deps.sh -O install_deps.sh
+            wget -q https://raw.githubusercontent.com/rotki/rotki/develop/install_deps.sh -O install_deps.sh
             chmod u+x install_deps.sh
             ./install_deps.sh
             rm install_deps.sh
