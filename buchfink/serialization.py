@@ -82,7 +82,8 @@ def serialize_balance(balance: Balance, asset: Asset) -> dict:
     }
 
 
-def deserialize_balance(balance: Dict[str, Any], inquirer: Optional[Any] = None) -> Tuple[Balance, Asset]:
+def deserialize_balance(balance: Dict[str, Any], inquirer: Optional[Any] = None) \
+        -> Tuple[Balance, Asset]:
     amount = FVal(balance['amount'])
     asset = Asset(balance['asset'])
     if inquirer:
