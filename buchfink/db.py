@@ -89,6 +89,7 @@ class BuchfinkDB(DBHandler):
         yaml_config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
         self.config = config_schema(yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
+        self._active_eth_address = None # type: Optional[ChecksumEthAddress]
 
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
@@ -107,7 +108,7 @@ class BuchfinkDB(DBHandler):
         self._amm_swaps = []  # type: List[AMMSwap]
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko(self.cache_directory / 'coingecko')
-        self.historian = PriceHistorian(self.cache_directory / 'history', '01/01/2014', self.cryptocompare)
+        self.historian = PriceHistorian(self.cache_directory / 'history', self.cryptocompare, self.coingecko)
         self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare, self.coingecko)
         self.msg_aggregator = MessagesAggregator()
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
@@ -125,6 +126,7 @@ class BuchfinkDB(DBHandler):
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
+        self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
         #self.chain_manager = ChainManager(
         #    blockchain_accounts=[],
@@ -190,7 +192,10 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, None, self.msg_aggregator, True)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
-        return BlockchainAccounts(eth=[], btc=[], ksm=[])
+        if self._active_eth_address:
+            return BlockchainAccounts(eth=[self._active_eth_address], btc=[], ksm=[])
+        else:
+            return BlockchainAccounts(eth=[], btc=[], ksm=[])
 
     def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
 
@@ -363,7 +368,13 @@ class BuchfinkDB(DBHandler):
 
         elif account.account_type == "ethereum":
             manager = self.get_chain_manager(account)
+
+            # This is a little hack because query_balances sometimes hooks back
+            # into out get_blockchain_accounts() without providing context (for
+            # example from makerdao module).
+            self._active_eth_address = account.address
             manager.query_balances()
+            self._active_eth_address = None
 
             return reduce(operator.add, manager.balances.eth.values())
 
