@@ -1,19 +1,19 @@
 import logging
-from typing import List
 import os.path
 import shutil
-from datetime import date, datetime
-from operator import itemgetter, attrgetter
-from pathlib import Path
+from datetime import datetime
+from operator import attrgetter, itemgetter
+from typing import List
 
 import click
 import coloredlogs
-from tabulate import tabulate
 import yaml
+from rotkehlchen.constants import ZERO
+from tabulate import tabulate
 
 from buchfink.datatypes import Asset, FVal, Trade
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import deserialize_trade, serialize_trades, serialize_timestamp
+from buchfink.serialization import serialize_timestamp, serialize_trades
 
 from .config import ReportConfig
 from .report import run_report
@@ -46,14 +46,18 @@ def init(directory):
 
     buchfink_db = BuchfinkDB(directory)
 
-    click.echo(click.style('Successfully initialized in {0}.'.format(buchfink_db.data_directory.absolute()), fg='green'))
+    click.echo(
+        click.style('Successfully initialized in {0}.'.format(
+                buchfink_db.data_directory.absolute()
+            ), fg='green')
+    )
 
 
-@buchfink.command()
+@buchfink.command('list')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-@click.option('--type', '-t', type=str, default=None, help='Filter by account type')
+@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @click.option('--output', '-o', type=str, default=None, help='Output field')
-def list(keyword, type, output):
+def list_(keyword, account_type, output):
     "List accounts"
     buchfink_db = BuchfinkDB()
 
@@ -61,11 +65,14 @@ def list(keyword, type, output):
         if keyword is not None and keyword not in account.name:
             continue
 
-        if type is not None and type not in account.account_type:
+        if account_type is not None and account_type not in account.account_type:
             continue
 
         if output is None:
-            type_and_name = '{0}: {1}'.format(account.account_type, click.style(account.name, fg='green'))
+            type_and_name = '{0}: {1}'.format(
+                    account.account_type,
+                    click.style(account.name, fg='green')
+            )
             address = ' ({0})'.format(account.address) if account.address is not None else ''
             click.echo(type_and_name + address)
         else:
@@ -75,7 +82,13 @@ def list(keyword, type, output):
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--fetch/--no-fetch', default=True, help='Fetch balances from sources')
-@click.option('--minimum-balance', '-m', type=float, default=0.0, help='Hide balances smaller than this amount (default 0)')
+@click.option(
+        '--minimum-balance',
+        '-m',
+        type=float,
+        default=0.0,
+        help='Hide balances smaller than this amount (default 0)'
+)
 def balances(keyword, minimum_balance, fetch):
     "Show balances across all accounts"
 
@@ -90,12 +103,8 @@ def balances(keyword, minimum_balance, fetch):
             continue
 
         if fetch:
-            try:
-                sheet = buchfink_db.query_balances(account)
-                buchfink_db.write_balances(account, sheet)
-            except Exception:
-                logger.exception('Skipping account "{0}" because of the following error'.format(account.name))
-                continue
+            sheet = buchfink_db.query_balances(account)
+            buchfink_db.write_balances(account, sheet)
         else:
             sheet = buchfink_db.get_balances(account)
 
@@ -106,11 +115,9 @@ def balances(keyword, minimum_balance, fetch):
 
         for liability, balance in sheet.liabilities.items():
             amount = balance.amount
-            liabilities_sum[liability] = liabilities_sum.get(asset, FVal(0)) + amount
-            liabilities_usd_sum[liability] = liabilities_usd_sum.get(asset, FVal(0)) + balance.usd_value
-
-
-
+            liabilities_sum[liability] = liabilities_sum.get(liability, FVal(0)) + amount
+            liabilities_usd_sum[liability] = liabilities_usd_sum.get(liability, FVal(0)) \
+                    + balance.usd_value
 
     currency = buchfink_db.get_main_currency()
     currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
@@ -118,7 +125,6 @@ def balances(keyword, minimum_balance, fetch):
     table = []
     assets = [obj[0] for obj in sorted(assets_usd_sum.items(), key=itemgetter(1), reverse=True)]
     balance_in_currency_sum = 0
-    ZERO = FVal(0)
 
     for asset in assets:
         balance = assets_sum[asset]
@@ -127,12 +133,21 @@ def balances(keyword, minimum_balance, fetch):
             balance_in_currency_sum += balance_in_currency
             table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
     table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
-    print(tabulate(table, headers=['Asset', 'Amount', 'Symbol', 'Fiat Value (%s)' % currency.symbol]))
+    print(tabulate(table, headers=[
+        'Asset',
+        'Amount',
+        'Symbol',
+        'Fiat Value (%s)' % currency.symbol
+    ]))
 
     if liabilities_sum:
         table = []
         balance_in_currency_sum = 0
-        assets = [obj[0] for obj in sorted(liabilities_usd_sum.items(), key=itemgetter(1), reverse=True)]
+        assets = [
+                obj[0]
+                for obj
+                in sorted(liabilities_usd_sum.items(), key=itemgetter(1), reverse=True)
+        ]
         for asset in assets:
             balance = liabilities_sum[asset]
             balance_in_currency = liabilities_usd_sum.get(asset, FVal(0)) / currency_in_usd
@@ -141,12 +156,17 @@ def balances(keyword, minimum_balance, fetch):
                 table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
         print()
-        print(tabulate(table, headers=['Liability', 'Amount', 'Symbol', 'Fiat Value (%s)' % currency.symbol]))
+        print(tabulate(table, headers=[
+            'Liability',
+            'Amount',
+            'Symbol',
+            'Fiat Value (%s)' % currency.symbol
+        ]))
 
 
-@buchfink.command()
+@buchfink.command('fetch')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-def fetch(keyword):
+def fetch_(keyword):
     "Fetch trades for configured accounts"
 
     buchfink_db = BuchfinkDB()
@@ -178,7 +198,11 @@ def fetch(keyword):
             api_key_is_valid, error = exchange.validate_api_key()
 
             if not api_key_is_valid:
-                logger.critical('Skipping exchange %s because API key is not valid (%s)', account.name, error)
+                logger.critical(
+                        'Skipping exchange %s because API key is not valid (%s)',
+                        account.name,
+                        error
+                )
                 continue
 
             trades = exchange.query_online_trade_history(
@@ -192,8 +216,8 @@ def fetch(keyword):
 
         logger.info('Fetched %d trades from %s', len(trades), name)
 
-        with open("trades/" + name + ".yaml", "w") as f:
-            yaml.dump({"trades": serialize_trades(trades)}, stream=f)
+        with open("trades/" + name + ".yaml", "w") as yaml_file:
+            yaml.dump({"trades": serialize_trades(trades)}, stream=yaml_file)
 
         sheet = buchfink_db.query_balances(account)
         buchfink_db.write_balances(account, sheet)
@@ -201,33 +225,33 @@ def fetch(keyword):
         logger.info('Fetched balances from %s', name)
 
 
-@buchfink.command()
+@buchfink.command('report')
 @click.option('--name', '-n', type=str, required=True)
-@click.option('--from', '-f', 'from_', type=str, required=True)
-@click.option('--to', '-t', type=str, required=True)
-def report(name, from_, to):
+@click.option('--from', '-f', 'from_date', type=str, required=True)
+@click.option('--to', '-t', 'to_date', type=str, required=True)
+def report_(name, from_date, to_date):
     "Run an ad-hoc report on your data"
 
     buchfink_db = BuchfinkDB()
 
     result = run_report(buchfink_db, ReportConfig(
         name=name,
-        from_dt=datetime.fromisoformat(from_),
-        to_dt=datetime.fromisoformat(to)
+        from_dt=datetime.fromisoformat(from_date),
+        to_dt=datetime.fromisoformat(to_date)
     ))
 
     logger.info("Overview: %s", result['overview'])
 
 
-@buchfink.command()
+@buchfink.command('trades')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
-def trades(keyword, asset):
+def trades_(keyword, asset):
     "Show trades"
 
     buchfink_db = BuchfinkDB()
 
-    trades = []  # List[Trade]
+    trades: List[Trade] = []
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
             continue
@@ -236,7 +260,7 @@ def trades(keyword, asset):
 
     if asset is not None:
         the_asset = Asset(asset)
-        trades = [trade for trade in trades if trade.base_asset == the_asset or trade.quote_asset == the_asset]
+        trades = [trade for trade in trades if the_asset in (trade.base_asset, trade.quote_asset)]
 
     trades = sorted(trades, key=attrgetter('timestamp'))
 
@@ -252,7 +276,15 @@ def trades(keyword, asset):
                 str(trade.quote_asset.symbol),
                 str(trade.rate),
             ])
-        print(tabulate(table, headers=['Time', 'Type', 'Amount', 'Quote Asset', 'Amount', 'Base Asset', 'Rate']))
+        print(tabulate(table, headers=[
+            'Time',
+            'Type',
+            'Amount',
+            'Quote Asset',
+            'Amount',
+            'Base Asset',
+            'Rate'
+        ]))
 
 
 @buchfink.command()
@@ -304,7 +336,7 @@ def allowances():
     currency = buchfink_db.get_main_currency()
     currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
 
-    accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [])
+    accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [], [])
     total_usd = FVal(0)
     table = []
     for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
@@ -328,4 +360,4 @@ def allowances():
 
 
 if __name__ == '__main__':
-    buchfink()
+    buchfink()  # pylint: disable=no-value-for-parameter
