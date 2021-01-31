@@ -1,0 +1,14 @@
+accounts:
+  - name: account1
+    file: account1.yaml
+
+reports:
+  - name: all
+    from: "2015-01-01"
+    to: "2020-06-30"
+
+settings:
+  main_currency: USD
+  taxfree_after_period: 31536000
+  include_gas_costs: True
+  include_crypto2crypto: True

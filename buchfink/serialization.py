@@ -4,11 +4,32 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 
-from buchfink.datatypes import AMMTrade, Asset, Balance, FVal, Trade, TradeType
+from buchfink.datatypes import (AMMTrade, Asset, Balance, FVal, LedgerAction,
+                                LedgerActionType, Trade, TradeType)
 
 
 def serialize_timestamp(timestamp: int) -> str:
     return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
+
+
+def deserialize_timestamp(timestamp: str) -> int:
+    return int(datetime.fromisoformat(timestamp).timestamp())
+
+
+def deserialize_ledger_action(action_dict) -> LedgerAction:
+    if 'income' in action_dict:
+        amount, asset = deserialize_amount(action_dict['income'])
+        return LedgerAction(
+            identifier=None,
+            location='',
+            action_type=LedgerActionType.INCOME,
+            amount=amount,
+            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            asset=asset,
+            notes=action_dict.get('notes', ''),
+            link=action_dict.get('link', '')
+        )
+    raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 
 def deserialize_trade(trade_dict) -> Trade:
