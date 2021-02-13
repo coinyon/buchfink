@@ -191,7 +191,7 @@ class BuchfinkDB(DBHandler):
         return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
     def get_accountant(self) -> Accountant:
-        return Accountant(self, None, self.msg_aggregator, True)
+        return Accountant(self, None, self.msg_aggregator, True, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
         if self._active_eth_address:
