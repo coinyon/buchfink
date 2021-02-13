@@ -1,6 +1,12 @@
 accounts:
-  - name: account1
-    file: account1.yaml
+  - name: acc_airdrop
+    file: acc_airdrop.yaml
+
+  - name: acc_income
+    file: acc_income.yaml
+
+  - name: acc_gift
+    file: acc_gift.yaml
 
 reports:
   - name: all

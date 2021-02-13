@@ -29,6 +29,30 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             notes=action_dict.get('notes', ''),
             link=action_dict.get('link', '')
         )
+    elif 'airdrop' in action_dict:
+        amount, asset = deserialize_amount(action_dict['airdrop'])
+        return LedgerAction(
+            identifier=None,
+            location='',
+            action_type=LedgerActionType.AIRDROP,
+            amount=amount,
+            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            asset=asset,
+            notes=action_dict.get('notes', ''),
+            link=action_dict.get('link', '')
+        )
+    elif 'gift' in action_dict:
+        amount, asset = deserialize_amount(action_dict['gift'])
+        return LedgerAction(
+            identifier=None,
+            location='',
+            action_type=LedgerActionType.GIFT,
+            amount=amount,
+            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            asset=asset,
+            notes=action_dict.get('notes', ''),
+            link=action_dict.get('link', '')
+        )
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 
