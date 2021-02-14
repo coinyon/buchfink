@@ -8,8 +8,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   height="222mm"
+   viewBox="0 0 210 222"
    version="1.1"
    id="svg8"
    inkscape:version="1.0.2 (e86c870879, 2021-01-15)"
@@ -17,29 +17,29 @@
   <defs
      id="defs2">
     <marker
-       style="overflow:visible;"
+       style="overflow:visible"
        id="Arrow2Lend"
-       refX="0.0"
-       refY="0.0"
+       refX="0"
+       refY="0"
        orient="auto"
        inkscape:stockid="Arrow2Lend"
        inkscape:isstock="true">
       <path
-         transform="scale(1.1) rotate(180) translate(1,0)"
-         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.9730900,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
-         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round;stroke:#000000;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
          id="path1154" />
     </marker>
     <rect
-       x="79.303161"
+       x="79.303162"
        y="101.44023"
-       width="99.082107"
-       height="41.696733"
+       width="99.082108"
+       height="41.696732"
        id="rect951" />
     <rect
        x="25.5278"
-       y="49.643426"
-       width="69.816613"
+       y="49.643425"
+       width="69.816612"
        height="20.741663"
        id="rect835" />
     <rect
@@ -81,8 +81,8 @@
     <rect
        x="25.5278"
        y="49.643425"
-       width="78.995961"
-       height="37.222829"
+       width="78.995964"
+       height="37.222828"
        id="rect835-2" />
     <rect
        x="25.5278"
@@ -105,7 +105,7 @@
     <rect
        x="25.5278"
        y="49.643425"
-       width="72.737092"
+       width="72.737091"
        height="19.700821"
        id="rect835-1-7" />
     <rect
@@ -275,8 +275,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.98994949"
-     inkscape:cx="385.2293"
-     inkscape:cy="505.47146"
+     inkscape:cx="472.64149"
+     inkscape:cy="410.82438"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -306,42 +306,42 @@
        xml:space="preserve"
        id="text833"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835);fill:#000000;fill-opacity:1;stroke:none"
-       transform="translate(-4.4645012,27.906911)"><tspan
+       transform="translate(-7.6739447,14.245179)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink.yaml</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-6"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-3);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(70.136643,-19.299533)"><tspan
+       transform="translate(69.128093,-34.389593)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink fetch</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-6-5"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-3-7);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(-17.089102,-20.460176)"><tspan
+       transform="translate(-17.214827,-34.389593)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink init</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-6-56"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-3-3);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(26.09581,145.25831)"><tspan
+       transform="translate(25.569583,130.16825)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink trades -a ETH</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text949"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect951);fill:#000000;fill-opacity:1;stroke:none"
-       transform="translate(-69.780207,70.466632)"><tspan
+       transform="translate(-70.01099,55.376572)"><tspan
          x="79.302734"
          y="107.96585"><tspan>buchfink balances</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-9"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-2);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(88.959069,21.722289)"><tspan
+       transform="translate(88.536403,6.6322293)"><tspan
          x="25.527344"
          y="56.168971"><tspan>Trades/LedgerActions/</tspan></tspan><tspan
          x="25.527344"
@@ -351,14 +351,14 @@
        id="rect1004"
        width="191.2654"
        height="78.604042"
-       x="11.103244"
-       y="58.941792"
+       x="10.680578"
+       y="43.85173"
        ry="11.910867" />
     <text
        xml:space="preserve"
        id="text833-2"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(-4.2360309,41.191344)"><tspan
+       transform="translate(-7.3620887,26.173148)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="font-size:4.23333px">Declarative configuration of </tspan></tspan><tspan
@@ -372,7 +372,7 @@
        xml:space="preserve"
        id="text833-2-0"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(88.737593,41.263208)"><tspan
+       transform="translate(88.314927,26.173148)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7)">Human-readable, YAML-based </tspan></tspan><tspan
@@ -386,24 +386,24 @@
        xml:space="preserve"
        id="text833-6-56-3"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-3-3-9);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(96.985711,119.0294)"><tspan
+       transform="translate(97.956293,103.93934)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink report -n 2021</tspan></tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.230602;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Lend)"
-       d="m 25.184419,52.902349 8.711822,22.430467"
+       d="m 24.761753,37.812289 8.711822,22.430467"
        id="path1131"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.230602;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Lend-6)"
-       d="m 64.31647,69.904834 c 0,0 3.466117,-46.449901 62.8474,-47.258642 38.17788,-0.519963 41.86238,45.274264 41.86238,45.274264"
+       d="m 70.665997,60.224812 c 0,0 -5.372032,-51.5719274 54.009243,-52.3806684 38.17788,-0.519963 46.17228,44.7189824 46.17228,44.7189824"
        id="path1131-6"
        sodipodi:nodetypes="csc" />
     <text
        xml:space="preserve"
        id="text833-2-0-6"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-2);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(-16.395638,-12.151968)"><tspan
+       transform="translate(-16.818304,-24.596193)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-2)">Sets up your Buchfink directory </tspan></tspan><tspan
@@ -414,7 +414,7 @@
        xml:space="preserve"
        id="text833-2-0-6-8"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-2-1);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(69.862615,-11.162085)"><tspan
+       transform="translate(69.439949,-24.596193)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-2-1)">Queries blockchain and </tspan></tspan><tspan
@@ -423,24 +423,24 @@
            style="shape-inside:url(#rect835-1-7-2-1)">exchange APIs</tspan></tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.230602;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Lend-7)"
-       d="m 42.77631,136.60641 -6.468534,29.4506"
+       d="m 42.353644,121.51635 -6.468534,29.4506"
        id="path1131-2"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.230602;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Lend-7-0)"
-       d="m 145.53004,137.12479 11.77438,28.61496"
+       d="m 145.10737,122.03473 11.77438,28.61496"
        id="path1131-2-3"
        sodipodi:nodetypes="cc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.230602;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow2Lend-7-0-7)"
-       d="M 85.157775,136.83362 89.5248,186.05719"
+       d="m 84.735109,121.74356 4.367025,49.22357"
        id="path1131-2-3-9"
        sodipodi:nodetypes="cc" />
     <text
        xml:space="preserve"
        id="text833-2-0-8"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-22);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(25.84911,153.20509)"><tspan
+       transform="translate(25.957639,139.65033)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-22)">Query your trade history, as in </tspan></tspan><tspan
@@ -457,7 +457,7 @@
        xml:space="preserve"
        id="text833-2-0-8-7"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-22-9);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(-15.395244,132.31211)"><tspan
+       transform="translate(-15.81791,117.22205)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-22-9)">Show all your assets and the fiat </tspan></tspan><tspan
@@ -468,7 +468,7 @@
        xml:space="preserve"
        id="text833-2-0-8-6"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-22-3);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(107.46802,128.18973)"><tspan
+       transform="translate(107.04535,113.62884)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-22-3)">Generate a PnL and tax report to </tspan></tspan><tspan
@@ -480,7 +480,7 @@
            style="shape-inside:url(#rect835-1-7-22-3)">customized with a Jinja2 </tspan></tspan><tspan
          x="25.527344"
          y="69.433401"><tspan
-           style="shape-inside:url(#rect835-1-7-22-3)">Template</tspan></tspan></text>
+           style="shape-inside:url(#rect835-1-7-22-3)">Template.</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
@@ -496,7 +496,7 @@
        xml:space="preserve"
        id="text833-2-0-2"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-1);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(-6.8335899,66.466429)"><tspan
+       transform="translate(-7.2562555,51.376369)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-1)">Everything inside the Buchfink folder is text-based and human-readable. You can use </tspan></tspan><tspan
@@ -505,6 +505,6 @@
            style="shape-inside:url(#rect835-1-7-1)">git to version control your configuration, balances and trades. And you can run </tspan></tspan><tspan
          x="25.527344"
          y="64.141736"><tspan
-           style="shape-inside:url(#rect835-1-7-1)">various commands on your data:</tspan></tspan></text>
+           style="shape-inside:url(#rect835-1-7-1)">various commands on your data.</tspan></tspan></text>
   </g>
 </svg>
