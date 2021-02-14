@@ -14,6 +14,10 @@ CLI and plain text files for declarative configuration and trade storage.
 Note: Buchfink is early alpha. Do NOT use it for tax or trading purposes.
 But feel free to report bugs and missing features.
 
+## Architecture
+
+![Buchfink Architecture](./Architecture.svg)
+
 ## Installation
 
 Install Buchfink like this (you may want to create a virtualenv):
