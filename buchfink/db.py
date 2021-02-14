@@ -1,4 +1,5 @@
 import logging
+import pickledb
 import operator
 import os.path
 from datetime import date, datetime
@@ -108,6 +109,8 @@ class BuchfinkDB(DBHandler):
         (self.cache_directory / 'coingecko').mkdir(exist_ok=True)
 
         self._amm_swaps = []  # type: List[AMMSwap]
+        self._eth_tx = []  # type: List[EthereumTransaction]
+        self._eth_receipts_store = pickledb.load(self.cache_directory / 'receipts.db', False)
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko(self.cache_directory / 'coingecko')
         self.historian = PriceHistorian(self.cache_directory / 'history', self.cryptocompare, self.coingecko)
@@ -494,6 +497,16 @@ class BuchfinkDB(DBHandler):
     def get_used_query_range(self, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
         return None
 
+    def get_ethereum_transaction_receipt(self, tx_hash: str, manager: ChainManager):
+        receipt = self._eth_receipts_store.get(tx_hash)
+        if receipt:
+            return receipt
+
+        receipt = manager.ethereum.get_transaction_receipt(tx_hash)
+        self._eth_receipts_store.set(tx_hash, receipt)
+        self._eth_receipts_store.dump()
+        return receipt
+
     def get_ignored_action_ids(
             self,
             action_type: Optional[ActionType],
@@ -505,7 +518,8 @@ class BuchfinkDB(DBHandler):
             ethereum_transactions: List[EthereumTransaction],
             from_etherscan: bool,
     ) -> None:
-        pass
+        self._eth_tx = []
+        self._eth_tx.extend(ethereum_transactions)
 
     def get_ethereum_transactions(
             self,
@@ -513,4 +527,4 @@ class BuchfinkDB(DBHandler):
             to_ts: Optional[Timestamp] = None,
             address: Optional[ChecksumEthAddress] = None,
     ) -> List[EthereumTransaction]:
-        return []
+        return self._eth_tx

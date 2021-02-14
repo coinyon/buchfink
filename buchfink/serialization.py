@@ -29,7 +29,8 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             notes=action_dict.get('notes', ''),
             link=action_dict.get('link', '')
         )
-    elif 'airdrop' in action_dict:
+
+    if 'airdrop' in action_dict:
         amount, asset = deserialize_amount(action_dict['airdrop'])
         return LedgerAction(
             identifier=None,
@@ -41,7 +42,8 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             notes=action_dict.get('notes', ''),
             link=action_dict.get('link', '')
         )
-    elif 'gift' in action_dict:
+
+    if 'gift' in action_dict:
         amount, asset = deserialize_amount(action_dict['gift'])
         return LedgerAction(
             identifier=None,
@@ -53,6 +55,7 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             notes=action_dict.get('notes', ''),
             link=action_dict.get('link', '')
         )
+
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 
@@ -172,10 +175,27 @@ def serialize_trade(trade: Union[Trade, AMMTrade]):
     return ser_trade
 
 
+def serialize_ledger_action(action: LedgerAction):
+    ser_action = action.serialize()
+    ser_action['timestamp'] = serialize_timestamp(action.timestamp)
+
+    if action.action_type == LedgerActionType.AIRDROP:
+        ser_action['airdrop'] = serialize_amount(FVal(action.amount), action.asset)
+
+    return ser_action
+
+
 def serialize_trades(trades: List[Trade]) -> List[Any]:
     return [
         serialize_trade(trade) for trade in
         sorted(trades, key=lambda trade: trade.timestamp)
+    ]
+
+
+def serialize_ledger_actions(actions: List[LedgerAction]) -> List[Any]:
+    return [
+        serialize_ledger_action(action) for action in
+        sorted(actions, key=lambda action: action.timestamp)
     ]
 
 

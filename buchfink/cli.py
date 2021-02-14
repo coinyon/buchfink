@@ -9,12 +9,15 @@ import click
 import coloredlogs
 import yaml
 from rotkehlchen.constants import ZERO
+from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
 from buchfink.datatypes import Asset, FVal, Trade
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import serialize_timestamp, serialize_trades
+from buchfink.serialization import (serialize_ledger_actions,
+                                    serialize_timestamp, serialize_trades)
 
+from .classification import classify_tx
 from .config import ReportConfig
 from .report import run_report
 
@@ -170,6 +173,7 @@ def fetch_(keyword):
     "Fetch trades for configured accounts"
 
     buchfink_db = BuchfinkDB()
+    now = ts_now()
 
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
@@ -178,6 +182,30 @@ def fetch_(keyword):
         name = account.name
 
         if account.account_type == "ethereum":
+
+            click.echo('Analyzing ethereum transactions for ' + name)
+
+            manager = buchfink_db.get_chain_manager(account)
+            txs = manager.ethereum.transactions.single_address_query_transactions(account.address,
+                    start_ts=0,
+                    end_ts=now,
+                    with_limit=False)
+
+            all_actions = []
+            for txn in txs:
+                tx_hash = '0x' + txn.tx_hash.hex()
+                receipt = buchfink_db.get_ethereum_transaction_receipt(tx_hash, manager)
+
+                actions = classify_tx(account, tx_hash, txn, receipt)
+                if actions:
+                    print(actions)
+                all_actions.extend(actions)
+
+            logger.info('Fetched %d action from %s', len(all_actions), name)
+
+            if all_actions:
+                with open("actions/" + name + ".yaml", "w") as yaml_file:
+                    yaml.dump({"actions": serialize_ledger_actions(all_actions)}, stream=yaml_file)
 
             click.echo('Fetching uniswap trades for ' + name)
 
@@ -318,6 +346,7 @@ def run(keyword):
 
 @buchfink.command()
 def allowances():
+     # pylint: disable = W
     "Show the amount of each asset that you could sell tax-free"
 
     buchfink_db = BuchfinkDB()
@@ -339,6 +368,10 @@ def allowances():
     accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [], [])
     total_usd = FVal(0)
     table = []
+
+    raise NotImplementedError()
+    """
+    # TODO: must be adapted to current rotki api
     for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
         symbol_usd = buchfink_db.inquirer.find_usd_price(symbol)
         total_usd += _allowance * symbol_usd
@@ -357,6 +390,7 @@ def allowances():
         'Current price (%s)' % currency.symbol,
         'Average buy price (%s)' % currency.symbol
     ]))
+    """
 
 
 if __name__ == '__main__':
