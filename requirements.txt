@@ -1,9 +1,10 @@
-voluptuous
-typing_extensions
-tabulate
+coloredlogs
+jinja2
+pickledb
+python-dateutil
+PyYAML>=5.0
 # if you change the following, please also update the reference in .github/workflows/ci.yml
 rotkehlchen @ git+https://github.com/rotki/rotki.git@develop#egg=rotkehlchen
-python-dateutil
-jinja2
-coloredlogs
-PyYAML>=5.0
+tabulate
+typing_extensions
+voluptuous
