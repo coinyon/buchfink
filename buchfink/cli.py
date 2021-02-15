@@ -169,7 +169,8 @@ def balances(keyword, minimum_balance, fetch):
 
 @buchfink.command('fetch')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-def fetch_(keyword):
+@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
+def fetch_(keyword, account_type):
     "Fetch trades for configured accounts"
 
     buchfink_db = BuchfinkDB()
@@ -177,6 +178,9 @@ def fetch_(keyword):
 
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
+            continue
+
+        if account_type is not None and account_type not in account.account_type:
             continue
 
         name = account.name
