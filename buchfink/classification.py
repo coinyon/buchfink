@@ -2,14 +2,20 @@
 from typing import List
 
 from rotkehlchen.typing import EthereumTransaction
+from rotkehlchen.utils.misc import hexstr_to_int
 
 from buchfink.account import Account
-from buchfink.datatypes import Asset, LedgerAction, LedgerActionType
+from buchfink.datatypes import Asset, FVal, LedgerAction, LedgerActionType
 
 CLAIMED = '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
+ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
+ADDR_PIEDAO_INCENTIVES = '0x8314337d2b13e1A61EadF0FD1686b2134D43762F'
+ADDR_INDEX_REWARDS = '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986'
+ADDR_YFI_GOVERNANCE = '0xba37b002abafdd8e89a1995da52740bbc013d992'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -31,5 +37,58 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 notes='',
                 link=tx_hash
             )]
+
+        if event['topics'][0] == CLAIMED and event['address'] == ADDR_MIRROR_AIRDROP.lower():
+            amount = hexstr_to_int(event['data'][130:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.AIRDROP,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('MIR'),
+                notes='',
+                link=tx_hash
+            )]
+
+        if event['topics'][0] == REWARD_PAID and event['address'] == ADDR_PIEDAO_INCENTIVES.lower():
+            amount = hexstr_to_int(event['data'][2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('DOUGH'),
+                notes='rewards for providing liquidity',
+                link=tx_hash
+            )]
+
+        if event['topics'][0] == REWARD_PAID and event['address'] == ADDR_INDEX_REWARDS.lower():
+            amount = hexstr_to_int(event['data'][2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('INDEX'),
+                notes='rewards for providing liquidity',
+                link=tx_hash
+            )]
+
+        if event['topics'][0] == REWARD_PAID and event['address'] == ADDR_YFI_GOVERNANCE.lower():
+            amount = hexstr_to_int(event['data'][2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('yDAI+yUSDC+yUSDT+yTUSD'),
+                notes='rewards from yearn governance',
+                link=tx_hash
+            )]
+
 
     return actions
