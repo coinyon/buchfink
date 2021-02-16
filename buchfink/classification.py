@@ -14,8 +14,11 @@ REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e048
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
 ADDR_PIEDAO_INCENTIVES = '0x8314337d2b13e1A61EadF0FD1686b2134D43762F'
+ADDR_PIEDAO_INCENTIVES2 = '0xb9a4bca06f14a982fcd14907d31dfacadc8ff88e'
 ADDR_INDEX_REWARDS = '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986'
 ADDR_YFI_GOVERNANCE = '0xba37b002abafdd8e89a1995da52740bbc013d992'
+ADDR_CREAM_REWARDS = '0x224061756c150e5048a1e4a3e6e066db35037462'
+ADDR_CREAM_7DAY_LOCK = '0x3ba3c0e8a9e5f4a01ce8e086b3d8e8a603a2129e'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -38,7 +41,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        if event['topics'][0] == CLAIMED and event['address'] == ADDR_MIRROR_AIRDROP.lower():
+        elif event['topics'][0] == CLAIMED and event['address'] == ADDR_MIRROR_AIRDROP.lower():
             amount = hexstr_to_int(event['data'][130:])
             actions += [LedgerAction(
                 identifier=None,
@@ -51,7 +54,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        if event['topics'][0] == REWARD_PAID and event['address'] == ADDR_PIEDAO_INCENTIVES.lower():
+        elif event['topics'][0] == REWARD_PAID and event['address'] in (ADDR_PIEDAO_INCENTIVES.lower(), ADDR_PIEDAO_INCENTIVES2):
             amount = hexstr_to_int(event['data'][2:])
             actions += [LedgerAction(
                 identifier=None,
@@ -64,7 +67,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        if event['topics'][0] == REWARD_PAID and event['address'] == ADDR_INDEX_REWARDS.lower():
+        elif event['topics'][0] == REWARD_PAID and event['address'] == ADDR_INDEX_REWARDS.lower():
             amount = hexstr_to_int(event['data'][2:])
             actions += [LedgerAction(
                 identifier=None,
@@ -77,7 +80,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        if event['topics'][0] == REWARD_PAID and event['address'] == ADDR_YFI_GOVERNANCE.lower():
+        elif event['topics'][0] == REWARD_PAID and event['address'] == ADDR_YFI_GOVERNANCE.lower():
             amount = hexstr_to_int(event['data'][2:])
             actions += [LedgerAction(
                 identifier=None,
@@ -90,5 +93,17 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
+        elif event['topics'][0] == REWARD_PAID and event['address'] in (ADDR_CREAM_REWARDS, ADDR_CREAM_7DAY_LOCK):
+            amount = hexstr_to_int(event['data'][2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('CREAM'),
+                notes='rewards from cream incentives',
+                link=tx_hash
+            )]
 
     return actions
