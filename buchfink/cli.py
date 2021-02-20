@@ -84,7 +84,7 @@ def list_(keyword, account_type, output):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-@click.option('--fetch/--no-fetch', default=True, help='Fetch balances from sources')
+@click.option('--fetch', default=False, help='Fetch balances from sources')
 @click.option(
         '--minimum-balance',
         '-m',
