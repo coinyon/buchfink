@@ -170,11 +170,15 @@ def balances(keyword, minimum_balance, fetch):
 @buchfink.command('fetch')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
-def fetch_(keyword, account_type):
+@click.option('--actions/--no-actions', 'fetch_actions', default=False, help='Fetch actions only')
+@click.option('--balances/--no-balances', 'fetch_balances', default=False, help='Fetch balances only')
+@click.option('--trades/--no-trades', 'fetch_trades', default=False, help='Fetch trades only')
+def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
     "Fetch trades for configured accounts"
 
     buchfink_db = BuchfinkDB()
     now = ts_now()
+    fetch_limited = fetch_actions or fetch_balances or fetch_trades
 
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
@@ -190,36 +194,39 @@ def fetch_(keyword, account_type):
             click.echo('Analyzing ethereum transactions for ' + name)
 
             manager = buchfink_db.get_chain_manager(account)
-            txs = manager.ethereum.transactions.single_address_query_transactions(account.address,
-                    start_ts=0,
-                    end_ts=now,
-                    with_limit=False)
 
-            all_actions = []
-            for txn in txs:
-                tx_hash = '0x' + txn.tx_hash.hex()
-                receipt = buchfink_db.get_ethereum_transaction_receipt(tx_hash, manager)
+            if not fetch_limited or fetch_actions:
+                txs = manager.ethereum.transactions.single_address_query_transactions(account.address,
+                        start_ts=0,
+                        end_ts=now,
+                        with_limit=False)
 
-                actions = classify_tx(account, tx_hash, txn, receipt)
-                if actions:
-                    print(actions)
-                all_actions.extend(actions)
+                all_actions = []
+                for txn in txs:
+                    tx_hash = '0x' + txn.tx_hash.hex()
+                    receipt = buchfink_db.get_ethereum_transaction_receipt(tx_hash, manager)
 
-            logger.info('Fetched %d action from %s', len(all_actions), name)
+                    actions = classify_tx(account, tx_hash, txn, receipt)
+                    if actions:
+                        print(actions)
+                    all_actions.extend(actions)
 
-            if all_actions:
-                with open("actions/" + name + ".yaml", "w") as yaml_file:
-                    yaml.dump({"actions": serialize_ledger_actions(all_actions)}, stream=yaml_file)
+                logger.info('Fetched %d action(s) from %s', len(all_actions), name)
 
-            click.echo('Fetching uniswap trades for ' + name)
+                if all_actions:
+                    with open("actions/" + name + ".yaml", "w") as yaml_file:
+                        yaml.dump({"actions": serialize_ledger_actions(all_actions)}, stream=yaml_file)
 
-            manager = buchfink_db.get_chain_manager(account)
+            if not fetch_limited or fetch_trades:
+                click.echo('Fetching uniswap trades for ' + name)
 
-            trades = manager.eth_modules['uniswap'].get_trades(
-                    addresses=manager.accounts.eth,
-                    from_timestamp=int(epoch_start_ts),
-                    to_timestamp=int(epoch_end_ts)
-                )
+                manager = buchfink_db.get_chain_manager(account)
+
+                trades = manager.eth_modules['uniswap'].get_trades(
+                        addresses=manager.accounts.eth,
+                        from_timestamp=int(epoch_start_ts),
+                        to_timestamp=int(epoch_end_ts)
+                    )
 
         elif account.account_type == "exchange":
 
@@ -246,15 +253,17 @@ def fetch_(keyword, account_type):
             logger.debug('No way to retrieve trades for %s, yet', name)
             continue
 
-        logger.info('Fetched %d trades from %s', len(trades), name)
+        if not fetch_limited or fetch_trades:
+            logger.info('Fetched %d trades from %s', len(trades), name)
 
-        with open("trades/" + name + ".yaml", "w") as yaml_file:
-            yaml.dump({"trades": serialize_trades(trades)}, stream=yaml_file)
+            with open("trades/" + name + ".yaml", "w") as yaml_file:
+                yaml.dump({"trades": serialize_trades(trades)}, stream=yaml_file)
 
-        sheet = buchfink_db.query_balances(account)
-        buchfink_db.write_balances(account, sheet)
+        if not fetch_limited or fetch_balances:
+            sheet = buchfink_db.query_balances(account)
+            buchfink_db.write_balances(account, sheet)
 
-        logger.info('Fetched balances from %s', name)
+            logger.info('Fetched balances from %s', name)
 
 
 @buchfink.command('report')
