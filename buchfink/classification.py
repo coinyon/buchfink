@@ -1,4 +1,4 @@
-
+import logging
 from typing import List
 
 from rotkehlchen.typing import EthereumTransaction
@@ -6,6 +6,8 @@ from rotkehlchen.utils.misc import hexstr_to_int
 
 from buchfink.account import Account
 from buchfink.datatypes import Asset, FVal, LedgerAction, LedgerActionType
+
+logger = logging.getLogger(__name__)
 
 CLAIMED = '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -19,6 +21,7 @@ ADDR_INDEX_REWARDS = '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986'
 ADDR_YFI_GOVERNANCE = '0xba37b002abafdd8e89a1995da52740bbc013d992'
 ADDR_CREAM_REWARDS = '0x224061756c150e5048a1e4a3e6e066db35037462'
 ADDR_CREAM_7DAY_LOCK = '0x3ba3c0e8a9e5f4a01ce8e086b3d8e8a603a2129e'
+ADDR_POOL_AIRDROP = '0xBE1a33519F586A4c8AA37525163Df8d67997016f'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -54,7 +57,23 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == REWARD_PAID and event['address'] in (ADDR_PIEDAO_INCENTIVES.lower(), ADDR_PIEDAO_INCENTIVES2):
+        elif event['topics'][0] == CLAIMED and event['address'] == ADDR_POOL_AIRDROP.lower():
+            amount = hexstr_to_int(event['data'][130:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.AIRDROP,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('POOL'),
+                notes='PoolTogether airdrop',
+                link=tx_hash
+            )]
+
+        elif event['topics'][0] == CLAIMED:
+            logger.warn('Unknown Claimed event for tx: %s', tx_hash)
+
+        if event['topics'][0] == REWARD_PAID and event['address'] in (ADDR_PIEDAO_INCENTIVES.lower(), ADDR_PIEDAO_INCENTIVES2):
             amount = hexstr_to_int(event['data'][2:])
             actions += [LedgerAction(
                 identifier=None,
@@ -105,5 +124,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 notes='rewards from cream incentives',
                 link=tx_hash
             )]
+
+        elif event['topics'][0] == REWARD_PAID:
+            logger.warn('Unknown RewardPaid event for tx: %s', tx_hash)
 
     return actions
