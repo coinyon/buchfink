@@ -274,9 +274,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4"
-     inkscape:cx="402.84911"
-     inkscape:cy="385.76582"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="350.23154"
+     inkscape:cy="283.42004"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      inkscape:document-rotation="0"
@@ -285,7 +285,18 @@
      inkscape:window-height="1393"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true">
+    <sodipodi:guide
+       position="172.54613,150.5625"
+       orientation="0,-1"
+       id="guide1055" />
+    <sodipodi:guide
+       position="-62.364262,150.5625"
+       orientation="0,-1"
+       id="guide1058" />
+  </sodipodi:namedview>
   <metadata
      id="metadata5">
     <rdf:RDF>
@@ -306,14 +317,14 @@
        xml:space="preserve"
        id="text833"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(-7.6739447,14.245179)"><tspan
+       transform="translate(-7.6739447,15.303513)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink.yaml</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-6"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-3);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(69.128093,-34.389593)"><tspan
+       transform="translate(71.773928,-34.389593)"><tspan
          x="25.527344"
          y="56.168971"><tspan>buchfink fetch</tspan></tspan></text>
     <text
@@ -327,9 +338,9 @@
        xml:space="preserve"
        id="text833-6-56"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-3-3);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(25.569583,130.16825)"><tspan
+       transform="translate(22.923748,130.16825)"><tspan
          x="25.527344"
-         y="56.168971"><tspan>buchfink trades -a ETH</tspan></tspan></text>
+         y="56.168971"><tspan>buchfink trades -a MKR</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text949"
@@ -341,9 +352,9 @@
        xml:space="preserve"
        id="text833-9"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-2);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(88.536403,6.6322293)"><tspan
+       transform="translate(88.115148,6.5546006)"><tspan
          x="25.527344"
-         y="56.168971"><tspan>Trades/LedgerActions/</tspan></tspan><tspan
+         y="56.168971"><tspan>Trades, Actions and </tspan></tspan><tspan
          x="25.527344"
          y="64.988422"><tspan>Balances</tspan></tspan></text>
     <rect
@@ -414,7 +425,7 @@
        xml:space="preserve"
        id="text833-2-0-6-8"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-2-1);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(69.439949,-24.596193)"><tspan
+       transform="translate(72.085784,-24.596193)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-2-1)">Queries blockchain and </tspan></tspan><tspan
@@ -440,19 +451,19 @@
        xml:space="preserve"
        id="text833-2-0-8"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-22);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(25.957639,139.65033)"><tspan
+       transform="translate(23.311804,140.1795)"><tspan
          x="25.527344"
          y="53.558408"><tspan
-           style="shape-inside:url(#rect835-1-7-22)">Query your trade history, as in </tspan></tspan><tspan
+           style="shape-inside:url(#rect835-1-7-22)">Outputs your trade history, as in </tspan></tspan><tspan
          x="25.527344"
          y="58.850072"><tspan
            style="shape-inside:url(#rect835-1-7-22)">&quot;across all blockchain addresses </tspan></tspan><tspan
          x="25.527344"
          y="64.141736"><tspan
-           style="shape-inside:url(#rect835-1-7-22)">and exchanges, when was the </tspan></tspan><tspan
+           style="shape-inside:url(#rect835-1-7-22)">and exchanges, when did I trade </tspan></tspan><tspan
          x="25.527344"
          y="69.433401"><tspan
-           style="shape-inside:url(#rect835-1-7-22)">last time I bought/sold ETH&quot;?</tspan></tspan></text>
+           style="shape-inside:url(#rect835-1-7-22)">MKR&quot;?</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-2-0-8-7"
@@ -460,15 +471,15 @@
        transform="translate(-15.81791,117.22205)"><tspan
          x="25.527344"
          y="53.558408"><tspan
-           style="shape-inside:url(#rect835-1-7-22-9)">Show all your assets and the fiat </tspan></tspan><tspan
+           style="shape-inside:url(#rect835-1-7-22-9)">Shows all your assets and the fiat </tspan></tspan><tspan
          x="25.527344"
          y="58.850072"><tspan
-           style="shape-inside:url(#rect835-1-7-22-9)">value</tspan></tspan></text>
+           style="shape-inside:url(#rect835-1-7-22-9)">values</tspan></tspan></text>
     <text
        xml:space="preserve"
        id="text833-2-0-8-6"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:4.23333px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;white-space:pre;shape-inside:url(#rect835-1-7-22-3);fill:#000000;fill-opacity:1;stroke:none;"
-       transform="translate(107.04535,113.62884)"><tspan
+       transform="translate(107.57452,114.15801)"><tspan
          x="25.527344"
          y="53.558408"><tspan
            style="shape-inside:url(#rect835-1-7-22-3)">Generate a PnL and tax report to </tspan></tspan><tspan
@@ -480,7 +491,7 @@
            style="shape-inside:url(#rect835-1-7-22-3)">customized with a Jinja2 </tspan></tspan><tspan
          x="25.527344"
          y="69.433401"><tspan
-           style="shape-inside:url(#rect835-1-7-22-3)">Template.</tspan></tspan></text>
+           style="shape-inside:url(#rect835-1-7-22-3)">template.</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:7.05556px;line-height:1.25;font-family:'AvantGarde LT Medium';-inkscape-font-specification:'AvantGarde LT Medium, Medium';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
