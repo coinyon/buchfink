@@ -208,7 +208,8 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
 
                     actions = classify_tx(account, tx_hash, txn, receipt)
                     if actions:
-                        print(actions)
+                        for act in actions:
+                            logger.debug('Found action: %s', act)
                     all_actions.extend(actions)
 
                 logger.info('Fetched %d action(s) from %s', len(all_actions), name)
