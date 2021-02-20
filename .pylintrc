@@ -1,2 +1,2 @@
 [MESSAGES CONTROL]
-disable = missing-function-docstring,missing-module-docstring,missing-class-docstring,too-many-locals
+disable = missing-function-docstring,missing-module-docstring,missing-class-docstring,too-many-locals,too-many-branches,too-many-nested-blocks

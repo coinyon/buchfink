@@ -170,8 +170,10 @@ def balances(keyword, minimum_balance, fetch):
 @buchfink.command('fetch')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
-@click.option('--actions/--no-actions', 'fetch_actions', default=False, help='Fetch actions only')
-@click.option('--balances/--no-balances', 'fetch_balances', default=False, help='Fetch balances only')
+@click.option('--actions/--no-actions', 'fetch_actions', default=False,
+        help='Fetch actions only')
+@click.option('--balances/--no-balances', 'fetch_balances', default=False,
+        help='Fetch balances only')
 @click.option('--trades/--no-trades', 'fetch_trades', default=False, help='Fetch trades only')
 def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
     "Fetch trades for configured accounts"
@@ -196,10 +198,12 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
             manager = buchfink_db.get_chain_manager(account)
 
             if not fetch_limited or fetch_actions:
-                txs = manager.ethereum.transactions.single_address_query_transactions(account.address,
+                txs = manager.ethereum.transactions.single_address_query_transactions(
+                        account.address,
                         start_ts=0,
                         end_ts=now,
-                        with_limit=False)
+                        with_limit=False
+                )
 
                 all_actions = []
                 for txn in txs:
@@ -216,7 +220,9 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
 
                 if all_actions:
                     with open("actions/" + name + ".yaml", "w") as yaml_file:
-                        yaml.dump({"actions": serialize_ledger_actions(all_actions)}, stream=yaml_file)
+                        yaml.dump({
+                            "actions": serialize_ledger_actions(all_actions)
+                        }, stream=yaml_file)
 
             if not fetch_limited or fetch_trades:
                 click.echo('Fetching uniswap trades for ' + name)
