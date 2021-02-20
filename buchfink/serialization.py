@@ -183,17 +183,34 @@ def serialize_ledger_action(action: LedgerAction):
         ser_action['airdrop'] = serialize_amount(FVal(action.amount), action.asset)
         del ser_action['asset']
         del ser_action['amount']
+        del ser_action['action_type']
 
-    elif action.action_type == LedgerActionType.AIRDROP:
+    elif action.action_type == LedgerActionType.INCOME:
         ser_action['income'] = serialize_amount(FVal(action.amount), action.asset)
         del ser_action['asset']
         del ser_action['amount']
+        del ser_action['action_type']
+
+    elif action.action_type == LedgerActionType.GIFT:
+        ser_action['gift'] = serialize_amount(FVal(action.amount), action.asset)
+        del ser_action['asset']
+        del ser_action['amount']
+        del ser_action['action_type']
+
+    elif action.action_type == LedgerActionType.LOSS:
+        ser_action['loss'] = serialize_amount(FVal(action.amount), action.asset)
+        del ser_action['asset']
+        del ser_action['amount']
+        del ser_action['action_type']
 
     if not ser_action['identifier']:
         del ser_action['identifier']
 
     if not ser_action['location']:
         del ser_action['location']
+
+    if not ser_action['notes']:
+        del ser_action['notes']
 
     return ser_action
 
