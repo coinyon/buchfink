@@ -181,6 +181,19 @@ def serialize_ledger_action(action: LedgerAction):
 
     if action.action_type == LedgerActionType.AIRDROP:
         ser_action['airdrop'] = serialize_amount(FVal(action.amount), action.asset)
+        del ser_action['asset']
+        del ser_action['amount']
+
+    elif action.action_type == LedgerActionType.AIRDROP:
+        ser_action['income'] = serialize_amount(FVal(action.amount), action.asset)
+        del ser_action['asset']
+        del ser_action['amount']
+
+    if not ser_action['identifier']:
+        del ser_action['identifier']
+
+    if not ser_action['location']:
+        del ser_action['location']
 
     return ser_action
 
