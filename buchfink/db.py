@@ -236,26 +236,33 @@ class BuchfinkDB(DBHandler):
 
     def get_local_ledger_actions_for_account(self, account_name: str) -> List[Trade]:
 
-        def safe_deserialize_ledger_action(trade):
-            if 'buy' in trade or 'sell' in trade:
+        def safe_deserialize_ledger_action(action):
+            if 'buy' in action or 'sell' in action:
                 return None
             try:
-                return deserialize_ledger_action(trade)
+                return deserialize_ledger_action(action)
             except UnknownAsset:
-                logger.warning('Ignoring ledger action with unknown asset: %s', trade)
+                logger.warning('Ignoring ledger action with unknown asset: %s', action)
                 return None
 
         account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
 
         if account.account_type == 'file':
-            trades_file = os.path.join(self.data_directory, account.config['file'])
-            exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
-            return [ser_trade
-                    for ser_trade in [safe_deserialize_ledger_action(trade) for trade in exchange.get('actions', [])]
-                    if ser_trade is not None]
+            actions_file = os.path.join(self.data_directory, account.config['file'])
+            exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
+            return [ser_action
+                    for ser_action in [safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])]
+                    if ser_action is not None]
 
-        else:
-            return []
+        elif account.account_type == 'ethereum':
+            actions_file = self.data_directory / f'actions/{account.name}.yaml'
+            if actions_file.exists():
+                exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
+                return [ser_action
+                        for ser_action in [safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])]
+                        if ser_action is not None]
+
+        return []
 
     def get_chain_manager(self, account: Account) -> ChainManager:
         if account.account_type == "ethereum":
