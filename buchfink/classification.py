@@ -32,12 +32,13 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
         return actions
 
     for event in receipt['logs']:
+        amount = hexstr_to_int(event['data'][130:])
         if event['topics'][0] == CLAIMED and event['address'] == ADDR_UNISWAP_AIRDROP.lower():
             actions += [LedgerAction(
                 identifier=None,
                 location='',
                 action_type=LedgerActionType.AIRDROP,
-                amount=400,
+                amount=FVal(amount) / FVal(1e18),
                 timestamp=txn.timestamp,
                 asset=Asset('UNI'),
                 notes='',
