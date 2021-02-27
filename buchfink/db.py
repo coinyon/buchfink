@@ -98,6 +98,7 @@ class BuchfinkDB(DBHandler):
         self.trades_directory = self.data_directory / "trades"
         self.cache_directory = self.data_directory / "cache"
         self.balances_directory = self.data_directory / "balances"
+        self.user_data_dir = self.data_directory / "user"
 
         self.reports_directory.mkdir(exist_ok=True)
         self.trades_directory.mkdir(exist_ok=True)

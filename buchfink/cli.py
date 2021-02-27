@@ -232,7 +232,8 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
                 trades = manager.eth_modules['uniswap'].get_trades(
                         addresses=manager.accounts.eth,
                         from_timestamp=int(epoch_start_ts),
-                        to_timestamp=int(epoch_end_ts)
+                        to_timestamp=int(epoch_end_ts),
+                        only_cache=False
                     )
 
         elif account.account_type == "exchange":
