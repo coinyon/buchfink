@@ -1,3 +1,9 @@
+0.0.7
+-----
+
+* Add classification of Ethereum transactions to ledger actions
+* Support "ledger actions" such an income, airdrop, loss...
+
 0.0.6
 -----
 
