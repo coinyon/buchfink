@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 CLAIMED = '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
 CLAIMED_2 = '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a'
+CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 
@@ -28,6 +29,9 @@ ADDR_CREAM_REWARDS = (
 )
 ADDR_BALANCER_REWARDS = '0x6d19b2bF3A36A61530909Ae65445a906D98A2Fa8'
 ADDR_POOL_AIRDROP = '0xBE1a33519F586A4c8AA37525163Df8d67997016f'
+ADDR_BADGER_TREE = '0x660802Fc641b154aBA66a62137e71f331B6d787A'
+ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
+ADDR_MIR_REWARDS = '0x5d447Fc0F8965cED158BAB42414Af10139Edf0AF'
 ADDR_XTOKEN_AIRDROP = '0x11f10378fc56277eEdBc0c3309c457b0fd5c6dfd'
 
 
@@ -79,6 +83,23 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
             )]
 
         elif event['topics'][0] == CLAIMED:
+            logger.warning('Unknown Claimed event for tx: %s', tx_hash)
+
+        if event['topics'][0] == CLAIMED_3 and event['address'] == ADDR_BADGER_TREE.lower():
+            if hexstr_to_int(event['topics'][2]) == hexstr_to_int(ADDR_BADGER):
+                amount = hexstr_to_int(event['data'][2:66])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    timestamp=txn.timestamp,
+                    asset=Asset('BADGER'),
+                    notes='Badger rewards for staking',
+                    link=tx_hash
+                )]
+
+        elif event['topics'][0] == CLAIMED_3:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
         if event['topics'][0] == CLAIMED_2 and event['address'] == ADDR_XTOKEN_AIRDROP.lower():
@@ -159,6 +180,19 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 timestamp=txn.timestamp,
                 asset=Asset('CREAM'),
                 notes='rewards from cream incentives',
+                link=tx_hash
+            )]
+
+        elif event['topics'][0] == REWARD_PAID and event['address'] == ADDR_MIR_REWARDS.lower():
+            amount = hexstr_to_int(event['data'][2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                timestamp=txn.timestamp,
+                asset=Asset('MIR'),
+                notes='rewards for staking MIR LP',
                 link=tx_hash
             )]
 
