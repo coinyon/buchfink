@@ -98,6 +98,7 @@ class BuchfinkDB(DBHandler):
         self.trades_directory = self.data_directory / "trades"
         self.cache_directory = self.data_directory / "cache"
         self.balances_directory = self.data_directory / "balances"
+        self.annotations_directory = self.data_directory / "annotations"
         self.user_data_dir = self.data_directory / "user"
 
         self.reports_directory.mkdir(exist_ok=True)
@@ -203,8 +204,7 @@ class BuchfinkDB(DBHandler):
         else:
             return BlockchainAccounts(eth=[], btc=[], ksm=[])
 
-    def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
-
+    def get_trades_from_file(self, trades_file) -> List[Trade]:
         def safe_deserialize_trade(trade):
             try:
                 return deserialize_trade(trade)
@@ -212,31 +212,30 @@ class BuchfinkDB(DBHandler):
                 logger.warning('Ignoring trade with unknown asset: %s', trade)
                 return None
 
+        exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
+        return [ser_trade
+                for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
+                if ser_trade is not None] \
+                + [ser_trade
+                for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('actions', []) if 'buy' in trade or 'sell' in trade]
+                if ser_trade is not None]
+
+    def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
         account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
 
         if account.account_type == 'file':
             trades_file = os.path.join(self.data_directory, account.config['file'])
-            exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
-            return [ser_trade
-                    for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
-                    if ser_trade is not None] \
-                    + [ser_trade
-                    for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('actions', []) if 'buy' in trade or 'sell' in trade]
-                    if ser_trade is not None]
+            return self.get_trades_from_file(trades_file)
 
         else:
             trades_file = os.path.join(self.data_directory, 'trades', account.name + '.yaml')
 
             if os.path.exists(trades_file):
-                exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
-                return [ser_trade
-                        for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
-                        if ser_trade is not None]
+                return self.get_trades_from_file(trades_file)
             else:
                 return []
 
-    def get_local_ledger_actions_for_account(self, account_name: str) -> List[Trade]:
-
+    def get_actions_from_file(self, actions_file):
         def safe_deserialize_ledger_action(action):
             if 'buy' in action or 'sell' in action:
                 return None
@@ -245,23 +244,24 @@ class BuchfinkDB(DBHandler):
             except UnknownAsset:
                 logger.warning('Ignoring ledger action with unknown asset: %s', action)
                 return None
+        exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
+        return [ser_action
+                for ser_action in [safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])]
+                if ser_action is not None]
 
+
+    def get_local_ledger_actions_for_account(self, account_name: str) -> List[Trade]:
         account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
 
         if account.account_type == 'file':
             actions_file = os.path.join(self.data_directory, account.config['file'])
-            exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
-            return [ser_action
-                    for ser_action in [safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])]
-                    if ser_action is not None]
+            if actions_file.exists():
+                return self.get_actions_from_file(actions_file)
 
         elif account.account_type == 'ethereum':
             actions_file = self.data_directory / f'actions/{account.name}.yaml'
             if actions_file.exists():
-                exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
-                return [ser_action
-                        for ser_action in [safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])]
-                        if ser_action is not None]
+                return self.get_actions_from_file(actions_file)
 
         return []
 
@@ -428,6 +428,16 @@ class BuchfinkDB(DBHandler):
 
         elif account.account_type == "file":
             return self.get_balances_from_file(account.config['file'])
+
+        else:
+            return BalanceSheet(assets={}, liabilities={})
+
+    def fetch_balances(self, account):
+        query_sheet = self.query_balances(account)
+        path = self.annotations_directory / (account.name + '.yaml')
+        if path.exists():
+            query_sheet += self.get_balances_from_file(path)
+        self.write_balances(account, query_sheet)
 
     def get_balances(self, account) -> BalanceSheet:
         path = self.balances_directory / (account.name + '.yaml')
