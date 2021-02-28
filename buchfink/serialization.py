@@ -212,6 +212,9 @@ def serialize_ledger_action(action: LedgerAction):
     if not ser_action['notes']:
         del ser_action['notes']
 
+    if not ser_action['link']:
+        del ser_action['link']
+
     return ser_action
 
 
