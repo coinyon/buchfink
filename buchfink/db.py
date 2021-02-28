@@ -254,7 +254,7 @@ class BuchfinkDB(DBHandler):
         account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
 
         if account.account_type == 'file':
-            actions_file = os.path.join(self.data_directory, account.config['file'])
+            actions_file = self.data_directory / account.config['file']
             if actions_file.exists():
                 return self.get_actions_from_file(actions_file)
 
