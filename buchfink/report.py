@@ -35,7 +35,7 @@ def run_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
 
     with (buchfink_db.reports_directory / Path(name) / 'report.yaml').open('w') as report_file:
-        yaml.dump({ 'overview': result['overview'] }, stream=report_file)
+        yaml.dump({'overview': result['overview']}, stream=report_file)
 
     logger.info('Report information has been written to: %s',
             buchfink_db.reports_directory / Path(name)
@@ -56,12 +56,12 @@ def run_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             "events": result['all_events']
         })
 
-        # TODO: get ext from template path. could also be json, csv, ...
+        # we should get ext from template path. could also be json, csv, ...
         ext = '.html'
 
         # to save the results
-        with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as fh:
-            fh.write(rendered_report)
+        with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as reportf:
+            reportf.write(rendered_report)
 
         logger.info("Rendered temmplate to 'report%s'.", ext)
 

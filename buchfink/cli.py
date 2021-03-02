@@ -387,7 +387,7 @@ def run(keyword):
 
 @buchfink.command()
 def allowances():
-     # pylint: disable = W
+    # pylint: disable = W
     "Show the amount of each asset that you could sell tax-free"
 
     buchfink_db = BuchfinkDB()

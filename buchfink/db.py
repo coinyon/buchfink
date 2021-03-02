@@ -89,10 +89,11 @@ class BuchfinkDB(DBHandler):
 
     def __init__(self, data_directory='.'):
         self.data_directory = Path(data_directory)
-        yaml_config = yaml.load(open(self.data_directory / 'buchfink.yaml', 'r'), Loader=yaml.SafeLoader)
+        with open(self.data_directory / 'buchfink.yaml', 'r') as cfg:
+            yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
         self.config = config_schema(yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
-        self._active_eth_address = None # type: Optional[ChecksumEthAddress]
+        self._active_eth_address = None  # type: Optional[ChecksumEthAddress]
 
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
@@ -115,8 +116,15 @@ class BuchfinkDB(DBHandler):
         self._eth_receipts_store = pickledb.load(self.cache_directory / 'receipts.db', False)
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko(self.cache_directory / 'coingecko')
-        self.historian = PriceHistorian(self.cache_directory / 'history', self.cryptocompare, self.coingecko)
-        self.inquirer = Inquirer(self.cache_directory / 'inquirer', self.cryptocompare, self.coingecko)
+        self.historian = PriceHistorian(
+                self.cache_directory / 'history',
+                self.cryptocompare,
+                self.coingecko
+            )
+        self.inquirer = Inquirer(self.cache_directory / 'inquirer',
+                self.cryptocompare,
+                self.coingecko
+            )
         self.msg_aggregator = MessagesAggregator()
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
@@ -135,19 +143,6 @@ class BuchfinkDB(DBHandler):
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
-        #self.chain_manager = ChainManager(
-        #    blockchain_accounts=[],
-        #    owned_eth_tokens=[],
-        #    ethereum_manager=self.ethereum_manager,
-        #    msg_aggregator=self.msg_aggregator,
-        #    greenlet_manager=self.greenlet_manager,
-        #    premium=False,
-        #    eth_modules=ethereum_modules,
-        #)
-        #self.ethereum_analyzer = EthereumAnalyzer(
-        #    ethereum_manager=self.ethereum_manager,
-        #    database=self,
-        #)
 
     def __del__(self):
         pass
@@ -214,10 +209,13 @@ class BuchfinkDB(DBHandler):
 
         exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
         return [ser_trade
-                for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
+                for ser_trade in [
+                    safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
                 if ser_trade is not None] \
                 + [ser_trade
-                for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('actions', []) if 'buy' in trade or 'sell' in trade]
+                for ser_trade in [
+                    safe_deserialize_trade(trade) for trade in exchange.get('actions', [])
+                    if 'buy' in trade or 'sell' in trade]
                 if ser_trade is not None]
 
     def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
@@ -246,9 +244,11 @@ class BuchfinkDB(DBHandler):
                 return None
         exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
         return [ser_action
-                for ser_action in [safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])]
+                for ser_action in [
+                    safe_deserialize_ledger_action(action)
+                    for action in exchange.get('actions', [])
+                ]
                 if ser_action is not None]
-
 
     def get_local_ledger_actions_for_account(self, account_name: str) -> List[Trade]:
         account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
@@ -400,7 +400,11 @@ class BuchfinkDB(DBHandler):
             balances, error = exchange.query_balances()
 
             if not error:
-                logger.info('Fetched balances for %d assets from %s', len(balances.keys()), account.name)
+                logger.info(
+                        'Fetched balances for %d assets from %s',
+                        len(balances.keys()),
+                        account.name
+                    )
                 return BalanceSheet(assets=balances, liabilities={})
 
             raise RuntimeError(error)
