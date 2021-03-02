@@ -1,13 +1,12 @@
 import logging
-import pickledb
 import operator
 import os.path
 from datetime import date, datetime
 from functools import reduce
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-import click
+import pickledb
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
@@ -218,8 +217,11 @@ class BuchfinkDB(DBHandler):
                     if 'buy' in trade or 'sell' in trade]
                 if ser_trade is not None]
 
-    def get_local_trades_for_account(self, account_name: str) -> List[Trade]:
-        account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
+    def get_local_trades_for_account(self, account_name: Union[str, Account]) -> List[Trade]:
+        if isinstance(account_name, str):
+            account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
+        else:
+            account = account_name
 
         if account.account_type == 'file':
             trades_file = os.path.join(self.data_directory, account.config['file'])
@@ -250,8 +252,12 @@ class BuchfinkDB(DBHandler):
                 ]
                 if ser_action is not None]
 
-    def get_local_ledger_actions_for_account(self, account_name: str) -> List[Trade]:
-        account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
+    def get_local_ledger_actions_for_account(self, account_name: Union[str, Account]) \
+            -> List[Trade]:
+        if isinstance(account_name, str):
+            account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
+        else:
+            account = account_name
 
         if account.account_type == 'file':
             actions_file = self.data_directory / account.config['file']

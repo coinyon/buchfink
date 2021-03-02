@@ -1,8 +1,8 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
-from typing_extensions import Literal
+from typing import Any, Dict, List, Optional, Union
 
 from rotkehlchen.typing import ChecksumEthAddress
+from typing_extensions import Literal
 
 
 @dataclass
@@ -36,5 +36,11 @@ def account_from_config(config_account):
     )
 
 
-def accounts_from_config(config):
+def accounts_from_config(config) -> List[Account]:
     return [account_from_config(acc) for acc in config['accounts']]
+
+
+def account_from_string(acc_def: str) -> Account:
+    if acc_def.lower().startswith('0x'):
+        return Account(acc_def, 'ethereum', acc_def, {})
+    raise ValueError(acc_def)

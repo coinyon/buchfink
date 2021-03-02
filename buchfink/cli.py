@@ -20,6 +20,7 @@ from buchfink.serialization import (serialize_ledger_actions,
 from .classification import classify_tx
 from .config import ReportConfig
 from .report import run_report
+from .account import account_from_string
 
 logger = logging.getLogger(__name__)
 
@@ -167,6 +168,8 @@ def balances(keyword, minimum_balance, fetch):
 
 
 @buchfink.command('fetch')
+@click.option('--external', '-e', type=str, multiple=True,
+        help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @click.option('--actions/--no-actions', 'fetch_actions', default=False,
@@ -174,14 +177,19 @@ def balances(keyword, minimum_balance, fetch):
 @click.option('--balances/--no-balances', 'fetch_balances', default=False,
         help='Fetch balances only')
 @click.option('--trades/--no-trades', 'fetch_trades', default=False, help='Fetch trades only')
-def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
+def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, external):
     "Fetch trades for configured accounts"
 
     buchfink_db = BuchfinkDB()
     now = ts_now()
     fetch_limited = fetch_actions or fetch_balances or fetch_trades
 
-    for account in buchfink_db.get_all_accounts():
+    if external:
+        accounts = [account_from_string(ext) for ext in external]
+    else:
+        accounts = buchfink_db.get_all_accounts()
+
+    for account in accounts:
         if keyword is not None and keyword not in account.name:
             continue
 
@@ -294,16 +302,23 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades):
             logger.info('Fetched balances from %s', name)
 
 
-@buchfink.command('report')
+@buchfink.command()
+@click.option('--external', '-e', type=str, multiple=True,
+        help='Use adhoc / external account')
 @click.option('--name', '-n', type=str, required=True)
 @click.option('--from', '-f', 'from_date', type=str, required=True)
 @click.option('--to', '-t', 'to_date', type=str, required=True)
-def report_(name, from_date, to_date):
-    "Run an ad-hoc report on your data"
+def run(name, from_date, to_date, external):
+    "Run a full fetch + report cycle"
 
     buchfink_db = BuchfinkDB()
 
-    result = run_report(buchfink_db, ReportConfig(
+    if external:
+        accounts = [account_from_string(ext) for ext in external]
+    else:
+        accounts = buchfink_db.get_all_accounts()
+
+    result = run_report(buchfink_db, accounts, ReportConfig(
         name=name,
         from_dt=datetime.fromisoformat(from_date),
         to_dt=datetime.fromisoformat(to_date)
@@ -356,24 +371,41 @@ def trades_(keyword, asset):
         ]))
 
 
-@buchfink.command()
+@buchfink.command('report')
+@click.option('--external', '-e', type=str, multiple=True,
+        help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-def run(keyword):
+@click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
+        multiple=True)
+def report_(keyword, external, year):
     "Generate reports for all report definition and output overview table"
 
     buchfink_db = BuchfinkDB()
 
-    num_matched_reports = 0
     results = {}
 
-    for report in buchfink_db.get_all_reports():
+    if external:
+        accounts = [account_from_string(ext) for ext in external]
+    else:
+        accounts = buchfink_db.get_all_accounts()
+
+    if year:
+        reports = [ReportConfig(
+            f'adhoc-{_year}',
+            str(year),
+            None,
+            datetime(_year, 1, 1),
+            datetime(_year + 1, 1, 1)
+            ) for _year in year]
+    else:
+        reports = [
+            report_ for report_ in buchfink_db.get_all_reports()
+            if keyword is None or keyword in report_.name
+        ]
+
+    for report in reports:
         name = str(report.name)
-
-        if keyword is not None and keyword not in name:
-            continue
-        num_matched_reports += 1
-
-        results[name] = run_report(buchfink_db, report)
+        results[name] = run_report(buchfink_db, accounts, report)
 
     table = []
     for report_name, result in results.items():
