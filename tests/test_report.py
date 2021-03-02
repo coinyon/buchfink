@@ -17,6 +17,6 @@ def test_bullrun_config():
     assert report.from_dt.year == 2015
     assert report.to_dt.year == 2020
 
-    result = run_report(buchfink_db, report)
+    result = run_report(buchfink_db, buchfink_db.get_all_accounts(), report)
 
     assert result['overview']['total_taxable_profit_loss'] == '15000'
