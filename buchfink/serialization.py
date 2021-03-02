@@ -172,6 +172,9 @@ def serialize_trade(trade: Union[Trade, AMMTrade]):
     if trade.location:
         ser_trade['location'] = str(trade.location)
 
+    if not ser_trade['link']:
+        del ser_trade['link']
+
     return ser_trade
 
 
