@@ -199,7 +199,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
     fetch_limited = fetch_actions or fetch_balances or fetch_trades
 
     if external:
-        accounts = [account_from_string(ext) for ext in external]
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
         accounts = buchfink_db.get_all_accounts()
 
@@ -328,7 +328,7 @@ def run(name, from_date, to_date, external):
     buchfink_db = BuchfinkDB()
 
     if external:
-        accounts = [account_from_string(ext) for ext in external]
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
         accounts = buchfink_db.get_all_accounts()
 
@@ -399,7 +399,7 @@ def report_(keyword, external, year):
     results = {}
 
     if external:
-        accounts = [account_from_string(ext) for ext in external]
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
         accounts = buchfink_db.get_all_accounts()
 
