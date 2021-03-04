@@ -166,7 +166,10 @@ def balances(keyword, minimum_balance, fetch, total):
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
 
         if total:
-            print(f'Total liabilities: {round(float(balance_in_currency_sum), 2)} {currency.symbol}')
+            print(
+                f'Total liabilities: '
+                f'{round(float(balance_in_currency_sum), 2)} {currency.symbol}'
+            )
 
         else:
             print()
