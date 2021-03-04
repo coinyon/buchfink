@@ -85,6 +85,8 @@ def list_(keyword, account_type, output):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--external', '-e', type=str, multiple=True,
+        help='Use adhoc / external account')
 @click.option('--total/--no-total', default=False, help='Only show totals')
 @click.option('--fetch/--no-fetch', default=False, help='Fetch balances from sources')
 @click.option(
@@ -94,7 +96,7 @@ def list_(keyword, account_type, output):
         default=0.0,
         help='Hide balances smaller than this amount (default 0)'
 )
-def balances(keyword, minimum_balance, fetch, total):
+def balances(keyword, minimum_balance, fetch, total, external):
     "Show balances across all accounts"
 
     buchfink_db = BuchfinkDB()
@@ -103,7 +105,12 @@ def balances(keyword, minimum_balance, fetch, total):
     liabilities_sum = {}
     liabilities_usd_sum = {}
 
-    for account in buchfink_db.get_all_accounts():
+    if external:
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
+    else:
+        accounts = buchfink_db.get_all_accounts()
+
+    for account in accounts:
         if keyword is not None and keyword not in account.name:
             continue
 
