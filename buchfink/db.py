@@ -17,6 +17,7 @@ from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
 from rotkehlchen.constants.assets import A_USD
 from rotkehlchen.data.importer import DataImporter
 from rotkehlchen.data_handler import DataHandler
+from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import (DBSettings, ModifiableDBSettings,
                                      db_settings_from_dict)
@@ -129,7 +130,8 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
-        self.all_eth_tokens = AssetResolver().get_all_eth_token_info()
+        self.globaldb = GlobalDBHandler(self.data_directory)
+        self.all_eth_tokens = AssetResolver(self.data_directory).get_all_eth_token_info()
         self.ethereum_manager = EthereumManager(
             database=self,
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
