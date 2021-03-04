@@ -85,6 +85,7 @@ def list_(keyword, account_type, output):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--total/--no-total', default=False, help='Only show totals')
 @click.option('--fetch/--no-fetch', default=False, help='Fetch balances from sources')
 @click.option(
         '--minimum-balance',
@@ -93,7 +94,7 @@ def list_(keyword, account_type, output):
         default=0.0,
         help='Hide balances smaller than this amount (default 0)'
 )
-def balances(keyword, minimum_balance, fetch):
+def balances(keyword, minimum_balance, fetch, total):
     "Show balances across all accounts"
 
     buchfink_db = BuchfinkDB()
@@ -135,13 +136,18 @@ def balances(keyword, minimum_balance, fetch):
         if balance > ZERO and balance_in_currency >= FVal(minimum_balance):
             balance_in_currency_sum += balance_in_currency
             table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
-    table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
-    print(tabulate(table, headers=[
-        'Asset',
-        'Amount',
-        'Symbol',
-        'Fiat Value (%s)' % currency.symbol
-    ]))
+
+    if total:
+        print(f'Total assets: {round(float(balance_in_currency_sum), 2)} {currency.symbol}')
+
+    else:
+        table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
+        print(tabulate(table, headers=[
+            'Asset',
+            'Amount',
+            'Symbol',
+            'Fiat Value (%s)' % currency.symbol
+        ]))
 
     if liabilities_sum:
         table = []
@@ -158,13 +164,18 @@ def balances(keyword, minimum_balance, fetch):
                 balance_in_currency_sum += balance_in_currency
                 table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
-        print()
-        print(tabulate(table, headers=[
-            'Liability',
-            'Amount',
-            'Symbol',
-            'Fiat Value (%s)' % currency.symbol
-        ]))
+
+        if total:
+            print(f'Total liabilities: {round(float(balance_in_currency_sum), 2)} {currency.symbol}')
+
+        else:
+            print()
+            print(tabulate(table, headers=[
+                'Liability',
+                'Amount',
+                'Symbol',
+                'Fiat Value (%s)' % currency.symbol
+            ]))
 
 
 @buchfink.command('fetch')
