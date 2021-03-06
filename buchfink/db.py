@@ -131,7 +131,6 @@ class BuchfinkDB(DBHandler):
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
         self.globaldb = GlobalDBHandler(self.data_directory)
-        self.all_eth_tokens = AssetResolver(self.data_directory).get_all_eth_token_info()
         self.ethereum_manager = EthereumManager(
             database=self,
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
