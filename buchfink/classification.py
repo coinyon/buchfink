@@ -6,6 +6,7 @@ from rotkehlchen.utils.misc import hexstr_to_int
 
 from buchfink.account import Account
 from buchfink.datatypes import Asset, FVal, LedgerAction, LedgerActionType
+from buchfink.serialization import serialize_timestamp
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ CLAIMED_2 = '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a'
 CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
+MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -33,11 +35,14 @@ ADDR_BADGER_TREE = '0x660802Fc641b154aBA66a62137e71f331B6d787A'
 ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
 ADDR_MIR_REWARDS = '0x5d447Fc0F8965cED158BAB42414Af10139Edf0AF'
 ADDR_XTOKEN_AIRDROP = '0x11f10378fc56277eEdBc0c3309c457b0fd5c6dfd'
+ADDR_SWERVE_MINTER = '0x2c988c3974ad7e604e276ae0294a7228def67974'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
         -> List[LedgerAction]:
     actions = []  # type: List[LedgerAction]
+
+    tx_time = serialize_timestamp(txn.timestamp)
 
     if txn.from_address != account.address:
         return actions
@@ -83,7 +88,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
             )]
 
         elif event['topics'][0] == CLAIMED:
-            logger.warning('Unknown Claimed event for tx: %s', tx_hash)
+            logger.warning('Unknown Claimed event for tx %s at %s', tx_hash, tx_time)
 
         if event['topics'][0] == CLAIMED_3 and event['address'] == ADDR_BADGER_TREE.lower():
             if hexstr_to_int(event['topics'][2]) == hexstr_to_int(ADDR_BADGER):
@@ -100,7 +105,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 )]
 
         elif event['topics'][0] == CLAIMED_3:
-            logger.warning('Unknown Claimed event for tx: %s', tx_hash)
+            logger.warning('Unknown Claimed event for tx %s at %s', tx_hash, tx_time)
 
         if event['topics'][0] == CLAIMED_2 and event['address'] == ADDR_XTOKEN_AIRDROP.lower():
             amount = hexstr_to_int(event['data'])
@@ -197,6 +202,23 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
             )]
 
         elif event['topics'][0] == REWARD_PAID:
-            logger.warning('Unknown RewardPaid event for tx: %s', tx_hash)
+            logger.warning('Unknown RewardPaid event for tx %s at %s', tx_hash, tx_time)
+
+        if event['topics'][0] == MINTED and event['address'] == ADDR_SWERVE_MINTER.lower():
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'][66:])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    timestamp=txn.timestamp,
+                    asset=Asset('SWRV'),
+                    notes='Swerve rewards for pooling liquidity',
+                    link=tx_hash
+                )]
+
+        elif event['topics'][0] == MINTED:
+            logger.warning('Unknown Minted event for tx %s at %s', tx_hash, tx_time)
 
     return actions
