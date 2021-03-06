@@ -49,7 +49,7 @@ from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
 from rotkehlchen.premium.sync import PremiumSyncManager
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
-                                Location, Timestamp)
+                                Location, SupportedBlockchain, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet, FVal,
@@ -131,7 +131,8 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
-        self.globaldb = GlobalDBHandler(self.cache_directory)
+        self.globaldb = GlobalDBHandler(self.data_directory)
+        self.asset_resolver = AssetResolver(self.data_directory)
         self.ethereum_manager = EthereumManager(
             database=self,
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
@@ -424,7 +425,10 @@ class BuchfinkDB(DBHandler):
             # into out get_blockchain_accounts() without providing context (for
             # example from makerdao module).
             self._active_eth_address = account.address
-            manager.query_balances()
+            manager.query_balances(
+                blockchain=SupportedBlockchain.ETHEREUM,
+                force_token_detection=True
+            )
             self._active_eth_address = None
 
             return reduce(operator.add, manager.balances.eth.values())
