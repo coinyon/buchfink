@@ -1,3 +1,8 @@
+master
+------
+
+* Balances will now be serialized sorted by asset
+
 0.0.7
 -----
 

@@ -17,7 +17,6 @@ from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
 from rotkehlchen.constants.assets import A_USD
 from rotkehlchen.data.importer import DataImporter
 from rotkehlchen.data_handler import DataHandler
-from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import (DBSettings, ModifiableDBSettings,
                                      db_settings_from_dict)
@@ -39,6 +38,7 @@ from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
+from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
@@ -56,7 +56,8 @@ from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet, FVal,
                                 Trade, TradeType)
 from buchfink.serialization import (deserialize_balance,
                                     deserialize_ledger_action,
-                                    deserialize_trade, serialize_balance)
+                                    deserialize_trade, serialize_balance,
+                                    serialize_balances)
 
 from .account import Account, accounts_from_config
 from .config import ReportConfig
@@ -493,16 +494,7 @@ class BuchfinkDB(DBHandler):
         path = self.balances_directory / (account.name + '.yaml')
 
         with path.open('w') as balances_file:
-            yaml.dump({
-                'assets': [
-                    serialize_balance(bal, asset)
-                    for asset, bal in balances.assets.items()
-                ],
-                'liabilities': [
-                    serialize_balance(bal, asset)
-                    for asset, bal in balances.liabilities.items()
-                ]
-            }, stream=balances_file)
+            yaml.dump(serialize_balances(balances), stream=balances_file)
 
     def get_amm_swaps(
             self,

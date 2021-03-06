@@ -1,11 +1,13 @@
 from datetime import datetime, timezone
+from operator import itemgetter
+
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 
 from buchfink.datatypes import (AMMTrade, Asset, Balance, FVal, LedgerAction,
-                                LedgerActionType, Trade, TradeType)
+                                LedgerActionType, Trade, TradeType, BalanceSheet)
 
 
 def serialize_timestamp(timestamp: int) -> str:
@@ -128,6 +130,21 @@ def serialize_balance(balance: Balance, asset: Asset) -> dict:
         'amount': serialize_decimal(balance.amount.num),
         'asset': asset.identifier
     }
+
+
+def serialize_balances(balances: BalanceSheet) -> dict:
+    ser_balances = {}
+    if balances.assets:
+        ser_balances['assets'] = [
+            serialize_balance(bal, asset)
+            for asset, bal in sorted(balances.assets.items(), key=itemgetter(0))
+        ]
+    if balances.liabilities:
+        ser_balances['liabilities'] = [
+            serialize_balance(bal, asset)
+            for asset, bal in sorted(balances.liabilities.items(), key=itemgetter(0))
+        ]
+    return ser_balances
 
 
 def deserialize_balance(balance: Dict[str, Any], inquirer: Optional[Any] = None) \
