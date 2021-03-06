@@ -223,11 +223,10 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
         if account.account_type == "ethereum":
 
-            click.echo('Analyzing ethereum transactions for ' + name)
-
-            manager = buchfink_db.get_chain_manager(account)
-
             if not fetch_limited or fetch_actions:
+                click.echo('Analyzing ethereum transactions for ' + name)
+                manager = buchfink_db.get_chain_manager(account)
+
                 txs = manager.ethereum.transactions.single_address_query_transactions(
                         account.address,
                         start_ts=0,
