@@ -1,4 +1,5 @@
 import logging
+import sys
 import os.path
 import shutil
 from datetime import datetime
@@ -40,18 +41,18 @@ def buchfink(log_level):
 def init(directory):
     "Initialize new Buchfink directory"
 
-    dir = Path(directory)
-    target_config = os.path.join(directory, 'buchfink.yaml')
+    bf_dir = Path(directory)
+    target_config = bf_dir / 'buchfink.yaml'
     init_data = Path(__file__).parent / 'data' / 'init'
 
-    if os.path.exists(target_config):
+    if target_config.exists():
         click.echo(click.style('Already initialized (buchfink.yaml exists), aborting.', fg='red'))
-        return
+        sys.exit(1)
 
     for init_file in init_data.iterdir():
-        shutil.copyfile(init_file, dir / init_file.name)
+        shutil.copyfile(init_file, bf_dir / init_file.name)
 
-    buchfink_db = BuchfinkDB(directory)
+    buchfink_db = BuchfinkDB(bf_dir)
 
     click.echo(
         click.style('Successfully initialized in {0}.'.format(

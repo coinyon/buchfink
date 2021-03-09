@@ -31,3 +31,13 @@ def test_run_on_ens_domain():
             result = runner.invoke(report_, ['-e', 'coinyon.eth', '-y', '2020'])
             assert result.exit_code == 0
             # We should test json output here
+
+
+def test_second_init_should_fail():
+    runner = CliRunner()
+    with TemporaryDirectory() as dir:
+        with cd(dir):
+            result = runner.invoke(init)
+            assert result.exit_code == 0
+            result = runner.invoke(init)
+            assert result.exit_code == 1
