@@ -3,6 +3,7 @@ import os.path
 import shutil
 from datetime import datetime
 from operator import attrgetter, itemgetter
+from pathlib import Path
 from typing import List
 
 import click
@@ -17,10 +18,10 @@ from buchfink.db import BuchfinkDB
 from buchfink.serialization import (serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
 
+from .account import account_from_string
 from .classification import classify_tx
 from .config import ReportConfig
 from .report import run_report
-from .account import account_from_string
 
 logger = logging.getLogger(__name__)
 
@@ -39,14 +40,16 @@ def buchfink(log_level):
 def init(directory):
     "Initialize new Buchfink directory"
 
+    dir = Path(directory)
     target_config = os.path.join(directory, 'buchfink.yaml')
+    init_data = Path(__file__).parent / 'data' / 'init'
 
     if os.path.exists(target_config):
         click.echo(click.style('Already initialized (buchfink.yaml exists), aborting.', fg='red'))
         return
 
-    initial_config = os.path.join(os.path.dirname(__file__), 'data', 'buchfink.initial.yaml')
-    shutil.copyfile(initial_config, target_config)
+    for init_file in init_data.iterdir():
+        shutil.copyfile(init_file, dir / init_file.name)
 
     buchfink_db = BuchfinkDB(directory)
 
