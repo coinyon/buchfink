@@ -87,8 +87,8 @@ def list_(keyword, account_type, output):
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
-@click.option('--total/--no-total', default=False, help='Only show totals')
-@click.option('--fetch/--no-fetch', default=False, help='Fetch balances from sources')
+@click.option('--total', is_flag=True, help='Only show totals')
+@click.option('--fetch', '-f', is_flag=True, help='Fetch balances from sources')
 @click.option(
         '--minimum-balance',
         '-m',
@@ -193,11 +193,9 @@ def balances(keyword, minimum_balance, fetch, total, external):
         help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
-@click.option('--actions/--no-actions', 'fetch_actions', default=False,
-        help='Fetch actions only')
-@click.option('--balances/--no-balances', 'fetch_balances', default=False,
-        help='Fetch balances only')
-@click.option('--trades/--no-trades', 'fetch_trades', default=False, help='Fetch trades only')
+@click.option('--actions', 'fetch_actions', is_flag=True, help='Fetch actions only')
+@click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
+@click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
 def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, external):
     "Fetch trades for configured accounts"
 
@@ -350,6 +348,7 @@ def run(name, from_date, to_date, external):
 @buchfink.command('trades')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
+@click.option('--fetch', '-f', is_flag=True, help='Fetch trades from sources')
 def trades_(keyword, asset):
     "Show trades"
 
