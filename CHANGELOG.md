@@ -1,7 +1,9 @@
-master
-------
+0.0.8
+-----
 
 * Balances will now be serialized sorted by asset
+* init will also create .gitignore
+* Support ENS domains for "ad-hoc accounts"
 
 0.0.7
 -----
