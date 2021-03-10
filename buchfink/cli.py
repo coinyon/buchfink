@@ -42,6 +42,7 @@ def init(directory):
     "Initialize new Buchfink directory"
 
     bf_dir = Path(directory).absolute()
+    logger.debug('Initializing in %s', str(bf_dir))
     target_config = bf_dir / 'buchfink.yaml'
     init_data = Path(__file__).parent / 'data' / 'init'
 

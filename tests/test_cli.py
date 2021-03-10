@@ -2,6 +2,7 @@
 import contextlib
 import logging
 import os
+import os.path
 
 from click.testing import CliRunner
 
@@ -13,7 +14,8 @@ logger = logging.getLogger(__name__)
 def test_run_on_ens_domain():
     "High level fetch+report integration test for adhoc accounts via ENS domain"
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
         result = runner.invoke(init)
         logger.debug('output of %s: %s', 'fetch', result.output)
         assert result.exception is None
@@ -31,7 +33,8 @@ def test_run_on_ens_domain():
 
 def test_second_init_should_fail():
     runner = CliRunner()
-    with runner.isolated_filesystem():
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
         result = runner.invoke(init)
         assert result.exception is None
         logger.debug('stdout of %s: %s', 'init', result.stdout_bytes)
@@ -40,5 +43,4 @@ def test_second_init_should_fail():
         assert result.exit_code == 0
         result = runner.invoke(init)
         logger.debug('output of %s: %s', 'init', result.output)
-        assert result.exception is None
         assert result.exit_code == 1
