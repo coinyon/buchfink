@@ -17,14 +17,14 @@ def test_run_on_ens_domain():
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
         result = runner.invoke(init)
-        logger.debug('output of %s: %s', 'fetch', result.output)
+        logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
         result = runner.invoke(fetch_, ['-e', 'coinyon.eth'])
         logger.debug('output of %s: %s', 'fetch', result.output)
         assert result.exception is None
         assert result.exit_code == 0
-        result = runner.invoke(report_, ['-e', 'coinyon.eth', '-y', '2020'])
+        result = runner.invoke(report_, ['-e', 'coinyon.eth', '--year', '2020'])
         logger.debug('output of %s: %s', 'report', result.output)
         assert result.exception is None
         assert result.exit_code == 0
@@ -36,9 +36,7 @@ def test_second_init_should_fail():
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
         result = runner.invoke(init)
-        assert result.exception is None
-        logger.debug('stdout of %s: %s', 'init', result.stdout_bytes)
-        logger.debug('stderr of %s: %s', 'init', result.stderr_bytes)
+        logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
         result = runner.invoke(init)
