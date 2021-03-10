@@ -46,4 +46,4 @@ jobs:
       - name: Typecheck & Lint
         run: make lint typecheck
       - name: Test with pytest
-        run: pytest -vv --log-cli-level debug
+        run: pytest -vv -x 2

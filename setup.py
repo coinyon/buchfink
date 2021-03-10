@@ -33,7 +33,7 @@ setup(
     url='https://github.com/coinyon/buchfink',
     packages=['buchfink'],
     package_data={
-        "buchfink": ["data/*.yaml"],
+        "buchfink": ["data/init/buchfink.yaml", "data/init/.gitignore"],
     },
     install_requires=install_requirements,
     use_scm_version=True,
