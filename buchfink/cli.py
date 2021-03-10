@@ -41,15 +41,19 @@ def buchfink(log_level):
 def init(directory):
     "Initialize new Buchfink directory"
 
-    bf_dir = Path(directory)
+    bf_dir = Path(directory).absolute()
     target_config = bf_dir / 'buchfink.yaml'
     init_data = Path(__file__).parent / 'data' / 'init'
 
     if target_config.exists():
-        click.echo(click.style('Already initialized (buchfink.yaml exists), aborting.', fg='red'))
+        click.echo(click.style(
+            f'Already initialized (buchfink.yaml exists in {bf_dir}), aborting.',
+            fg='red'
+        ))
         sys.exit(1)
 
     for init_file in init_data.iterdir():
+        logger.debug('Copying %s', init_file.name)
         shutil.copyfile(init_file, bf_dir / init_file.name)
 
     buchfink_db = BuchfinkDB(bf_dir)
