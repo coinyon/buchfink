@@ -9,3 +9,6 @@ typecheck:
 
 test:
 	py.test
+
+test-local:
+	py.test -m 'not blockchain_data'

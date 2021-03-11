@@ -4,6 +4,7 @@ import logging
 import os
 import os.path
 
+import pytest
 from click.testing import CliRunner
 
 from buchfink.cli import fetch_, init, report_
@@ -11,6 +12,7 @@ from buchfink.cli import fetch_, init, report_
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.blockchain_data
 def test_run_on_ens_domain():
     "High level fetch+report integration test for adhoc accounts via ENS domain"
     runner = CliRunner()

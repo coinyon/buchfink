@@ -1,10 +1,13 @@
 import os.path
 from datetime import datetime
 
-from buchfink.db import BuchfinkDB
+import pytest
+
 from buchfink.datatypes import FVal
+from buchfink.db import BuchfinkDB
 
 
+@pytest.mark.blockchain_data
 def test_ethereum_balances():
     start_ts = datetime.fromisoformat('2015-01-01').timestamp()
     end_ts = datetime.fromisoformat('2019-01-01').timestamp()
