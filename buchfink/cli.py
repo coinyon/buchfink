@@ -1,23 +1,22 @@
 import logging
-import sys
 import os.path
 import shutil
+import sys
 from datetime import datetime
 from operator import attrgetter, itemgetter
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import click
 import coloredlogs
 import yaml
-from rotkehlchen.constants import ZERO
-from rotkehlchen.utils.misc import ts_now
-from tabulate import tabulate
-
 from buchfink.datatypes import Asset, FVal, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
+from rotkehlchen.constants import ZERO
+from rotkehlchen.utils.misc import ts_now
+from tabulate import tabulate
 
 from .account import account_from_string
 from .classification import classify_tx
@@ -492,6 +491,27 @@ def allowances():
         'Average buy price (%s)' % currency.symbol
     ]))
     """
+
+
+@buchfink.command('quote')
+@click.argument('asset', nargs=-1)
+@click.option('--amount', '-n', type=float, default=1.0)
+@click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
+def quote(asset, amount, base_asset_: Optional[str]):
+    buchfink_db = BuchfinkDB()
+    currency = buchfink_db.get_main_currency()
+    base_asset = Asset(base_asset_) if base_asset_ else buchfink_db.get_main_currency()
+    base_in_usd = buchfink_db.inquirer.find_usd_price(base_asset)
+
+    for symbol in asset:
+        asset_ = Asset(symbol)
+        asset_usd = buchfink_db.inquirer.find_usd_price(asset_)
+        click.echo('{} {} = {} {}'.format(
+                click.style(f'{amount}', fg='white'),
+                click.style(asset_.symbol, fg='green'),
+                click.style(f'{FVal(amount) * asset_usd / base_in_usd}', fg='white'),
+                click.style(base_asset.symbol, fg='green')
+        ))
 
 
 if __name__ == '__main__':

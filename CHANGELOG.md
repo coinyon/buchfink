@@ -1,3 +1,8 @@
+master
+------
+
+* Add new "quote" subcommnad
+
 0.0.8
 -----
 
