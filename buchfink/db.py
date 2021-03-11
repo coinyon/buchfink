@@ -1,10 +1,10 @@
 import logging
 import operator
 import os.path
-from datetime import date, datetime
+from datetime import datetime
 from functools import reduce
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 import pickledb
 import yaml
@@ -13,17 +13,12 @@ from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.chain.ethereum.eth2 import Eth2Deposit
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
-from rotkehlchen.chain.manager import BlockchainBalancesUpdate, ChainManager
-from rotkehlchen.constants.assets import A_USD
-from rotkehlchen.data.importer import DataImporter
-from rotkehlchen.data_handler import DataHandler
+from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
-from rotkehlchen.db.settings import (DBSettings, ModifiableDBSettings,
-                                     db_settings_from_dict)
+from rotkehlchen.db.settings import db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
-from rotkehlchen.errors import (EthSyncError, InputError,
-                                PremiumAuthenticationError, RemoteError,
-                                SystemPermissionError, UnknownAsset)
+from rotkehlchen.errors import UnknownAsset
+from rotkehlchen.db.settings import DBSettings
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitmex import Bitmex
@@ -32,7 +27,6 @@ from rotkehlchen.exchanges.coinbase import Coinbase
 from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.kraken import Kraken
-from rotkehlchen.exchanges.manager import ExchangeManager
 from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
@@ -42,22 +36,15 @@ from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.logging import (DEFAULT_ANONYMIZED_LOGS, LoggingSettings,
-                                 RotkehlchenLogsAdapter)
-from rotkehlchen.premium.premium import (Premium, PremiumCredentials,
-                                         premium_create_and_verify)
-from rotkehlchen.premium.sync import PremiumSyncManager
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
                                 Location, SupportedBlockchain, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
-from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet, FVal,
-                                Trade, TradeType)
+from buchfink.datatypes import ActionType, Asset, Balance, BalanceSheet, Trade
 from buchfink.serialization import (deserialize_balance,
                                     deserialize_ledger_action,
-                                    deserialize_trade, serialize_balance,
-                                    serialize_balances)
+                                    deserialize_trade, serialize_balances)
 
 from .account import Account, accounts_from_config
 from .config import ReportConfig
@@ -168,10 +155,11 @@ class BuchfinkDB(DBHandler):
                 to_dt=datetime.fromisoformat(str(report_info['to']))
             )
 
-    def get_settings(self):
+    def get_settings(self, have_premium: bool = False) -> DBSettings:
         clean_settings = dict(self.config['settings'])
         if 'external_services' in clean_settings:
             del clean_settings['external_services']
+
         return db_settings_from_dict(clean_settings, self.msg_aggregator)
 
     def get_ignored_assets(self):
@@ -198,8 +186,7 @@ class BuchfinkDB(DBHandler):
     def get_blockchain_accounts(self) -> BlockchainAccounts:
         if self._active_eth_address:
             return BlockchainAccounts(eth=[self._active_eth_address], btc=[], ksm=[])
-        else:
-            return BlockchainAccounts(eth=[], btc=[], ksm=[])
+        return BlockchainAccounts(eth=[], btc=[], ksm=[])
 
     def get_trades_from_file(self, trades_file) -> List[Trade]:
         def safe_deserialize_trade(trade):
@@ -230,13 +217,12 @@ class BuchfinkDB(DBHandler):
             trades_file = os.path.join(self.data_directory, account.config['file'])
             return self.get_trades_from_file(trades_file)
 
-        else:
-            trades_file = os.path.join(self.data_directory, 'trades', account.name + '.yaml')
+        trades_file = os.path.join(self.data_directory, 'trades', account.name + '.yaml')
 
-            if os.path.exists(trades_file):
-                return self.get_trades_from_file(trades_file)
-            else:
-                return []
+        if os.path.exists(trades_file):
+            return self.get_trades_from_file(trades_file)
+
+        return []
 
     def get_actions_from_file(self, actions_file):
         def safe_deserialize_ledger_action(action):
@@ -282,7 +268,9 @@ class BuchfinkDB(DBHandler):
         else:
             raise ValueError('Unable to create chain manager for account')
 
-        premium = False  # TODO allow premium key in config file
+        # Eventually we should allow premium credentials in config file
+        premium = False
+
         eth_modules = self.get_settings().active_modules
         if not premium:
             eth_modules = [mod for mod in eth_modules if mod not in PREMIUM_ONLY_ETH_MODULES]
@@ -418,7 +406,7 @@ class BuchfinkDB(DBHandler):
 
             raise RuntimeError(error)
 
-        elif account.account_type == "ethereum":
+        if account.account_type == "ethereum":
             manager = self.get_chain_manager(account)
 
             # This is a little hack because query_balances sometimes hooks back
@@ -433,7 +421,7 @@ class BuchfinkDB(DBHandler):
 
             return reduce(operator.add, manager.balances.eth.values())
 
-        elif account.account_type == "bitcoin":
+        if account.account_type == "bitcoin":
             manager = self.get_chain_manager(account)
             manager.query_balances()
             btc = Asset('BTC')
@@ -442,11 +430,10 @@ class BuchfinkDB(DBHandler):
                 btc: reduce(operator.add, manager.balances.btc.values())
             }, liabilities={})
 
-        elif account.account_type == "file":
+        if account.account_type == "file":
             return self.get_balances_from_file(account.config['file'])
 
-        else:
-            return BalanceSheet(assets={}, liabilities={})
+        return BalanceSheet(assets={}, liabilities={})
 
     def fetch_balances(self, account):
         query_sheet = self.query_balances(account)
@@ -459,8 +446,7 @@ class BuchfinkDB(DBHandler):
         path = self.balances_directory / (account.name + '.yaml')
         if path.exists():
             return self.get_balances_from_file(path)
-        else:
-            return BalanceSheet(assets={}, liabilities={})
+        return BalanceSheet(assets={}, liabilities={})
 
     def get_balances_from_file(self, path) -> BalanceSheet:
         account = yaml.load(open(path, 'r'), Loader=yaml.SafeLoader)
