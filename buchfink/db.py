@@ -10,7 +10,6 @@ import pickledb
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
-from rotkehlchen.chain.ethereum.eth2 import Eth2Deposit
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
@@ -76,6 +75,7 @@ class BuchfinkDB(DBHandler):
     """
 
     def __init__(self, data_directory='.'):
+        # pylint: disable=super-init-not-called
         self.data_directory = Path(data_directory)
         with open(self.data_directory / 'buchfink.yaml', 'r') as cfg:
             yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
@@ -98,6 +98,8 @@ class BuchfinkDB(DBHandler):
         (self.cache_directory / 'history').mkdir(exist_ok=True)
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
         (self.cache_directory / 'coingecko').mkdir(exist_ok=True)
+
+        self.last_write_ts: Optional[Timestamp] = None
 
         self._amm_swaps = []  # type: List[AMMSwap]
         self._eth_tx = []  # type: List[EthereumTransaction]
@@ -164,10 +166,6 @@ class BuchfinkDB(DBHandler):
 
     def get_ignored_assets(self):
         return []
-
-    @property
-    def last_write_ts(self):
-        return 0
 
     def get_external_service_credentials(
             self,
@@ -290,14 +288,6 @@ class BuchfinkDB(DBHandler):
             premium=premium,
             eth_modules=eth_modules
         )
-
-    def get_eth2_deposits(
-            self,
-            from_ts: Optional[Timestamp] = None,
-            to_ts: Optional[Timestamp] = None,
-            address: Optional[ChecksumEthAddress] = None,
-    ) -> List[Eth2Deposit]:
-        return []
 
     def get_exchange(self, account: str) -> ExchangeInterface:
 
