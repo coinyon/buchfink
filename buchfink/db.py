@@ -14,17 +14,18 @@ from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
-from rotkehlchen.db.settings import db_settings_from_dict
+from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.errors import UnknownAsset
-from rotkehlchen.db.settings import DBSettings
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
+from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
 from rotkehlchen.exchanges.bittrex import Bittrex
 from rotkehlchen.exchanges.coinbase import Coinbase
 from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.gemini import Gemini
+from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.beaconchain import BeaconChain
@@ -48,17 +49,6 @@ from buchfink.serialization import (deserialize_balance,
 from .account import Account, accounts_from_config
 from .config import ReportConfig
 from .schema import config_schema
-
-try:
-    # Bitcoinde module is not yet merged in Rotki, so we will make this optional
-    from rotkehlchen.exchanges.bitcoinde import Bitcoinde
-except ImportError:
-    Bitcoinde = None
-try:
-    # Iconomi module is not yet merged in Rotki, so we will make this optional
-    from rotkehlchen.exchanges.iconomi import Iconomi
-except ImportError:
-    Iconomi = None
 
 logger = logging.getLogger(__name__)
 
