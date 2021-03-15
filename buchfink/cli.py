@@ -471,7 +471,7 @@ def allowances():
 
     accountant = buchfink_db.get_accountant()
     currency = buchfink_db.get_main_currency()
-    currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
+    currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
 
     accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [], [])
     total_usd = FVal(0)
@@ -481,7 +481,7 @@ def allowances():
     """
     # TODO: must be adapted to current rotki api
     for (symbol, (_allowance, buy_price)) in accountant.events.details.items():
-        symbol_usd = buchfink_db.inquirer.find_usd_price(symbol)
+        symbol_usd = FVal(buchfink_db.inquirer.find_usd_price(symbol))
         total_usd += _allowance * symbol_usd
         table.append([
             symbol,
@@ -508,11 +508,11 @@ def allowances():
 def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str]):
     buchfink_db = BuchfinkDB()
     base_asset = Asset(base_asset_) if base_asset_ else buchfink_db.get_main_currency()
-    base_in_usd = buchfink_db.inquirer.find_usd_price(base_asset)
+    base_in_usd = FVal(buchfink_db.inquirer.find_usd_price(base_asset))
 
     for symbol in asset:
         asset_ = Asset(symbol)
-        asset_usd = buchfink_db.inquirer.find_usd_price(asset_)
+        asset_usd = FVal(buchfink_db.inquirer.find_usd_price(asset_))
         click.echo('{} {} = {} {}'.format(
                 click.style(f'{amount}', fg='white'),
                 click.style(asset_.symbol, fg='green'),

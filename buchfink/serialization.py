@@ -152,7 +152,7 @@ def deserialize_balance(balance: Dict[str, Any], inquirer: Optional[Any] = None)
     amount = FVal(balance['amount'])
     asset = Asset(balance['asset'])
     if inquirer:
-        usd_value = amount * inquirer.find_usd_price(asset)
+        usd_value = amount * FVal(inquirer.find_usd_price(asset))
         return Balance(amount, usd_value), asset
     return Balance(amount), asset
 
