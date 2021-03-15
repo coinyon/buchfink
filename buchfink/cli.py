@@ -140,23 +140,30 @@ def balances(keyword, minimum_balance, fetch, total, external):
                     + balance.usd_value
 
     currency = buchfink_db.get_main_currency()
-    currency_in_usd = buchfink_db.inquirer.find_usd_price(currency)
+    currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
 
     table = []
     assets = [obj[0] for obj in sorted(assets_usd_sum.items(), key=itemgetter(1), reverse=True)]
     balance_in_currency_sum = 0
+    small_balances_sum = 0
 
     for asset in assets:
         balance = assets_sum[asset]
-        balance_in_currency = assets_usd_sum.get(asset, FVal(0)) / currency_in_usd
-        if balance > ZERO and balance_in_currency >= FVal(minimum_balance):
+        balance_in_currency = FVal(assets_usd_sum.get(asset, 0)) / currency_in_usd
+        if balance > ZERO:
+            if balance_in_currency > FVal(minimum_balance):
+                table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
+            else:
+                small_balances_sum += balance_in_currency
             balance_in_currency_sum += balance_in_currency
-            table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
 
     if total:
         print(f'Total assets: {round(float(balance_in_currency_sum), 2)} {currency.symbol}')
 
     else:
+        if small_balances_sum > 0:
+            table.append(['Others', None, None, round(float(small_balances_sum), 2)])
+
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
         print(tabulate(table, headers=[
             'Asset',
