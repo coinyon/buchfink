@@ -2,6 +2,7 @@ master
 ------
 
 * Add new "quote" subcommnad
+* Balances will now show "small balances" in sum and table
 
 0.0.8
 -----
