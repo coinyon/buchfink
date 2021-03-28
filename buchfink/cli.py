@@ -365,7 +365,7 @@ def run(name, from_date, to_date, external):
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
 @click.option('--fetch', '-f', is_flag=True, help='Fetch trades from sources')
-def trades_(keyword, asset, fetch):
+def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
     "Show trades"
 
     buchfink_db = BuchfinkDB()
