@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from operator import itemgetter
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
@@ -115,7 +115,11 @@ QUANT_DECIMAL = Decimal('0.00000000000001')
 
 def serialize_decimal(dec: Decimal) -> str:
     'return a nice, non-scientific, non-trailing-zero number representation'
-    ser_amount = str(dec.quantize(QUANT_DECIMAL))
+    print(dec, type(dec), QUANT_DECIMAL)
+    try:
+        ser_amount = str(dec.quantize(QUANT_DECIMAL))
+    except InvalidOperation:
+        ser_amount = str(dec)
     if 'E' in ser_amount or 'e' in ser_amount:
         ser_amount = '{0:.14f}'.format(float(dec))
     return ser_amount.rstrip('0').rstrip('.')
