@@ -241,7 +241,7 @@ class BuchfinkDB(DBHandler):
             if actions_file.exists():
                 return self.get_actions_from_file(actions_file)
 
-        elif account.account_type == 'ethereum':
+        else:
             actions_file = self.data_directory / f'actions/{account.name}.yaml'
             if actions_file.exists():
                 return self.get_actions_from_file(actions_file)
