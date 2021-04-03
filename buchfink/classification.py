@@ -16,6 +16,7 @@ CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
+PURCHASE = '0x2499a5330ab0979cc612135e7883ebc3cd5c9f7a8508f042540c34723348f632'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -36,6 +37,7 @@ ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
 ADDR_MIR_REWARDS = '0x5d447Fc0F8965cED158BAB42414Af10139Edf0AF'
 ADDR_XTOKEN_AIRDROP = '0x11f10378fc56277eEdBc0c3309c457b0fd5c6dfd'
 ADDR_SWERVE_MINTER = '0x2c988c3974ad7e604e276ae0294a7228def67974'
+ADDR_FEI_GENESIS_GROUP = '0xBFfB152b9392e38CdDc275D818a3Db7FE364596b'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -220,5 +222,22 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
 
         elif event['topics'][0] == MINTED:
             logger.warning('Unknown Minted event for tx %s at %s', tx_hash, tx_time)
+
+        if event['topics'][0] == PURCHASE and event['address'] == ADDR_FEI_GENESIS_GROUP.lower():
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.EXPENSE,
+                    amount=FVal(amount) / FVal(1e18),
+                    timestamp=txn.timestamp,
+                    asset=Asset('ETH'),
+                    notes='Fei Genesis Commit',
+                    link=tx_hash
+                )]
+
+        elif event['topics'][0] == PURCHASE:
+            logger.warning('Unknown Purchase event for tx %s at %s', tx_hash, tx_time)
 
     return actions
