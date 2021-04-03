@@ -58,6 +58,19 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             link=action_dict.get('link', '')
         )
 
+    if 'expense' in action_dict:
+        amount, asset = deserialize_amount(action_dict['expense'])
+        return LedgerAction(
+            identifier=None,
+            location='',
+            action_type=LedgerActionType.EXPENSE,
+            amount=amount,
+            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            asset=asset,
+            notes=action_dict.get('notes', ''),
+            link=action_dict.get('link', '')
+        )
+
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 
@@ -223,6 +236,12 @@ def serialize_ledger_action(action: LedgerAction):
 
     elif action.action_type == LedgerActionType.LOSS:
         ser_action['loss'] = serialize_amount(FVal(action.amount), action.asset)
+        del ser_action['asset']
+        del ser_action['amount']
+        del ser_action['action_type']
+
+    elif action.action_type == LedgerActionType.EXPENSE:
+        ser_action['expense'] = serialize_amount(FVal(action.amount), action.asset)
         del ser_action['asset']
         del ser_action['amount']
         del ser_action['action_type']
