@@ -409,7 +409,7 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
 @buchfink.command('report')
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
-@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in report name')
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
 def report_(keyword, external, year):
