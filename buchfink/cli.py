@@ -234,7 +234,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
             accounts = [acc for acc in accounts if keyword in acc.name]
 
     logger.info(
-            f'Collected %d account(s): %s',
+            'Collected %d account(s): %s',
             len(accounts),
             ', '.join([acc.name for acc in accounts])
         )
