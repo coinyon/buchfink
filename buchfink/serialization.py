@@ -139,8 +139,7 @@ QUANT_DECIMAL = Decimal('0.00000000000001')
 
 
 def serialize_decimal(dec: Decimal) -> str:
-    'return a nice, non-scientific, non-trailing-zero number representation'
-    print(dec, type(dec), QUANT_DECIMAL)
+    'return a non-scientific, non-trailing-zero number representation'
     try:
         ser_amount = str(dec.quantize(QUANT_DECIMAL))
     except InvalidOperation:
