@@ -1,12 +1,16 @@
+import os.path
 from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
-from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
+from rotkehlchen.assets.utils import symbol_to_asset_or_token
+from rotkehlchen.globaldb import GlobalDBHandler
+from rotkehlchen.serialization.deserialize import \
+    deserialize_timestamp_from_date
 
-from buchfink.datatypes import Asset, FVal, Trade, TradeType, Balance
-from buchfink.serialization import (deserialize_balance, deserialize_trade, serialize_balance, serialize_decimal,
-                                    serialize_trade)
+from buchfink.datatypes import Asset, Balance, FVal, Trade, TradeType
+from buchfink.db import BuchfinkDB
+from buchfink.serialization import deserialize_asset, deserialize_balance, deserialize_trade, serialize_asset, serialize_balance, serialize_decimal, serialize_trade
 
 
 @pytest.fixture
@@ -14,7 +18,8 @@ def dummy_trade():
     return Trade(
         datetime(2020, 1, 3, tzinfo=timezone.utc).timestamp(),
         'coinbase',
-        'BTC_EUR',
+        Asset('BTC'),
+        Asset('EUR'),
         TradeType.BUY,
         FVal('0.52'),
         FVal('7200.0'),
@@ -69,15 +74,31 @@ def test_datetime_deserialization():
     assert dt.day == 5
 
 
+def test_assets():
+
+    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'))
+
+    assert buchfink_db.get_asset_by_symbol('ETH') == Asset('ETH')
+    assert buchfink_db.get_asset_by_symbol('DAI') is not None
+
+    assert deserialize_asset(serialize_asset(Asset('ETH'))) == Asset('ETH')
+
+    A_STAKEDAO = buchfink_db.get_asset_by_symbol('_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F')
+    assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
+
+
 def test_serialize_deserialize_balance():
+    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'))
     bal = serialize_balance(Balance(FVal('0.5')), Asset('ETH'))
-    balance, asset = deserialize_balance(bal)
+    balance, asset = deserialize_balance(bal, buchfink_db)
     assert str(balance.amount) == '0.5'
     assert asset == Asset('ETH')
 
 
 def test_serialize_deserialize_balance_secondary():
-    bal = serialize_balance(Balance(FVal('1.5')), Asset('SDT-2'))
-    balance, asset = deserialize_balance(bal)
+    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'))
+    A_STAKEDAO = buchfink_db.get_asset_by_symbol('_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F')
+    bal = serialize_balance(Balance(FVal('1.5')), A_STAKEDAO)
+    balance, asset = deserialize_balance(bal, buchfink_db)
     assert str(balance.amount) == '1.5'
-    assert asset == Asset('SDT-2')
+    assert asset == A_STAKEDAO

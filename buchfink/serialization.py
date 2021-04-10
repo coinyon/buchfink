@@ -1,13 +1,16 @@
+import re
 from datetime import datetime, timezone
-from operator import itemgetter
-
 from decimal import Decimal, InvalidOperation
+from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
+from rotkehlchen.assets.utils import symbol_to_asset_or_token
+from rotkehlchen.errors import UnknownAsset
 
-from buchfink.datatypes import (AMMTrade, Asset, Balance, FVal, LedgerAction,
-                                LedgerActionType, Trade, TradeType, BalanceSheet)
+from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet, FVal,
+                                LedgerAction, LedgerActionType, Trade,
+                                TradeType)
 
 
 def serialize_timestamp(timestamp: int) -> str:
@@ -26,6 +29,8 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             location='',
             action_type=LedgerActionType.INCOME,
             amount=amount,
+            rate=None,
+            rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
             notes=action_dict.get('notes', ''),
@@ -39,6 +44,8 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             location='',
             action_type=LedgerActionType.AIRDROP,
             amount=amount,
+            rate=None,
+            rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
             notes=action_dict.get('notes', ''),
@@ -52,6 +59,8 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             location='',
             action_type=LedgerActionType.GIFT,
             amount=amount,
+            rate=None,
+            rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
             notes=action_dict.get('notes', ''),
@@ -65,6 +74,8 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             location='',
             action_type=LedgerActionType.EXPENSE,
             amount=amount,
+            rate=None,
+            rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
             notes=action_dict.get('notes', ''),
@@ -113,7 +124,8 @@ def deserialize_trade(trade_dict) -> Trade:
     return Trade(
         dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
         trade_dict.get('location', ''),
-        '{0}_{1}'.format(base_asset.identifier, quote_asset.identifier),
+        base_asset,
+        quote_asset,
         trade_type,
         amount,
         quote_amount / amount,
@@ -138,40 +150,46 @@ def serialize_decimal(dec: Decimal) -> str:
     return ser_amount.rstrip('0').rstrip('.')
 
 
+def serialize_asset(asset: Asset) -> str:
+    try:
+        if asset == symbol_to_asset_or_token(asset.symbol):
+            return asset.symbol
+    except UnknownAsset:
+        pass
+    return f'{asset.symbol}[{asset.identifier}]'
+
+
 def serialize_amount(amount: FVal, asset: Asset) -> str:
-    return '{0} {1}'.format(serialize_decimal(amount.num), str(asset.identifier))
+    return '{0} {1}'.format(serialize_decimal(amount.num), serialize_asset(asset))
 
 
 def serialize_balance(balance: Balance, asset: Asset) -> dict:
     return {
         'amount': serialize_decimal(balance.amount.num),
-        'asset': asset.identifier
+        'asset': serialize_asset(asset)
     }
 
 
 def serialize_balances(balances: BalanceSheet) -> dict:
     ser_balances = {}
     if balances.assets:
-        ser_balances['assets'] = [
+        ser_balances['assets'] = sorted([
             serialize_balance(bal, asset)
-            for asset, bal in sorted(balances.assets.items(), key=itemgetter(0))
-        ]
+            for asset, bal in balances.assets.items()
+        ], key=itemgetter('asset'))
     if balances.liabilities:
-        ser_balances['liabilities'] = [
+        ser_balances['liabilities'] = sorted([
             serialize_balance(bal, asset)
-            for asset, bal in sorted(balances.liabilities.items(), key=itemgetter(0))
-        ]
+            for asset, bal in balances.liabilities.items()
+        ], key=itemgetter('asset'))
     return ser_balances
 
 
-def deserialize_balance(balance: Dict[str, Any], inquirer: Optional[Any] = None) \
-        -> Tuple[Balance, Asset]:
+def deserialize_balance(balance: Dict[str, Any], buchfink_db) -> Tuple[Balance, Asset]:
     amount = FVal(balance['amount'])
-    asset = Asset(balance['asset'])
-    if inquirer:
-        usd_value = amount * FVal(inquirer.find_usd_price(asset))
-        return Balance(amount, usd_value), asset
-    return Balance(amount), asset
+    asset = buchfink_db.get_asset_by_symbol(balance['asset'])
+    usd_value = amount * FVal(buchfink_db.inquirer.find_usd_price(asset))
+    return Balance(amount, usd_value), asset
 
 
 def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
@@ -209,7 +227,13 @@ def serialize_trade(trade: Union[Trade, AMMTrade]):
     if not ser_trade['link']:
         del ser_trade['link']
 
-    return ser_trade
+    # TODO: This should probably be implemented in the actual yaml writer
+    preferred_order = ['buy', 'sell', 'for', 'fee', 'location', 'link', 'timestamp']
+
+    return {
+        key: ser_trade[key]
+        for key in sorted(ser_trade.keys(), key=preferred_order.index)
+    }
 
 
 def serialize_ledger_action(action: LedgerAction):
@@ -258,6 +282,12 @@ def serialize_ledger_action(action: LedgerAction):
     if not ser_action['link']:
         del ser_action['link']
 
+    if not ser_action['rate']:
+        del ser_action['rate']
+
+    if not ser_action['rate_asset']:
+        del ser_action['rate_asset']
+
     return ser_action
 
 
@@ -289,5 +319,21 @@ def deserialize_fval(val: str) -> FVal:
     return FVal(val)
 
 
+ASSET_RE = re.compile(r'([^\[]+)(\[(.*)\])?')
+
+
 def deserialize_asset(val: str) -> Asset:
-    return Asset(val)
+    match = ASSET_RE.match(val)
+    if match is None:
+        raise ValueError(f'Could not parse asset: {val}')
+
+    symbol, _identifier_outer, identifier = match.groups()
+    if identifier:
+        asset = symbol_to_asset_or_token(identifier)
+    else:
+        asset = symbol_to_asset_or_token(symbol)
+
+    if asset is None:
+        raise ValueError(f'Symbol not found or ambigous: {val}')
+
+    return asset

@@ -1,6 +1,7 @@
 master
 ------
 
+* Ambiguous symbols are now serialized as 'SYMBOL[UNIQUE_IDENTIFIER]'
 * Add new "quote" subcommnad
 * Balances will now show "small balances" in sum and table
 

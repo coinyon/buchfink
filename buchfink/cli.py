@@ -1,5 +1,6 @@
 import logging
 import os.path
+import re
 import shutil
 import sys
 from datetime import datetime
@@ -224,10 +225,21 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
     else:
         accounts = buchfink_db.get_all_accounts()
 
-    for account in accounts:
-        if keyword is not None and keyword not in account.name:
-            continue
+    # TODO: This should move to BuchfinkDB.get_accounts()
+    if keyword is not None:
+        if keyword.startswith('/') and keyword.endswith('/'):
+            keyword_re = re.compile(keyword[1:-1])
+            accounts = [acc for acc in accounts if keyword_re.search(acc.name)]
+        else:
+            accounts = [acc for acc in accounts if keyword in acc.name]
 
+    logger.info(
+            f'Collected %d account(s): %s',
+            len(accounts),
+            ', '.join([acc.name for acc in accounts])
+        )
+
+    for account in accounts:
         if account_type is not None and account_type not in account.account_type:
             continue
 
@@ -273,21 +285,21 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
         elif account.account_type == "exchange":
 
-            click.echo('Fetching trades for ' + name)
-
-            exchange = buchfink_db.get_exchange(name)
-
-            api_key_is_valid, error = exchange.validate_api_key()
-
-            if not api_key_is_valid:
-                logger.critical(
-                        'Skipping exchange %s because API key is not valid (%s)',
-                        account.name,
-                        error
-                )
-                continue
-
             if not fetch_limited or fetch_trades:
+                click.echo('Fetching trades for ' + name)
+
+                exchange = buchfink_db.get_exchange(name)
+
+                api_key_is_valid, error = exchange.validate_api_key()
+
+                if not api_key_is_valid:
+                    logger.critical(
+                            'Skipping exchange %s because API key is not valid (%s)',
+                            account.name,
+                            error
+                    )
+                    continue
+
                 trades = exchange.query_online_trade_history(
                     start_ts=epoch_start_ts,
                     end_ts=epoch_end_ts
@@ -314,7 +326,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                 with open("actions/" + name + ".yaml", "w") as yaml_file:
                     yaml.dump({
                         "actions": serialize_ledger_actions(actions)
-                    }, stream=yaml_file)
+                    }, stream=yaml_file, sort_keys=True)
 
         if not fetch_limited or fetch_trades:
             if os.path.exists(annotations_path):
@@ -328,7 +340,9 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
             trades.extend(annotated)
 
             with open("trades/" + name + ".yaml", "w") as yaml_file:
-                yaml.dump({"trades": serialize_trades(trades)}, stream=yaml_file)
+                yaml.dump({
+                    "trades": serialize_trades(trades)
+                }, stream=yaml_file, sort_keys=True)
 
         if not fetch_limited or fetch_balances:
             buchfink_db.fetch_balances(account)

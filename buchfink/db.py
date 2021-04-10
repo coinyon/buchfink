@@ -42,7 +42,7 @@ from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import ActionType, Asset, Balance, BalanceSheet, Trade
-from buchfink.serialization import (deserialize_balance,
+from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
 
@@ -111,7 +111,7 @@ class BuchfinkDB(DBHandler):
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
         self.globaldb = GlobalDBHandler(self.cache_directory)
-        self.asset_resolver = AssetResolver(self.data_directory)
+        self.asset_resolver = AssetResolver()
         self.ethereum_manager = EthereumManager(
             database=self,
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
@@ -127,6 +127,10 @@ class BuchfinkDB(DBHandler):
 
     def __del__(self):
         pass
+
+    def get_asset_by_symbol(self, symbol: str) -> Asset:
+        # TODO: this indirection function could incorporate a custom mapping from yaml config
+        return deserialize_asset(symbol)
 
     def get_main_currency(self):
         return self.get_settings().main_currency
@@ -436,7 +440,7 @@ class BuchfinkDB(DBHandler):
         if 'balances' in account:
             logger.warning('Found deprecated key "balances", please use "assets" instead.')
             for balance in account['balances']:
-                balance, asset = deserialize_balance(balance, inquirer=self.inquirer)
+                balance, asset = deserialize_balance(balance, self)
                 if asset in assets:
                     assets[asset] += balance
                 else:
@@ -444,7 +448,7 @@ class BuchfinkDB(DBHandler):
 
         if 'assets' in account:
             for balance in account['assets']:
-                balance, asset = deserialize_balance(balance, inquirer=self.inquirer)
+                balance, asset = deserialize_balance(balance, self)
                 if asset in assets:
                     assets[asset] += balance
                 else:
@@ -452,7 +456,7 @@ class BuchfinkDB(DBHandler):
 
         if 'liabilities' in account:
             for balance in account['liabilities']:
-                balance, asset = deserialize_balance(balance, inquirer=self.inquirer)
+                balance, asset = deserialize_balance(balance, self)
                 if asset in liabilities:
                     liabilities[asset] += balance
                 else:

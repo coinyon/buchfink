@@ -1,6 +1,7 @@
 import logging
 from typing import List
 
+from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.typing import EthereumTransaction
 from rotkehlchen.utils.misc import hexstr_to_int
 
@@ -57,8 +58,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('UNI'),
+                asset=symbol_to_asset_or_token('_ceth_0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'),
                 notes='',
                 link=tx_hash
             )]
@@ -70,8 +73,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('MIR'),
+                asset=symbol_to_asset_or_token('_ceth_0x09a3ecafa817268f77be1283176b946c4ff2e608'),
                 notes='',
                 link=tx_hash
             )]
@@ -83,8 +88,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('POOL'),
+                asset=symbol_to_asset_or_token('_ceth_0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'),
                 notes='PoolTogether airdrop',
                 link=tx_hash
             )]
@@ -95,13 +102,16 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
         if event['topics'][0] == CLAIMED_3 and event['address'] == ADDR_BADGER_TREE.lower():
             if hexstr_to_int(event['topics'][2]) == hexstr_to_int(ADDR_BADGER):
                 amount = hexstr_to_int(event['data'][2:66])
+                token = symbol_to_asset_or_token('_ceth_0x3472a5a71965499acd81997a54bba8d852c6e53d')
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
                     action_type=LedgerActionType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=Asset('BADGER'),
+                    asset=token,
                     notes='Badger rewards for staking',
                     link=tx_hash
                 )]
@@ -116,8 +126,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('XTK'),
+                asset=symbol_to_asset_or_token('_ceth_0x7f3edcdd180dbe4819bd98fee8929b5cedb3adeb'),
                 notes='xToken airdrop',
                 link=tx_hash
             )]
@@ -129,8 +141,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('BAL'),
+                asset=symbol_to_asset_or_token('BAL'),
                 notes='Balancer rewards for providing liquidity',
                 link=tx_hash
             )]
@@ -145,8 +159,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('DOUGH'),
+                asset=symbol_to_asset_or_token('DOUGH'),
                 notes='rewards for providing liquidity',
                 link=tx_hash
             )]
@@ -158,8 +174,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('INDEX'),
+                asset=symbol_to_asset_or_token('INDEX'),
                 notes='rewards for providing liquidity',
                 link=tx_hash
             )]
@@ -171,8 +189,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('yDAI+yUSDC+yUSDT+yTUSD'),
+                asset=symbol_to_asset_or_token('yDAI+yUSDC+yUSDT+yTUSD'),
                 notes='rewards from yearn governance',
                 link=tx_hash
             )]
@@ -184,8 +204,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('CREAM'),
+                asset=symbol_to_asset_or_token('CREAM'),
                 notes='rewards from cream incentives',
                 link=tx_hash
             )]
@@ -197,8 +219,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 location='',
                 action_type=LedgerActionType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=Asset('MIR'),
+                asset=symbol_to_asset_or_token('_ceth_0x09a3ecafa817268f77be1283176b946c4ff2e608'),
                 notes='rewards for staking MIR LP',
                 link=tx_hash
             )]
@@ -214,8 +238,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     location='',
                     action_type=LedgerActionType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=Asset('SWRV'),
+                    asset=symbol_to_asset_or_token('SWRV'),
                     notes='Swerve rewards for pooling liquidity',
                     link=tx_hash
                 )]
@@ -231,6 +257,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     location='',
                     action_type=LedgerActionType.EXPENSE,
                     amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
                     timestamp=txn.timestamp,
                     asset=Asset('ETH'),
                     notes='Fei Genesis Commit',
