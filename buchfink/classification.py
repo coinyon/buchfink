@@ -6,7 +6,7 @@ from rotkehlchen.typing import EthereumTransaction
 from rotkehlchen.utils.misc import hexstr_to_int
 
 from buchfink.account import Account
-from buchfink.datatypes import Asset, FVal, LedgerAction, LedgerActionType
+from buchfink.datatypes import FVal, LedgerAction, LedgerActionType
 from buchfink.serialization import serialize_timestamp
 
 logger = logging.getLogger(__name__)
