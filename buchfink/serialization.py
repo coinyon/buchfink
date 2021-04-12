@@ -194,7 +194,7 @@ def deserialize_balance(balance: Dict[str, Any], buchfink_db) -> Tuple[Balance, 
 def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
     elems = amount.split(' ')
     amount = FVal(elems[0])
-    asset = Asset(elems[1]) if len(elems) > 1 else None
+    asset = deserialize_asset(elems[1]) if len(elems) > 1 else None
     return amount, asset
 
 
