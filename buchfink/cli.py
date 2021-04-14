@@ -15,7 +15,7 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
-from buchfink.datatypes import Asset, FVal, Trade
+from buchfink.datatypes import FVal, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
@@ -153,7 +153,7 @@ def balances(keyword, minimum_balance, fetch, total, external):
         balance_in_currency = FVal(assets_usd_sum.get(asset, 0)) / currency_in_usd
         if balance > ZERO:
             if balance_in_currency > FVal(minimum_balance):
-                table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
+                table.append([asset.name, balance, asset.symbol, round(float(balance_in_currency), 2)])
             else:
                 small_balances_sum += balance_in_currency
             balance_in_currency_sum += balance_in_currency
@@ -186,7 +186,7 @@ def balances(keyword, minimum_balance, fetch, total, external):
             balance_in_currency = liabilities_usd_sum.get(asset, FVal(0)) / currency_in_usd
             if balance > ZERO and balance_in_currency >= FVal(minimum_balance):
                 balance_in_currency_sum += balance_in_currency
-                table.append([asset, balance, asset.symbol, round(float(balance_in_currency), 2)])
+                table.append([asset.name, balance, asset.symbol, round(float(balance_in_currency), 2)])
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
 
         if total:
@@ -392,7 +392,7 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
         trades.extend(buchfink_db.get_local_trades_for_account(account.name))
 
     if asset is not None:
-        the_asset = Asset(asset)
+        the_asset = buchfink_db.get_asset_by_symbol(asset)
         trades = [trade for trade in trades if the_asset in (trade.base_asset, trade.quote_asset)]
 
     trades = sorted(trades, key=attrgetter('timestamp'))
@@ -521,11 +521,13 @@ def allowances():
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
 def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str]):
     buchfink_db = BuchfinkDB()
-    base_asset = Asset(base_asset_) if base_asset_ else buchfink_db.get_main_currency()
+    base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
+            if base_asset_ \
+            else buchfink_db.get_main_currency()
     base_in_usd = FVal(buchfink_db.inquirer.find_usd_price(base_asset))
 
     for symbol in asset:
-        asset_ = Asset(symbol)
+        asset_ = buchfink_db.get_asset_by_symbol(symbol)
         asset_usd = FVal(buchfink_db.inquirer.find_usd_price(asset_))
         click.echo('{} {} = {} {}'.format(
                 click.style(f'{amount}', fg='white'),
