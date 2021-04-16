@@ -153,7 +153,12 @@ def balances(keyword, minimum_balance, fetch, total, external):
         balance_in_currency = FVal(assets_usd_sum.get(asset, 0)) / currency_in_usd
         if balance > ZERO:
             if balance_in_currency > FVal(minimum_balance):
-                table.append([asset.name, balance, asset.symbol, round(float(balance_in_currency), 2)])
+                table.append([
+                    asset.name,
+                    balance,
+                    asset.symbol,
+                    round(float(balance_in_currency), 2)
+                ])
             else:
                 small_balances_sum += balance_in_currency
             balance_in_currency_sum += balance_in_currency
@@ -186,7 +191,12 @@ def balances(keyword, minimum_balance, fetch, total, external):
             balance_in_currency = liabilities_usd_sum.get(asset, FVal(0)) / currency_in_usd
             if balance > ZERO and balance_in_currency >= FVal(minimum_balance):
                 balance_in_currency_sum += balance_in_currency
-                table.append([asset.name, balance, asset.symbol, round(float(balance_in_currency), 2)])
+                table.append([
+                    asset.name,
+                    balance,
+                    asset.symbol,
+                    round(float(balance_in_currency), 2)
+                ])
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
 
         if total:
