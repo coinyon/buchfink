@@ -34,7 +34,7 @@ from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.greenlets import GreenletManager
-from rotkehlchen.history import PriceHistorian
+from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
