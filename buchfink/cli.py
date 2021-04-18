@@ -260,7 +260,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
         if account.account_type == "ethereum":
 
             if not fetch_limited or fetch_actions:
-                click.echo('Analyzing ethereum transactions for ' + name)
+                logger.info('Analyzing ethereum transactions for %s', name)
                 manager = buchfink_db.get_chain_manager(account)
 
                 txs = manager.ethereum.transactions.single_address_query_transactions(
@@ -282,7 +282,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                     actions.extend(acc_actions)
 
             if not fetch_limited or fetch_trades:
-                click.echo('Fetching uniswap trades for ' + name)
+                logger.info('Fetching uniswap trades for %s', name)
 
                 manager = buchfink_db.get_chain_manager(account)
 
@@ -296,7 +296,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
         elif account.account_type == "exchange":
 
             if not fetch_limited or fetch_trades:
-                click.echo('Fetching trades for ' + name)
+                logger.info('Fetching exhange trades for %s', name)
 
                 exchange = buchfink_db.get_exchange(name)
 
