@@ -33,6 +33,7 @@ from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.globaldb import GlobalDBHandler
+from rotkehlchen.globaldb.updates import AssetsUpdater
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.inquirer import Inquirer
@@ -112,6 +113,7 @@ class BuchfinkDB(DBHandler):
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
         self.globaldb = GlobalDBHandler(self.cache_directory)
         self.asset_resolver = AssetResolver()
+        self.assets_updater = AssetsUpdater(self.msg_aggregator)
         self.ethereum_manager = EthereumManager(
             database=self,
             ethrpc_endpoint=self.get_eth_rpc_endpoint(),
@@ -523,3 +525,6 @@ class BuchfinkDB(DBHandler):
             address: Optional[ChecksumEthAddress] = None,
     ) -> List[EthereumTransaction]:
         return self._eth_tx
+
+    def perform_assets_updates(self):
+        result = self.assets_updater.perform_update(None, 'remote')

@@ -125,6 +125,7 @@ def balances(keyword, minimum_balance, fetch, total, external):
             continue
 
         if fetch:
+            buchfink_db.perform_assets_updates()
             buchfink_db.fetch_balances(account)
 
         sheet = buchfink_db.get_balances(account)
@@ -227,6 +228,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
     "Fetch trades for configured accounts"
 
     buchfink_db = BuchfinkDB()
+    buchfink_db.perform_assets_updates()
     now = ts_now()
     fetch_limited = fetch_actions or fetch_balances or fetch_trades
 
