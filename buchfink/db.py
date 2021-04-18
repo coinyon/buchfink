@@ -527,4 +527,4 @@ class BuchfinkDB(DBHandler):
         return self._eth_tx
 
     def perform_assets_updates(self):
-        result = self.assets_updater.perform_update(None, 'remote')
+        self.assets_updater.perform_update(None, 'remote')
