@@ -310,16 +310,15 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                             account.name,
                             error
                     )
-                    continue
 
-                trades = exchange.query_online_trade_history(
-                    start_ts=epoch_start_ts,
-                    end_ts=epoch_end_ts
-                )
+                else:
+                    trades = exchange.query_online_trade_history(
+                        start_ts=epoch_start_ts,
+                        end_ts=epoch_end_ts
+                    )
 
         else:
             logger.debug('No way to retrieve trades for %s, yet', name)
-            continue
 
         annotations_path = "annotations/" + name + ".yaml"
 
