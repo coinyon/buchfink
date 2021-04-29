@@ -271,7 +271,7 @@ class BuchfinkDB(DBHandler):
 
         logger.debug('Creating ChainManager with modules: %s', eth_modules)
 
-        return ChainManager(
+        manager = ChainManager(
             database=self,
             blockchain_accounts=accounts,
             beaconchain=self.beaconchain,
@@ -284,6 +284,9 @@ class BuchfinkDB(DBHandler):
             premium=premium,
             eth_modules=eth_modules
         )
+        # Monkey-patch function that uses singleton
+        manager.queried_addresses_for_module = lambda self, module = None: [account]
+        return manager
 
     def get_exchange(self, account: str) -> ExchangeInterface:
 
