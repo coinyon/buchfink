@@ -291,78 +291,34 @@ class BuchfinkDB(DBHandler):
     def get_exchange(self, account: str) -> ExchangeInterface:
 
         account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
+        exchange_opts = dict(
+            name=account_info['name'],
+            api_key=str(account_info['api_key']),
+            secret=str(account_info['secret']).encode(),
+            database=self,
+            msg_aggregator=self.msg_aggregator
+        )
 
         if account_info['exchange'] == 'kraken':
-            exchange = Kraken(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Kraken(**exchange_opts)
         elif account_info['exchange'] == 'binance':
-            exchange = Binance(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Binance(**exchange_opts)
         elif account_info['exchange'] == 'coinbase':
-            exchange = Coinbase(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Coinbase(**exchange_opts)
         elif account_info['exchange'] == 'coinbasepro':
-            exchange = Coinbasepro(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator,
-                    str(account_info['passphrase'])
-                )
+            exchange = Coinbasepro(**exchange_opts, passphrase=str(account_info['passphrase']))
         elif account_info['exchange'] == 'gemini':
-            exchange = Gemini(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Gemini(**exchange_opts)
         elif account_info['exchange'] == 'bitmex':
-            exchange = Bitmex(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Bitmex(**exchange_opts)
         elif account_info['exchange'] == 'bittrex':
-            exchange = Bittrex(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Bittrex(**exchange_opts)
         elif account_info['exchange'] == 'poloniex':
-            exchange = Poloniex(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Poloniex(**exchange_opts)
         elif account_info['exchange'] == 'bitcoinde':
-            exchange = Bitcoinde(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Bitcoinde(**exchange_opts)
         elif account_info['exchange'] == 'iconomi':
-            exchange = Iconomi(
-                    str(account_info['api_key']),
-                    str(account_info['secret']).encode(),
-                    self,
-                    self.msg_aggregator
-                )
+            exchange = Iconomi(**exchange_opts)
         else:
             raise ValueError("Unknown exchange: " + account_info['exchange'])
 
