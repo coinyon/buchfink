@@ -42,6 +42,7 @@ ADDR_SWERVE_MINTER = '0x2c988c3974ad7e604e276ae0294a7228def67974'
 ADDR_FEI_GENESIS_GROUP = '0xBFfB152b9392e38CdDc275D818a3Db7FE364596b'
 ADDR_DODO_REWARDS = '0x0e504d3e053885a82bd1cb5c29cbaae5b3673be4'
 ADDR_DODO = '0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd'
+ADDR_IMX_AIRDROP = '0x2011b5d4d5287cc9d3462b4e8af0e4daf29e3c1d'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -96,6 +97,21 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 timestamp=txn.timestamp,
                 asset=symbol_to_asset_or_token('_ceth_0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'),
                 notes='PoolTogether airdrop',
+                link=tx_hash
+            )]
+
+        elif event['topics'][0] == CLAIMED and event['address'] == ADDR_IMX_AIRDROP.lower():
+            amount = hexstr_to_int(event['data'][130:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.AIRDROP,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('_ceth_0x7b35ce522cb72e4077baeb96cb923a5529764a00'),
+                notes='IMX airdrop',
                 link=tx_hash
             )]
 
