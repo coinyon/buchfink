@@ -1,0 +1,14 @@
+accounts:
+  - name: whale
+    ethereum: '0xD57479B8287666B44978255F1677E412d454d4f0'
+
+tokens:
+  - type: ethereum
+    name: Impermax
+    address: '0x7b35ce522cb72e4077baeb96cb923a5529764a00'
+    symbol: IMX
+    coingecko: impermax
+    decimals: 18
+    cryptocompare: ~
+
+settings: {}

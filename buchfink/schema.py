@@ -42,6 +42,16 @@ settings_schema = Schema({
   }
 })
 
+token_or_asset = Schema({
+  'type': str,
+  'name': str,
+  'address': str,
+  'symbol': str,
+  'decimals': int,
+  'coingecko': Any(None, str),
+  'cryptocompare': Any(None, str)
+})
+
 config_schema = Schema({
   Required('accounts'): [Any(
     exchange_account,
@@ -49,6 +59,7 @@ config_schema = Schema({
     bitcoin_account,
     manual_account
   )],
+  'tokens': [token_or_asset],
   'reports': [report_schema],
   'settings': settings_schema
 })

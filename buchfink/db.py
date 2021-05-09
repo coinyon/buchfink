@@ -10,6 +10,7 @@ import pickledb
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
+from rotkehlchen.assets.typing import AssetType
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
@@ -44,6 +45,7 @@ from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import ActionType, Asset, Balance, BalanceSheet, Trade
 from buchfink.serialization import (deserialize_asset, deserialize_balance,
+                                    deserialize_ethereum_token,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
 
@@ -111,6 +113,7 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
+        GlobalDBHandler._GlobalDBHandler__instance = None
         self.globaldb = GlobalDBHandler(self.cache_directory)
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
@@ -487,3 +490,18 @@ class BuchfinkDB(DBHandler):
 
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, 'remote')
+        for token_data in self.config.get('tokens', []):
+            eth_token = deserialize_ethereum_token(token_data)
+            identifier = '_ceth_' + eth_token.address
+
+            try:
+                self.get_asset_by_symbol(identifier)
+                logger.debug('Asset already exists: %s', eth_token)
+            except UnknownAsset:
+                self.globaldb.add_asset(identifier, AssetType.ETHEREUM_TOKEN, eth_token)
+                try:
+                    self.get_asset_by_symbol(identifier)
+                except UnknownAsset as exc:
+                    raise ValueError('Unable to add asset: ' + str(eth_token)) from exc
+
+            self.asset_resolver.clean_memory_cache()

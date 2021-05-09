@@ -16,3 +16,9 @@ def test_ethereum_balances():
     whale = buchfink_db.get_all_accounts()[0]
     sheet = buchfink_db.query_balances(whale)
     assert sheet.assets['ETH'].amount == FVal('147699.424503407102942053')
+
+
+def test_custom_ethereum_token():
+    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'custom_token'))
+    buchfink_db.perform_assets_updates()
+    assert buchfink_db.get_asset_by_symbol('IMX') is not None

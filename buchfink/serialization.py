@@ -6,7 +6,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
+from rotkehlchen.chain.ethereum.typing import CustomEthereumToken
 from rotkehlchen.errors import UnknownAsset
+from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
+from rotkehlchen.typing import ChecksumEthAddress
 
 from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet, FVal,
                                 LedgerAction, LedgerActionType, Trade,
@@ -336,3 +339,14 @@ def deserialize_asset(val: str) -> Asset:
         raise ValueError(f'Symbol not found or ambigous: {val}')
 
     return asset
+
+
+def deserialize_ethereum_token(token_data: dict) -> CustomEthereumToken:
+    token = CustomEthereumToken(
+            address=deserialize_ethereum_address(token_data.get('address')),
+            name=token_data.get('name'),
+            symbol=token_data.get('symbol'),
+            decimals=token_data.get('decimals'),
+            coingecko=token_data.get('coingecko')
+    )
+    return token
