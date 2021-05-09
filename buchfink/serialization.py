@@ -9,7 +9,6 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.chain.ethereum.typing import CustomEthereumToken
 from rotkehlchen.errors import UnknownAsset
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
-from rotkehlchen.typing import ChecksumEthAddress
 
 from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet, FVal,
                                 LedgerAction, LedgerActionType, Trade,
