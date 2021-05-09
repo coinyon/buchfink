@@ -1,5 +1,5 @@
-master
-------
+0.0.9
+-----
 
 * Add ability to add custom tokens to yaml
 * Ambiguous symbols are now serialized as 'SYMBOL[UNIQUE_IDENTIFIER]'
