@@ -11,15 +11,15 @@ from rotkehlchen.errors import UnknownAsset
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
 
 from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet, FVal,
-                                LedgerAction, LedgerActionType, Trade,
-                                TradeType)
+                                LedgerAction, LedgerActionType, Timestamp,
+                                Trade, TradeType)
 
 
 def serialize_timestamp(timestamp: int) -> str:
     return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
 
 
-def deserialize_timestamp(timestamp: str) -> int:
+def deserialize_timestamp(timestamp: str) -> Timestamp:
     return int(datetime.fromisoformat(timestamp).timestamp())
 
 

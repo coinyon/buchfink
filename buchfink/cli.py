@@ -12,12 +12,14 @@ import click
 import coloredlogs
 import yaml
 from rotkehlchen.constants import ZERO
+from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
 from buchfink.datatypes import FVal, Trade
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import (serialize_ledger_actions,
+from buchfink.serialization import (deserialize_timestamp,
+                                    serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
 
 from .account import account_from_string
@@ -529,17 +531,29 @@ def allowances():
 @buchfink.command('quote')
 @click.argument('asset', nargs=-1)
 @click.option('--amount', '-n', type=float, default=1.0)
+@click.option('--timestamp', '-t', type=str, default=None)
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
-def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str]):
+def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestamp: Optional[str]):
     buchfink_db = BuchfinkDB()
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
             if base_asset_ \
             else buchfink_db.get_main_currency()
     base_in_usd = FVal(buchfink_db.inquirer.find_usd_price(base_asset))
+    a_usd = buchfink_db.get_asset_by_symbol('USD')
+
+    ds_timestamp = deserialize_timestamp(timestamp) if timestamp else None
+    historian = PriceHistorian()
 
     for symbol in asset:
         asset_ = buchfink_db.get_asset_by_symbol(symbol)
-        asset_usd = FVal(buchfink_db.inquirer.find_usd_price(asset_))
+        if ds_timestamp:
+            asset_usd = historian.query_historical_price(
+                    from_asset=asset_,
+                    to_asset=a_usd,
+                    timestamp=ds_timestamp
+            )
+        else:
+            asset_usd = FVal(buchfink_db.inquirer.find_usd_price(asset_))
         click.echo('{} {} = {} {}'.format(
                 click.style(f'{amount}', fg='white'),
                 click.style(asset_.symbol, fg='green'),

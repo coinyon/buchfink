@@ -1,3 +1,8 @@
+master
+------
+
+* "quote" subcommand now has a timestamp (-t) option to query historical prices
+
 0.0.9
 -----
 
