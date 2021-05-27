@@ -98,7 +98,7 @@ class BuchfinkDB(DBHandler):
         self._eth_tx = []  # type: List[EthereumTransaction]
         self._eth_receipts_store = pickledb.load(self.cache_directory / 'receipts.db', False)
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
-        self.coingecko = Coingecko(self.cache_directory / 'coingecko')
+        self.coingecko = Coingecko()
         self.historian = PriceHistorian(
                 self.cache_directory / 'history',
                 self.cryptocompare,
