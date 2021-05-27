@@ -43,6 +43,9 @@ ADDR_FEI_GENESIS_GROUP = '0xBFfB152b9392e38CdDc275D818a3Db7FE364596b'
 ADDR_DODO_REWARDS = '0x0e504d3e053885a82bd1cb5c29cbaae5b3673be4'
 ADDR_DODO = '0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd'
 ADDR_IMX_AIRDROP = '0x2011b5d4d5287cc9d3462b4e8af0e4daf29e3c1d'
+ADDR_ROOK_REWARDS = '0x2777b798fdfb906d42b89cf8f9de541db05dd6a1'
+ADDR_SUSHI_REWARDS = '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd'
+ADDR_SUSHI = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -165,6 +168,21 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 timestamp=txn.timestamp,
                 asset=symbol_to_asset_or_token('BAL'),
                 notes='Balancer rewards for providing liquidity',
+                link=tx_hash
+            )]
+
+        elif event['topics'][0] == CLAIMED_2 and event['address'] == ADDR_ROOK_REWARDS.lower():
+            amount = hexstr_to_int(event['data'][2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('ROOK'),
+                notes='Rook rewards for providing liquidity',
                 link=tx_hash
             )]
 
@@ -301,6 +319,23 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     timestamp=txn.timestamp,
                     asset=symbol_to_asset_or_token('DODO'),
                     notes='Claim DODO rewards',
+                    link=tx_hash
+                )]
+
+        if event['topics'][0] == TRANSFER and event['address'] == ADDR_SUSHI.lower():
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_SUSHI_REWARDS) and \
+                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('SUSHI'),
+                    notes='Claim SUSHI rewards for staking LP',
                     link=tx_hash
                 )]
 
