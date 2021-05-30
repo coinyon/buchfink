@@ -535,6 +535,7 @@ def allowances():
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
 def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestamp: Optional[str]):
     buchfink_db = BuchfinkDB()
+    buchfink_db.perform_assets_updates()
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
             if base_asset_ \
             else buchfink_db.get_main_currency()

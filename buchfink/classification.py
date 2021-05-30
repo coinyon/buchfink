@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 CLAIMED = '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
 CLAIMED_2 = '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a'
 CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
+CLAIMED_4 = '0x04672052dcb6b5b19a9cc2ec1b8f447f1f5e47b5e24cfa5e4ffb640d63ca2be7'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
@@ -46,6 +47,7 @@ ADDR_IMX_AIRDROP = '0x2011b5d4d5287cc9d3462b4e8af0e4daf29e3c1d'
 ADDR_ROOK_REWARDS = '0x2777b798fdfb906d42b89cf8f9de541db05dd6a1'
 ADDR_SUSHI_REWARDS = '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd'
 ADDR_SUSHI = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
+ADDR_GITCOIN_AIRDROP = '0xde3e5a990bce7fc60a6f017e7c4a95fc4939299e'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -187,6 +189,24 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
             )]
 
         elif event['topics'][0] == CLAIMED_2:
+            logger.warning('Unknown Claimed event for tx: %s', tx_hash)
+
+        if event['topics'][0] == CLAIMED_4 and event['address'] == ADDR_GITCOIN_AIRDROP.lower():
+            amount = hexstr_to_int(event['data'][2:][128:192])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('_ceth_0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F'),
+                notes='Gitcoin retroactive airdrop',
+                link=tx_hash
+            )]
+
+        elif event['topics'][0] == CLAIMED_4:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
         if event['topics'][0] == REWARD_PAID and event['address'] in ADDR_PIEDAO_INCENTIVES:
