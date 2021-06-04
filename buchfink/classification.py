@@ -19,6 +19,8 @@ TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
 PURCHASE = '0x2499a5330ab0979cc612135e7883ebc3cd5c9f7a8508f042540c34723348f632'
+HUNT = '0x8eaf15614908a4e9022141fe4a596b1ab0cb72ab32b25023e3da2a459c9a335c'
+STAKEEND = '0x72d9c5a7ab13846e08d9c838f9e866a1bb4a66a2fd3ba3c9e7da3cf9e394dfd7'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -48,6 +50,10 @@ ADDR_ROOK_REWARDS = '0x2777b798fdfb906d42b89cf8f9de541db05dd6a1'
 ADDR_SUSHI_REWARDS = '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd'
 ADDR_SUSHI = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
 ADDR_GITCOIN_AIRDROP = '0xde3e5a990bce7fc60a6f017e7c4a95fc4939299e'
+ADDR_BLACKPOOL_AIRDROP = '0x6b63564a8b3f145b3ef085bcc197c0ff64e9a140'
+ADDR_TORN = '0x77777feddddffc19ff86db637967013e6c6a116c'
+ADDR_TORN_VTORN = '0x3eFA30704D2b8BBAc821307230376556cF8CC39e'
+ADDR_HEX = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -342,7 +348,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        if event['topics'][0] == TRANSFER and event['address'] == ADDR_SUSHI.lower():
+        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_SUSHI.lower():
             if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_SUSHI_REWARDS) and \
                     hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event['data'])
@@ -359,4 +365,52 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
+        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_TORN.lower():
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
+                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('_ceth_0x77777FeDdddFfC19Ff86DB637967013e6C6A116C'),
+                    notes='TORN airdrop',
+                    link=tx_hash
+                )]
+
+        elif event['topics'][0] == STAKEEND and event['address'] == ADDR_HEX.lower():
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
+                payout = hexstr_to_int(event['data'][2:][:18])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(payout) / FVal(1e8),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('_ceth_' + ADDR_HEX),
+                    notes='HEX Payout for staking',
+                    link=tx_hash
+                )]
+
+        if event['topics'][0] == HUNT and event['address'] == ADDR_BLACKPOOL_AIRDROP.lower():
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'][2:][64:128])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('_ceth_0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da'),
+                    notes='Blackpool airdrop',
+                    link=tx_hash
+                )]
     return actions
