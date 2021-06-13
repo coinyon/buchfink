@@ -6,13 +6,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
-from rotkehlchen.chain.ethereum.typing import CustomEthereumToken
 from rotkehlchen.errors import UnknownAsset
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
 
 from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet, FVal,
                                 LedgerAction, LedgerActionType, Timestamp,
-                                Trade, TradeType)
+                                Trade, TradeType, EthereumToken)
 
 
 def serialize_timestamp(timestamp: int) -> str:
@@ -340,8 +339,8 @@ def deserialize_asset(val: str) -> Asset:
     return asset
 
 
-def deserialize_ethereum_token(token_data: dict) -> CustomEthereumToken:
-    token = CustomEthereumToken(
+def deserialize_ethereum_token(token_data: dict) -> EthereumToken:
+    token = EthereumToken.initialize(
             address=deserialize_ethereum_address(token_data.get('address')),
             name=token_data.get('name'),
             symbol=token_data.get('symbol'),

@@ -492,7 +492,7 @@ class BuchfinkDB(DBHandler):
         self.assets_updater.perform_update(None, 'remote')
         for token_data in self.config.get('tokens', []):
             eth_token = deserialize_ethereum_token(token_data)
-            identifier = '_ceth_' + eth_token.address
+            identifier = '_ceth_' + eth_token.ethereum_address
 
             try:
                 self.get_asset_by_symbol(identifier)
