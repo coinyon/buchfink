@@ -366,6 +366,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 )]
 
         elif event['topics'][0] == TRANSFER and event['address'] == ADDR_TORN.lower():
+            asset = symbol_to_asset_or_token('_ceth_0x77777FeDdddFfC19Ff86DB637967013e6C6A116C')
             if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
                     hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event['data'])
@@ -377,7 +378,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('_ceth_0x77777FeDdddFfC19Ff86DB637967013e6C6A116C'),
+                    asset=asset,
                     notes='TORN airdrop',
                     link=tx_hash
                 )]
@@ -399,6 +400,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 )]
 
         if event['topics'][0] == HUNT and event['address'] == ADDR_BLACKPOOL_AIRDROP.lower():
+            asset = symbol_to_asset_or_token('_ceth_0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da')
             if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event['data'][2:][64:128])
                 actions += [LedgerAction(
@@ -409,7 +411,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('_ceth_0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da'),
+                    asset=asset,
                     notes='Blackpool airdrop',
                     link=tx_hash
                 )]
