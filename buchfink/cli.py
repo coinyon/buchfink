@@ -286,7 +286,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                     actions.extend(acc_actions)
 
             if not fetch_limited or fetch_trades:
-                logger.info('Fetching uniswap trades for %s', name)
+                logger.info('Fetching trades for %s', name)
 
                 manager = buchfink_db.get_chain_manager(account)
 
@@ -336,7 +336,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
             actions.extend(annotated)
 
             if actions:
-                with open("actions/" + name + ".yaml", "w") as yaml_file:
+                with open(buchfink_db.actions_directory / (name + ".yaml"), "w") as yaml_file:
                     yaml.dump({
                         "actions": serialize_ledger_actions(actions)
                     }, stream=yaml_file, sort_keys=True)
@@ -352,7 +352,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
             trades.extend(annotated)
 
-            with open("trades/" + name + ".yaml", "w") as yaml_file:
+            with open(buchfink_db.trades_directory / (name + ".yaml"), "w") as yaml_file:
                 yaml.dump({
                     "trades": serialize_trades(trades)
                 }, stream=yaml_file, sort_keys=True)

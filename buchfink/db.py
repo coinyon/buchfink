@@ -79,6 +79,7 @@ class BuchfinkDB(DBHandler):
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
         self.cache_directory = self.data_directory / "cache"
+        self.actions_directory = self.data_directory / "actions"
         self.balances_directory = self.data_directory / "balances"
         self.annotations_directory = self.data_directory / "annotations"
         self.user_data_dir = self.data_directory / "user"
@@ -87,6 +88,7 @@ class BuchfinkDB(DBHandler):
         self.trades_directory.mkdir(exist_ok=True)
         self.balances_directory.mkdir(exist_ok=True)
         self.cache_directory.mkdir(exist_ok=True)
+        self.actions_directory.mkdir(exist_ok=True)
         (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
         (self.cache_directory / 'history').mkdir(exist_ok=True)
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
