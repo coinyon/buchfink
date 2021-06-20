@@ -21,6 +21,7 @@ MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
 PURCHASE = '0x2499a5330ab0979cc612135e7883ebc3cd5c9f7a8508f042540c34723348f632'
 HUNT = '0x8eaf15614908a4e9022141fe4a596b1ab0cb72ab32b25023e3da2a459c9a335c'
 STAKEEND = '0x72d9c5a7ab13846e08d9c838f9e866a1bb4a66a2fd3ba3c9e7da3cf9e394dfd7'
+VESTED = '0xfbeff59d2bfda0d79ea8a29f8c57c66d48c7a13eabbdb90908d9115ec41c9dc6'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -54,6 +55,7 @@ ADDR_BLACKPOOL_AIRDROP = '0x6b63564a8b3f145b3ef085bcc197c0ff64e9a140'
 ADDR_TORN = '0x77777feddddffc19ff86db637967013e6c6a116c'
 ADDR_TORN_VTORN = '0x3eFA30704D2b8BBAc821307230376556cF8CC39e'
 ADDR_HEX = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39'
+ADDR_XTK_VESTING = '0x2ac34f8327aceD80CFC04085972Ee06Be72A45bb'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -413,6 +415,23 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     timestamp=txn.timestamp,
                     asset=asset,
                     notes='Blackpool airdrop',
+                    link=tx_hash
+                )]
+
+        if event['topics'][0] == VESTED and event['address'] == ADDR_XTK_VESTING.lower():
+            asset = symbol_to_asset_or_token('_ceth_0x7F3EDcdD180Dbe4819Bd98FeE8929b5cEdB3AdEB')
+            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'][2:][64:128])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=asset,
+                    notes='XTK Rewards for LP staking',
                     link=tx_hash
                 )]
     return actions
