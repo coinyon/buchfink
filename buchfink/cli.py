@@ -453,10 +453,11 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
 @buchfink.command('report')
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
-@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in report name')
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--report', type=str, default=None, help='Filter by keyword in report name')
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
-def report_(keyword, external, year):
+def report_(keyword, external, report, year):
     "Generate reports for all report definition and output overview table"
 
     buchfink_db = BuchfinkDB()
@@ -466,7 +467,8 @@ def report_(keyword, external, year):
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
-        accounts = buchfink_db.get_all_accounts()
+        accounts = [account for account in buchfink_db.get_all_accounts()
+                if keyword is None or keyword in account.name]
 
     if year:
         reports = [ReportConfig(
@@ -479,12 +481,12 @@ def report_(keyword, external, year):
     else:
         reports = [
             report_ for report_ in buchfink_db.get_all_reports()
-            if keyword is None or keyword in report_.name
+            if report is None or report in report_.name
         ]
 
-    for report in reports:
-        name = str(report.name)
-        results[name] = run_report(buchfink_db, accounts, report)
+    for _report in reports:
+        name = str(_report.name)
+        results[name] = run_report(buchfink_db, accounts, _report)
 
     table = []
     for report_name, result in results.items():
