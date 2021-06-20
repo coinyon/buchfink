@@ -26,6 +26,8 @@ from .account import account_from_string
 from .classification import classify_tx
 from .config import ReportConfig
 from .report import run_report
+from .importers import zerion_csv
+from rotkehlchen.chain.ethereum.trades import AMMTrade
 
 logger = logging.getLogger(__name__)
 
@@ -297,6 +299,8 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                         only_cache=False
                     )
 
+                trades.extend(zerion_csv.get_trades(account))
+
         elif account.account_type == "exchange":
 
             if not fetch_limited or fetch_trades:
@@ -352,9 +356,22 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
             trades.extend(annotated)
 
+            existing = set()
+            unique_trades = []
+            for trade in trades:
+                if isinstance(trade, AMMTrade):
+                    unique_trades.append(trade)
+                    for swap in trade.swaps:
+                        existing.add((swap.location, swap.tx_hash))
+                elif not (trade.location, trade.link) in existing:
+                    existing.add((trade.location, trade.link))
+                    unique_trades.append(trade)
+                else:
+                    logger.warning('Removing duplicate trade: %s', trade)
+
             with open(buchfink_db.trades_directory / (name + ".yaml"), "w") as yaml_file:
                 yaml.dump({
-                    "trades": serialize_trades(trades)
+                    "trades": serialize_trades(unique_trades)
                 }, stream=yaml_file, sort_keys=True)
 
         if not fetch_limited or fetch_balances:
