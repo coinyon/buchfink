@@ -22,6 +22,17 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     all_trades = []
     all_actions = []
 
+    folder = buchfink_db.reports_directory / Path(name)
+    folder.mkdir(exist_ok=True)
+    logfile = folder / 'report.log'
+    logfile.unlink(missing_ok=True)
+    root_logger = logging.getLogger('')
+    fh = logging.FileHandler(logfile)
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s: %(message)s')
+    fh.setFormatter(formatter)
+    root_logger.addHandler(fh)
+
     logger.info('Generating report "%s"...', name)
 
     for account in accounts:
@@ -36,12 +47,14 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [], all_actions)
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
 
-    with (buchfink_db.reports_directory / Path(name) / 'report.yaml').open('w') as report_file:
+    with (folder / 'report.yaml').open('w') as report_file:
         yaml.dump({'overview': result['overview']}, stream=report_file)
 
     logger.info('Report information has been written to: %s',
             buchfink_db.reports_directory / Path(name)
     )
+
+    root_logger.removeHandler(fh)
 
     if report_config.template:
         # Look for templates relative to the data_directory, that is the directory where
