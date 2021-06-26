@@ -553,6 +553,16 @@ def allowances():
 @click.option('--timestamp', '-t', type=str, default=None)
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
 def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestamp: Optional[str]):
+    """
+    Show a price quote. In addition to the options flags, the following short syntax
+    is also supported:
+
+        buchfink quote 100 ETH
+
+        buchfink quote ETH/BTC
+
+        buchfink quote 2.5 ETH/BTC
+    """
     buchfink_db = BuchfinkDB()
     buchfink_db.perform_assets_updates()
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
