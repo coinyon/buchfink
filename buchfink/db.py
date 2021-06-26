@@ -490,6 +490,12 @@ class BuchfinkDB(DBHandler):
     ) -> List[EthereumTransaction]:
         return self._eth_tx
 
+    def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
+        pass
+
+    def get_binance_pairs(self, name: str, location: Location) -> List[str]:
+        return []
+
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, 'remote')
         for token_data in self.config.get('tokens', []):
