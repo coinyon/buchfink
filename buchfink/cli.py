@@ -575,6 +575,15 @@ def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestam
     historian = PriceHistorian()
 
     for symbol in asset:
+        try:
+            amount = float(symbol)
+            continue
+        except ValueError:
+            pass
+        if '/' in symbol:
+            symbol, base_symbol = symbol.split('/')
+            base_asset = buchfink_db.get_asset_by_symbol(base_symbol)
+            base_in_usd = FVal(buchfink_db.inquirer.find_usd_price(base_asset))
         asset_ = buchfink_db.get_asset_by_symbol(symbol)
         if ds_timestamp:
             asset_usd = historian.query_historical_price(
