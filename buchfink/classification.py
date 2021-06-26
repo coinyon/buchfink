@@ -204,7 +204,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
             actions += [LedgerAction(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                action_type=LedgerActionType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
