@@ -22,6 +22,8 @@ PURCHASE = '0x2499a5330ab0979cc612135e7883ebc3cd5c9f7a8508f042540c34723348f632'
 HUNT = '0x8eaf15614908a4e9022141fe4a596b1ab0cb72ab32b25023e3da2a459c9a335c'
 STAKEEND = '0x72d9c5a7ab13846e08d9c838f9e866a1bb4a66a2fd3ba3c9e7da3cf9e394dfd7'
 VESTED = '0xfbeff59d2bfda0d79ea8a29f8c57c66d48c7a13eabbdb90908d9115ec41c9dc6'
+BORROW = '0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80'
+XFLOBBYEXIT = '0xa6b19fa7f41317a186e1d58e9d81f86a52f1102b6bce10b4eca83f37aaa58468'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -56,6 +58,8 @@ ADDR_TORN = '0x77777feddddffc19ff86db637967013e6c6a116c'
 ADDR_TORN_VTORN = '0x3eFA30704D2b8BBAc821307230376556cF8CC39e'
 ADDR_HEX = '0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39'
 ADDR_XTK_VESTING = '0x2ac34f8327aceD80CFC04085972Ee06Be72A45bb'
+ADDR_COMPOUND_DAI = '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643'
+ADDR_DAI = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
@@ -385,7 +389,28 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == STAKEEND and event['address'] == ADDR_HEX.lower():
+        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_DAI.lower():
+            # MakerDAO Mint
+            # Until we clarify generalized lending support in Buchfink,
+            # treat borrowed DAI as a gift you have to pay back
+            asset = symbol_to_asset_or_token('DAI')
+            if hexstr_to_int(event['topics'][1]) == 0 and \
+                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event['data'])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.GIFT,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=asset,
+                    notes='DAI mint',
+                    link=tx_hash
+                )]
+
+        if event['topics'][0] == STAKEEND and event['address'] == ADDR_HEX.lower():
             if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
                 payout = hexstr_to_int(event['data'][2:][:18])
                 actions += [LedgerAction(
@@ -434,4 +459,50 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     notes='XTK Rewards for LP staking',
                     link=tx_hash
                 )]
+
+        # Until we clarify generalized lending support in Buchfink,
+        # treat borrowed DAI as a gift you have to pay back
+        if event['topics'][0] == BORROW and event['address'] == ADDR_COMPOUND_DAI.lower():
+            asset = symbol_to_asset_or_token('DAI')
+            borrower = hexstr_to_int(event['data'][2:][:64])
+            amount = hexstr_to_int(event['data'][2:][64:128])
+            if borrower == hexstr_to_int(account.address):
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.GIFT,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=asset,
+                    notes='Compound DAI mint',
+                    link=tx_hash
+                )]
+
+        if event['topics'][0] == XFLOBBYEXIT and event['address'] == ADDR_HEX.lower():
+            asset = symbol_to_asset_or_token('_ceth_' + ADDR_HEX)
+
+            # Find another TRANSFER
+            for ev2 in receipt['logs']:
+                if ev2['topics'][0] == TRANSFER and \
+                        ev2['address'] == ADDR_HEX.lower() and \
+                        hexstr_to_int(ev2['topics'][1]) == 0 and \
+                        hexstr_to_int(ev2['topics'][2]) == hexstr_to_int(account.address):
+
+                    amount = hexstr_to_int(ev2['data'][2:])
+                    # We will classify those as GIFT instead of purche because
+                    # we already paid earlier
+                    actions += [LedgerAction(
+                        identifier=None,
+                        location='',
+                        action_type=LedgerActionType.GIFT,
+                        amount=FVal(amount) / FVal(1e8),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='XFLOBBYEXIT HEX mint',
+                        link=tx_hash
+                    )]
     return actions
