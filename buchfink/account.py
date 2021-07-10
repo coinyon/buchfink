@@ -4,16 +4,19 @@ from typing import Any, Dict, List, Optional, Union
 from rotkehlchen.typing import ChecksumEthAddress
 from typing_extensions import Literal
 
+AccountType = Union[Literal["ethereum"], Literal["bitcoin"], Literal["exchange"], Literal["file"]]
+
 
 @dataclass
 class Account:
     name: str
-    account_type: Union[Literal["ethereum"], Literal["bitcoin"]]
+    account_type: AccountType
     address: Optional[Union[ChecksumEthAddress, str]]
     config: Dict[str, Any]
 
 
 def account_from_config(config_account):
+    account_type = "ethereum"   # type: AccountType
     if 'ethereum' in config_account:
         account_type = "ethereum"
         address = config_account["ethereum"]

@@ -262,10 +262,20 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
         name = account.name
         trades = []
         actions = []
+        fetch_config = account.config.get('fetch', {})
+
+        fetch_actions_for_this_account = (not fetch_limited or fetch_trades) and \
+                fetch_config.get('actions', True)
+
+        fetch_balances_for_this_account = (not fetch_limited or fetch_balances) and \
+                fetch_config.get('balances', True)
+
+        fetch_trades_for_this_account = (not fetch_limited or fetch_trades) and \
+                fetch_config.get('trades', True)
 
         if account.account_type == "ethereum":
 
-            if not fetch_limited or fetch_actions:
+            if fetch_actions_for_this_account:
                 logger.info('Analyzing ethereum transactions for %s', name)
                 manager = buchfink_db.get_chain_manager(account)
 
@@ -287,7 +297,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                             logger.debug('Found action: %s', act)
                     actions.extend(acc_actions)
 
-            if not fetch_limited or fetch_trades:
+            if fetch_trades_for_this_account:
                 logger.info('Fetching trades for %s', name)
 
                 manager = buchfink_db.get_chain_manager(account)
@@ -303,7 +313,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
         elif account.account_type == "exchange":
 
-            if not fetch_limited or fetch_trades:
+            if fetch_trades_for_this_account:
                 logger.info('Fetching exhange trades for %s', name)
 
                 exchange = buchfink_db.get_exchange(name)
@@ -328,7 +338,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
         annotations_path = "annotations/" + name + ".yaml"
 
-        if not fetch_limited or fetch_actions:
+        if fetch_actions_for_this_account:
 
             if os.path.exists(annotations_path):
                 annotated = buchfink_db.get_actions_from_file(annotations_path)
@@ -345,7 +355,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                         "actions": serialize_ledger_actions(actions)
                     }, stream=yaml_file, sort_keys=True)
 
-        if not fetch_limited or fetch_trades:
+        if fetch_trades_for_this_account:
             if os.path.exists(annotations_path):
                 annotated = buchfink_db.get_trades_from_file(annotations_path)
             else:
@@ -374,9 +384,8 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                     "trades": serialize_trades(unique_trades)
                 }, stream=yaml_file, sort_keys=True)
 
-        if not fetch_limited or fetch_balances:
+        if fetch_balances_for_this_account:
             buchfink_db.fetch_balances(account)
-
             logger.info('Fetched balances from %s', name)
 
 
