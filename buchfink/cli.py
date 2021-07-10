@@ -11,6 +11,7 @@ from typing import List, Optional, Tuple
 import click
 import coloredlogs
 import yaml
+from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.constants import ZERO
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.utils.misc import ts_now
@@ -25,9 +26,8 @@ from buchfink.serialization import (deserialize_timestamp,
 from .account import account_from_string
 from .classification import classify_tx
 from .config import ReportConfig
-from .report import run_report
 from .importers import zerion_csv
-from rotkehlchen.chain.ethereum.trades import AMMTrade
+from .report import run_report
 
 logger = logging.getLogger(__name__)
 

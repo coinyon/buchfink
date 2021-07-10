@@ -27,11 +27,11 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     logfile = folder / 'report.log'
     logfile.unlink(missing_ok=True)
     root_logger = logging.getLogger('')
-    fh = logging.FileHandler(logfile)
-    fh.setLevel(logging.DEBUG)
+    file_handler = logging.FileHandler(logfile)
+    file_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s: %(message)s')
-    fh.setFormatter(formatter)
-    root_logger.addHandler(fh)
+    file_handler.setFormatter(formatter)
+    root_logger.addHandler(file_handler)
 
     logger.info('Generating report "%s"...', name)
 
@@ -54,7 +54,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             buchfink_db.reports_directory / Path(name)
     )
 
-    root_logger.removeHandler(fh)
+    root_logger.removeHandler(file_handler)
 
     if report_config.template:
         # Look for templates relative to the data_directory, that is the directory where
