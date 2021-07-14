@@ -176,11 +176,13 @@ def serialize_balances(balances: BalanceSheet) -> dict:
         ser_balances['assets'] = sorted([
             serialize_balance(bal, asset)
             for asset, bal in balances.assets.items()
+            if bal.amount > 0
         ], key=itemgetter('asset'))
     if balances.liabilities:
         ser_balances['liabilities'] = sorted([
             serialize_balance(bal, asset)
             for asset, bal in balances.liabilities.items()
+            if bal.amount > 0
         ], key=itemgetter('asset'))
     return ser_balances
 
