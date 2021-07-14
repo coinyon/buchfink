@@ -43,7 +43,8 @@ from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 Location, SupportedBlockchain, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
-from buchfink.datatypes import ActionType, Asset, Balance, BalanceSheet, Trade
+from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
+                                LedgerAction, Trade)
 from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ethereum_token,
                                     deserialize_ledger_action,
@@ -223,7 +224,7 @@ class BuchfinkDB(DBHandler):
 
         return []
 
-    def get_actions_from_file(self, actions_file):
+    def get_actions_from_file(self, actions_file) -> List[LedgerAction]:
         def safe_deserialize_ledger_action(action):
             if 'buy' in action or 'sell' in action:
                 return None
@@ -241,7 +242,7 @@ class BuchfinkDB(DBHandler):
                 if ser_action is not None]
 
     def get_local_ledger_actions_for_account(self, account_name: Union[str, Account]) \
-            -> List[Trade]:
+            -> List[LedgerAction]:
         if isinstance(account_name, str):
             account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
         else:

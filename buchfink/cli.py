@@ -17,13 +17,13 @@ from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
-from buchfink.datatypes import FVal, Trade
+from buchfink.datatypes import FVal, LedgerAction, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (deserialize_timestamp,
                                     serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
 
-from .account import account_from_string
+from .account import Account, account_from_string
 from .classification import classify_tx
 from .config import ReportConfig
 from .importers import zerion_csv
@@ -423,22 +423,22 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
 
     buchfink_db = BuchfinkDB()
 
-    trades: List[Trade] = []
+    trades: List[Tuple[Trade, Account]] = []
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
             continue
 
-        trades.extend(buchfink_db.get_local_trades_for_account(account.name))
+        trades.extend((trade, account) for trade in buchfink_db.get_local_trades_for_account(account.name))
 
     if asset is not None:
         the_asset = buchfink_db.get_asset_by_symbol(asset)
-        trades = [trade for trade in trades if the_asset in (trade.base_asset, trade.quote_asset)]
+        trades = [trade for trade in trades if the_asset in (trade[0].base_asset, trade[0].quote_asset)]
 
-    trades = sorted(trades, key=attrgetter('timestamp'))
+    trades = sorted(trades, key=lambda trade_account: trade_account[0].timestamp)
 
     if trades:
         table = []
-        for trade in trades:
+        for (trade, account) in trades:
             table.append([
                 serialize_timestamp(trade.timestamp),
                 str(trade.trade_type),
@@ -447,6 +447,7 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
                 str(trade.amount * trade.rate),
                 str(trade.quote_asset.symbol),
                 str(trade.rate),
+                str(account.name)
             ])
         print(tabulate(table, headers=[
             'Time',
@@ -455,7 +456,48 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
             'Quote Asset',
             'Amount',
             'Base Asset',
-            'Rate'
+            'Rate',
+            'Account'
+        ]))
+
+
+@buchfink.command('actions')
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
+def actions_(keyword, asset):
+    "Show actions"
+
+    buchfink_db = BuchfinkDB()
+
+    actions: List[Tuple[LedgerAction, Account]] = []
+    for account in buchfink_db.get_all_accounts():
+        if keyword is not None and keyword not in account.name:
+            continue
+
+        actions.extend((action, account) for action in buchfink_db.get_local_ledger_actions_for_account(account.name))
+
+    if asset is not None:
+        the_asset = buchfink_db.get_asset_by_symbol(asset)
+        actions = [action for action in actions if the_asset in (action[0].asset,)]
+
+    actions = sorted(actions, key=lambda action_account: action_account[0].timestamp)
+
+    if actions:
+        table = []
+        for (action, account) in actions:
+            table.append([
+                serialize_timestamp(action.timestamp),
+                str(action.action_type),
+                str(action.amount),
+                str(action.asset.symbol),
+                str(account.name),
+            ])
+        print(tabulate(table, headers=[
+            'Time',
+            'Type',
+            'Amount',
+            'Asset',
+            'Account'
         ]))
 
 
