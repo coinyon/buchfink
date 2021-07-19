@@ -264,7 +264,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
         actions = []
         fetch_config = account.config.get('fetch', {})
 
-        fetch_actions_for_this_account = (not fetch_limited or fetch_trades) and \
+        fetch_actions_for_this_account = (not fetch_limited or fetch_actions) and \
                 fetch_config.get('actions', True)
 
         fetch_balances_for_this_account = (not fetch_limited or fetch_balances) and \
