@@ -4,7 +4,7 @@ import re
 import shutil
 import sys
 from datetime import datetime
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 from pathlib import Path
 from typing import List, Optional, Tuple
 
