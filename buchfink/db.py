@@ -185,8 +185,8 @@ class BuchfinkDB(DBHandler):
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
         if self._active_eth_address:
-            return BlockchainAccounts(eth=[self._active_eth_address], btc=[], ksm=[])
-        return BlockchainAccounts(eth=[], btc=[], ksm=[])
+            return BlockchainAccounts(eth=[self._active_eth_address], btc=[], ksm=[], dot=[], avax=[])
+        return BlockchainAccounts(eth=[], btc=[], ksm=[], dot=[], avax=[])
 
     def get_trades_from_file(self, trades_file) -> List[Trade]:
         def safe_deserialize_trade(trade):
@@ -262,9 +262,9 @@ class BuchfinkDB(DBHandler):
 
     def get_chain_manager(self, account: Account) -> ChainManager:
         if account.account_type == "ethereum":
-            accounts = BlockchainAccounts(eth=[account.address], btc=[], ksm=[])
+            accounts = BlockchainAccounts(eth=[account.address], btc=[], ksm=[], dot=[], avax=[])
         elif account.account_type == "bitcoin":
-            accounts = BlockchainAccounts(eth=[], btc=[account.address], ksm=[])
+            accounts = BlockchainAccounts(eth=[], btc=[account.address], ksm=[], dot=[], avax=[])
         else:
             raise ValueError('Unable to create chain manager for account')
 
@@ -283,6 +283,8 @@ class BuchfinkDB(DBHandler):
             beaconchain=self.beaconchain,
             data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
+            polkadot_manager=None,
+            avalanche_manager=None,
             kusama_manager=None,
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
