@@ -8,8 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from buchfink.db import BuchfinkDB
 
-from .config import ReportConfig
-from .account import Account
+from .models import Account, ReportConfig
 
 logger = logging.getLogger(__name__)
 

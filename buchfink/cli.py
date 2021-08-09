@@ -23,10 +23,10 @@ from buchfink.serialization import (deserialize_timestamp,
                                     serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
 
-from .account import Account, account_from_string
 from .classification import classify_tx
-from .config import ReportConfig
 from .importers import zerion_csv
+from .models import Account, ReportConfig
+from .models.account import account_from_string
 from .report import run_report
 
 logger = logging.getLogger(__name__)
@@ -428,11 +428,18 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
         if keyword is not None and keyword not in account.name:
             continue
 
-        trades.extend((trade, account) for trade in buchfink_db.get_local_trades_for_account(account.name))
+        trades.extend(
+                (trade, account)
+                for trade in buchfink_db.get_local_trades_for_account(account.name)
+                )
 
     if asset is not None:
         the_asset = buchfink_db.get_asset_by_symbol(asset)
-        trades = [trade for trade in trades if the_asset in (trade[0].base_asset, trade[0].quote_asset)]
+        trades = [
+                trade
+                for trade in trades
+                if the_asset in (trade[0].base_asset, trade[0].quote_asset)
+                ]
 
     trades = sorted(trades, key=lambda trade_account: trade_account[0].timestamp)
 
@@ -474,7 +481,10 @@ def actions_(keyword, asset):
         if keyword is not None and keyword not in account.name:
             continue
 
-        actions.extend((action, account) for action in buchfink_db.get_local_ledger_actions_for_account(account.name))
+        actions.extend(
+                (action, account)
+                for action in buchfink_db.get_local_ledger_actions_for_account(account.name)
+                )
 
     if asset is not None:
         the_asset = buchfink_db.get_asset_by_symbol(asset)

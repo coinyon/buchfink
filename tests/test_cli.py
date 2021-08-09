@@ -1,5 +1,4 @@
 "Test buchfink cli app"
-import contextlib
 import logging
 import os
 import os.path

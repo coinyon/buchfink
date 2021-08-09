@@ -1,16 +1,14 @@
 "Load Zerion export CSV and output trades"
 import logging
 import os.path
-import sys
 from typing import List
 
 import pandas as pd
-import yaml
 from rotkehlchen.errors import UnknownAsset
 
-from buchfink.account import Account
 from buchfink.datatypes import FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
+from buchfink.models import Account
 from buchfink.serialization import deserialize_timestamp, serialize_trades
 
 logger = logging.getLogger(__name__)

@@ -50,9 +50,8 @@ from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
 
-from .account import Account, accounts_from_config
-from .config import ReportConfig
-from .schema import config_schema
+from .models import Account, ReportConfig, Config
+from .models.account import accounts_from_config
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +72,7 @@ class BuchfinkDB(DBHandler):
         self.data_directory = Path(data_directory)
         with open(self.data_directory / 'buchfink.yaml', 'r') as cfg:
             yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
-        self.config = config_schema(yaml_config)
+        self.config = Config(yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
         self._active_eth_address = None  # type: Optional[ChecksumEthAddress]
 
@@ -184,9 +183,10 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, None, self.msg_aggregator, True, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
+        accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[])
         if self._active_eth_address:
-            return BlockchainAccounts(eth=[self._active_eth_address], btc=[], ksm=[], dot=[], avax=[])
-        return BlockchainAccounts(eth=[], btc=[], ksm=[], dot=[], avax=[])
+            accs['eth'].append(self._active_eth_address)
+        return BlockchainAccounts(**accs)
 
     def get_trades_from_file(self, trades_file) -> List[Trade]:
         def safe_deserialize_trade(trade):
