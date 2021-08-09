@@ -50,7 +50,7 @@ from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
 
-from .models import Account, ReportConfig, Config
+from .models import Account, ReportConfig, Config, ExchangeAccountConfig
 from .models.account import accounts_from_config
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class BuchfinkDB(DBHandler):
         self.data_directory = Path(data_directory)
         with open(self.data_directory / 'buchfink.yaml', 'r') as cfg:
             yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
-        self.config = Config(yaml_config)
+        self.config = Config(**yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
         self._active_eth_address = None  # type: Optional[ChecksumEthAddress]
 
@@ -143,25 +143,30 @@ class BuchfinkDB(DBHandler):
         return self.get_settings().main_currency
 
     def get_eth_rpc_endpoint(self):
-        return self.config['settings'].get('eth_rpc_endpoint', None)
+        return self.config.settings.eth_rpc_endpoint
 
     def get_all_accounts(self) -> List[Account]:
         return self.accounts
 
     def get_all_reports(self) -> Iterable[ReportConfig]:
-        for report_info in self.config['reports']:
+        for report in self.config.reports:
             yield ReportConfig(
-                name=str(report_info['name']),
-                title=report_info.get('title'),
-                template=report_info.get('template'),
-                from_dt=datetime.fromisoformat(str(report_info['from'])),
-                to_dt=datetime.fromisoformat(str(report_info['to']))
+                name=str(report.name),
+                title=report.title,
+                template=report.template,
+                from_dt=datetime.fromisoformat(str(report.from_)),
+                to_dt=datetime.fromisoformat(str(report.to))
             )
 
     def get_settings(self, have_premium: bool = False) -> DBSettings:
-        clean_settings = dict(self.config['settings'])
+        clean_settings = self.config.settings.dict()
         if 'external_services' in clean_settings:
             del clean_settings['external_services']
+
+        # Remove None values
+        for k in list(clean_settings):
+            if clean_settings[k] is None:
+                del clean_settings[k]
 
         return db_settings_from_dict(clean_settings, self.msg_aggregator)
 
@@ -174,9 +179,13 @@ class BuchfinkDB(DBHandler):
     ) -> Optional[ExternalServiceApiCredentials]:
         """If existing it returns the external service credentials for the given service"""
         short_name = service_name.name.lower()
-        api_key = self.config['settings'].get('external_services', {}).get(short_name)
+        if not self.config.settings.external_services:
+            return None
+
+        api_key = self.config.settings.external_services.dict()[short_name]
         if not api_key:
             return None
+
         return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
     def get_accountant(self) -> Accountant:
@@ -214,7 +223,7 @@ class BuchfinkDB(DBHandler):
             account = account_name
 
         if account.account_type == 'file':
-            trades_file = os.path.join(self.data_directory, account.config['file'])
+            trades_file = os.path.join(self.data_directory, account.config.file)
             return self.get_trades_from_file(trades_file)
 
         trades_file = os.path.join(self.data_directory, 'trades', account.name + '.yaml')
@@ -249,7 +258,7 @@ class BuchfinkDB(DBHandler):
             account = account_name
 
         if account.account_type == 'file':
-            actions_file = self.data_directory / account.config['file']
+            actions_file = self.data_directory / account.config.file
             if actions_file.exists():
                 return self.get_actions_from_file(actions_file)
 
@@ -298,37 +307,42 @@ class BuchfinkDB(DBHandler):
 
     def get_exchange(self, account: str) -> ExchangeInterface:
 
-        account_info = [a for a in self.config['accounts'] if a['name'] == account][0]
+        account_ = [a for a in self.accounts if a.name == account][0]
+        account_config = account_.config
+
+        if not isinstance(account_config, ExchangeAccountConfig):
+            raise ValueError("Not an exchange account: " + account)
+
         exchange_opts = dict(
-            name=account_info['name'],
-            api_key=str(account_info['api_key']),
-            secret=str(account_info['secret']).encode(),
+            name=account_config.name,
+            api_key=str(account_config.api_key),
+            secret=str(account_config.secret).encode(),
             database=self,
             msg_aggregator=self.msg_aggregator
         )
 
-        if account_info['exchange'] == 'kraken':
+        if account_config.exchange == 'kraken':
             exchange = Kraken(**exchange_opts)
-        elif account_info['exchange'] == 'binance':
+        elif account_config.exchange == 'binance':
             exchange = Binance(**exchange_opts)
-        elif account_info['exchange'] == 'coinbase':
+        elif account_config.exchange == 'coinbase':
             exchange = Coinbase(**exchange_opts)
-        elif account_info['exchange'] == 'coinbasepro':
-            exchange = Coinbasepro(**exchange_opts, passphrase=str(account_info['passphrase']))
-        elif account_info['exchange'] == 'gemini':
+        elif account_config.exchange == 'coinbasepro':
+            exchange = Coinbasepro(**exchange_opts, passphrase=str(account_config.passphrase))
+        elif account_config.exchange == 'gemini':
             exchange = Gemini(**exchange_opts)
-        elif account_info['exchange'] == 'bitmex':
+        elif account_config.exchange == 'bitmex':
             exchange = Bitmex(**exchange_opts)
-        elif account_info['exchange'] == 'bittrex':
+        elif account_config.exchange == 'bittrex':
             exchange = Bittrex(**exchange_opts)
-        elif account_info['exchange'] == 'poloniex':
+        elif account_config.exchange == 'poloniex':
             exchange = Poloniex(**exchange_opts)
-        elif account_info['exchange'] == 'bitcoinde':
+        elif account_config.exchange == 'bitcoinde':
             exchange = Bitcoinde(**exchange_opts)
-        elif account_info['exchange'] == 'iconomi':
+        elif account_config.exchange == 'iconomi':
             exchange = Iconomi(**exchange_opts)
         else:
-            raise ValueError("Unknown exchange: " + account_info['exchange'])
+            raise ValueError("Unknown exchange: " + account_config.exchange)
 
         return exchange
 
@@ -384,12 +398,13 @@ class BuchfinkDB(DBHandler):
             }, liabilities={})
 
         if account.account_type == "file":
-            return self.get_balances_from_file(account.config['file'])
+            return self.get_balances_from_file(account.config.file)
 
         return BalanceSheet(assets={}, liabilities={})
 
     def fetch_balances(self, account):
         query_sheet = self.query_balances(account)
+        logger.debug('Balances for %s before annotations: %s', account.name, query_sheet)
         path = self.annotations_directory / (account.name + '.yaml')
         if path.exists():
             query_sheet += self.get_balances_from_file(path)
@@ -501,8 +516,9 @@ class BuchfinkDB(DBHandler):
 
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, 'remote')
-        for token_data in self.config.get('tokens', []):
-            eth_token = deserialize_ethereum_token(token_data)
+
+        for token in self.config.tokens:
+            eth_token = deserialize_ethereum_token(token.dict())
             identifier = '_ceth_' + eth_token.ethereum_address
 
             try:

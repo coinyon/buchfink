@@ -19,6 +19,8 @@ def serialize_timestamp(timestamp: int) -> str:
 
 
 def deserialize_timestamp(timestamp: str) -> Timestamp:
+    if timestamp.endswith('Z'):
+        timestamp = timestamp[:-1]
     return int(datetime.fromisoformat(timestamp).timestamp())
 
 

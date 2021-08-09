@@ -25,7 +25,7 @@ from buchfink.serialization import (deserialize_timestamp,
 
 from .classification import classify_tx
 from .importers import zerion_csv
-from .models import Account, ReportConfig
+from .models import Account, ReportConfig, FetchConfig
 from .models.account import account_from_string
 from .report import run_report
 
@@ -262,16 +262,16 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
         name = account.name
         trades = []
         actions = []
-        fetch_config = account.config.get('fetch', {})
+        fetch_config = account.config.fetch or FetchConfig()
 
         fetch_actions_for_this_account = (not fetch_limited or fetch_actions) and \
-                fetch_config.get('actions', True)
+                fetch_config.actions
 
         fetch_balances_for_this_account = (not fetch_limited or fetch_balances) and \
-                fetch_config.get('balances', True)
+                fetch_config.balances
 
         fetch_trades_for_this_account = (not fetch_limited or fetch_trades) and \
-                fetch_config.get('trades', True)
+                fetch_config.trades
 
         if account.account_type == "ethereum":
 
