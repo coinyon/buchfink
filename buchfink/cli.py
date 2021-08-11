@@ -191,6 +191,7 @@ def balances(keyword, minimum_balance, fetch, total, external, denominate_asset)
     if liabilities_sum:
         table = []
         balance_in_currency_sum = 0
+        small_balances_sum = 0
         assets = [
                 obj[0]
                 for obj
@@ -207,6 +208,8 @@ def balances(keyword, minimum_balance, fetch, total, external, denominate_asset)
                     asset.symbol,
                     round(float(balance_in_currency), 2)
                 ])
+            else:
+                small_balances_sum += balance_in_currency
         table.append(['Total', None, None, round(float(balance_in_currency_sum), 2)])
 
         if total:
@@ -216,6 +219,9 @@ def balances(keyword, minimum_balance, fetch, total, external, denominate_asset)
             )
 
         else:
+            if small_balances_sum > 0:
+                table.append(['Others', None, None, round(float(small_balances_sum), 2)])
+
             print()
             print(tabulate(table, headers=[
                 'Liability',
