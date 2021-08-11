@@ -205,7 +205,9 @@ class BuchfinkDB(DBHandler):
                 logger.warning('Ignoring trade with unknown asset: %s', trade)
                 return None
 
-        exchange = yaml.load(open(trades_file, 'r'), Loader=yaml.SafeLoader)
+        with open(trades_file, 'r') as trades_f:
+            exchange = yaml.load(trades_f, Loader=yaml.SafeLoader)
+
         return [ser_trade
                 for ser_trade in [
                     safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
@@ -242,7 +244,10 @@ class BuchfinkDB(DBHandler):
             except UnknownAsset:
                 logger.warning('Ignoring ledger action with unknown asset: %s', action)
                 return None
-        exchange = yaml.load(open(actions_file, 'r'), Loader=yaml.SafeLoader)
+
+        with open(actions_file, 'r') as actions_f:
+            exchange = yaml.load(actions_f, Loader=yaml.SafeLoader)
+
         return [ser_action
                 for ser_action in [
                     safe_deserialize_ledger_action(action)
@@ -417,7 +422,10 @@ class BuchfinkDB(DBHandler):
         return BalanceSheet(assets={}, liabilities={})
 
     def get_balances_from_file(self, path) -> BalanceSheet:
-        account = yaml.load(open(path, 'r'), Loader=yaml.SafeLoader)
+
+        with open(path, 'r') as account_f:
+            account = yaml.load(account_f, Loader=yaml.SafeLoader)
+
         assets = {}  # type: Dict[Asset, Balance]
         liabilities = {}  # type: Dict[Asset, Balance]
 
