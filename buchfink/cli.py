@@ -102,6 +102,7 @@ def list_(keyword, account_type, output):
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
 @click.option('--total', is_flag=True, help='Only show totals')
+@click.option('--denominate-asset', '-d', type=str, help='Denominate in this asset')
 @click.option('--fetch', '-f', is_flag=True, help='Fetch balances from sources')
 @click.option(
         '--minimum-balance',
@@ -110,7 +111,7 @@ def list_(keyword, account_type, output):
         default=0.0,
         help='Hide balances smaller than this amount (default 0)'
 )
-def balances(keyword, minimum_balance, fetch, total, external):
+def balances(keyword, minimum_balance, fetch, total, external, denominate_asset):
     "Show balances across all accounts"
 
     buchfink_db = BuchfinkDB()
@@ -145,9 +146,13 @@ def balances(keyword, minimum_balance, fetch, total, external):
             liabilities_usd_sum[liability] = liabilities_usd_sum.get(liability, FVal(0)) \
                     + balance.usd_value
 
-    currency = buchfink_db.get_main_currency()
-    currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
+    if denominate_asset is not None:
+        currency = buchfink_db.get_asset_by_symbol(denominate_asset)
+    else:
+        currency = buchfink_db.get_main_currency()
 
+    currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
+    logger.debug('Denominating in %s: %s USD', currency, currency_in_usd)
     table = []
     assets = [obj[0] for obj in sorted(assets_usd_sum.items(), key=itemgetter(1), reverse=True)]
     balance_in_currency_sum = 0
@@ -180,7 +185,7 @@ def balances(keyword, minimum_balance, fetch, total, external):
             'Asset',
             'Amount',
             'Symbol',
-            'Fiat Value (%s)' % currency.symbol
+            'Value (%s)' % currency.symbol
         ]))
 
     if liabilities_sum:
@@ -216,7 +221,7 @@ def balances(keyword, minimum_balance, fetch, total, external):
                 'Liability',
                 'Amount',
                 'Symbol',
-                'Fiat Value (%s)' % currency.symbol
+                'Value (%s)' % currency.symbol
             ]))
 
 
