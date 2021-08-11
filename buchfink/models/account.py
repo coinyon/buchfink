@@ -20,6 +20,7 @@ class Account(BaseModel):
 
 def account_from_config(account_config: AccountConfig):
     account_type = "ethereum"   # type: AccountType
+    address = None  # type: Optional[str]
     if isinstance(account_config, EthereumAccountConfig):
         account_type = "ethereum"
         address = account_config.ethereum
@@ -28,10 +29,8 @@ def account_from_config(account_config: AccountConfig):
         address = account_config.bitcoin
     elif isinstance(account_config, ExchangeAccountConfig):
         account_type = "exchange"
-        address = None
     elif isinstance(account_config, ManualAccountConfig):
         account_type = "file"
-        address = None
     else:
         raise ValueError("Invalid account")
     return Account(
@@ -51,9 +50,9 @@ def account_from_string(acc_def: str, buchfink_db) -> Account:
         eth_address = buchfink_db.ethereum_manager.ens_lookup(acc_def)
         if not eth_address:
             raise ValueError(f'Could not resolve ENS: {acc_def}')
-        return Account(acc_def, 'ethereum', eth_address, {})
+        return Account(name=acc_def, account_type='ethereum', address=eth_address, config={})
 
     if acc_def.lower().startswith('0x'):
-        return Account(acc_def, 'ethereum', acc_def, {})
+        return Account(name=acc_def, account_type='ethereum', address=acc_def, config={})
 
     raise ValueError(acc_def)

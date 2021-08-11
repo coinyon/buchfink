@@ -50,7 +50,8 @@ from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
 
-from .models import Account, ReportConfig, Config, ExchangeAccountConfig
+from .models import (Account, Config, ExchangeAccountConfig,
+                     ManualAccountConfig, ReportConfig)
 from .models.account import accounts_from_config
 
 logger = logging.getLogger(__name__)
@@ -192,7 +193,7 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, None, self.msg_aggregator, True, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
-        accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[])
+        accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[])  # type: dict
         if self._active_eth_address:
             accs['eth'].append(self._active_eth_address)
         return BlockchainAccounts(**accs)
@@ -225,6 +226,10 @@ class BuchfinkDB(DBHandler):
             account = account_name
 
         if account.account_type == 'file':
+            if not isinstance(account.config, ManualAccountConfig):
+                # TODO: this check should already be enforced by type system
+                raise ValueError("Invalid account config")
+
             trades_file = os.path.join(self.data_directory, account.config.file)
             return self.get_trades_from_file(trades_file)
 
@@ -263,6 +268,10 @@ class BuchfinkDB(DBHandler):
             account = account_name
 
         if account.account_type == 'file':
+            if not isinstance(account.config, ManualAccountConfig):
+                # TODO: this check should already be enforced by type system
+                raise ValueError("Invalid account config")
+
             actions_file = self.data_directory / account.config.file
             if actions_file.exists():
                 return self.get_actions_from_file(actions_file)
