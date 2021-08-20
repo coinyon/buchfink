@@ -1,3 +1,4 @@
+# pylint: skip-file
 "Load Zerion export CSV and output trades"
 import logging
 import os.path
@@ -9,7 +10,7 @@ from rotkehlchen.errors import UnknownAsset
 from buchfink.datatypes import FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
 from buchfink.models import Account
-from buchfink.serialization import deserialize_timestamp, serialize_trades
+from buchfink.serialization import deserialize_timestamp
 
 logger = logging.getLogger(__name__)
 
