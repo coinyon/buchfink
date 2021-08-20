@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 # Utility function to read the README file.
@@ -31,7 +31,7 @@ setup(
     license='BSD-3',
     keywords='accounting tax-report portfolio asset-management cryptocurrencies commandline',
     url='https://github.com/coinyon/buchfink',
-    packages=['buchfink'],
+    packages=find_packages(),
     package_data={
         "buchfink": ["data/init/buchfink.yaml", "data/init/.gitignore"],
     },

@@ -50,9 +50,9 @@ from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
 
-from .models import (Account, Config, ExchangeAccountConfig,
+from buchfink.models import (Account, Config, ExchangeAccountConfig,
                      ManualAccountConfig, ReportConfig)
-from .models.account import accounts_from_config
+from buchfink.models.account import accounts_from_config
 
 logger = logging.getLogger(__name__)
 
