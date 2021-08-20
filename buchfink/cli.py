@@ -125,12 +125,14 @@ def balances(keyword, minimum_balance, fetch, total, external, denominate_asset)
     else:
         accounts = buchfink_db.get_all_accounts()
 
+    if fetch:
+        buchfink_db.perform_assets_updates()
+
     for account in accounts:
         if keyword is not None and keyword not in account.name:
             continue
 
         if fetch:
-            buchfink_db.perform_assets_updates()
             buchfink_db.fetch_balances(account)
 
         sheet = buchfink_db.get_balances(account)
