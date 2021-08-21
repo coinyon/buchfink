@@ -1,5 +1,6 @@
 coloredlogs
 jinja2
+pandas
 pickledb
 python-dateutil
 PyYAML>=5.0
