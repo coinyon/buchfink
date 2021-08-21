@@ -50,9 +50,18 @@ def account_from_string(acc_def: str, buchfink_db) -> Account:
         eth_address = buchfink_db.ethereum_manager.ens_lookup(acc_def)
         if not eth_address:
             raise ValueError(f'Could not resolve ENS: {acc_def}')
-        return Account(name=acc_def, account_type='ethereum', address=eth_address, config={})
+
+        config = {
+            'name': acc_def,
+            'ethereum': eth_address,
+        }
+        return Account(name=acc_def, account_type='ethereum', address=eth_address, config=config)
 
     if acc_def.lower().startswith('0x'):
-        return Account(name=acc_def, account_type='ethereum', address=acc_def, config={})
+        config = {
+            'name': acc_def,
+            'ethereum': acc_def,
+        }
+        return Account(name=acc_def, account_type='ethereum', address=acc_def, config=config)
 
     raise ValueError(acc_def)
