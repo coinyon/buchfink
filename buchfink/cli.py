@@ -546,11 +546,11 @@ def report_(keyword, external, report, year):
 
     if year:
         reports = [ReportConfig(
-            f'adhoc-{_year}',
-            str(year),
-            None,
-            datetime(_year, 1, 1),
-            datetime(_year + 1, 1, 1)
+            name=f'adhoc-{_year}',
+            title=str(year),
+            template=None,
+            from_dt=datetime(_year, 1, 1),
+            to_dt=datetime(_year + 1, 1, 1)
             ) for _year in year]
     else:
         reports = [
