@@ -44,6 +44,10 @@ jobs:
           pip install .
           pip install pylint pytest mypy==0.790 pycodestyle
       - name: Typecheck & Lint
-        run: make lint typecheck
+        run: |
+          pylint --version
+          mypy --version
+          py.test --version
+          make lint typecheck
       - name: Test with pytest
         run: pytest -vv --maxfail=2
