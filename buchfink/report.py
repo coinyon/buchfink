@@ -24,7 +24,8 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     folder = buchfink_db.reports_directory / Path(name)
     folder.mkdir(exist_ok=True)
     logfile = folder / 'report.log'
-    logfile.unlink(missing_ok=True)
+    if logfile.exists():
+        logfile.unlink()
     root_logger = logging.getLogger('')
     file_handler = logging.FileHandler(logfile)
     file_handler.setLevel(logging.DEBUG)
