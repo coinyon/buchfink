@@ -15,6 +15,7 @@ from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
+from rotkehlchen.db.filtering import ETHTransactionsFilterQuery
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.errors import UnknownAsset
@@ -45,14 +46,13 @@ from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
                                 LedgerAction, Trade)
+from buchfink.models import (Account, Config, ExchangeAccountConfig,
+                             ManualAccountConfig, ReportConfig)
+from buchfink.models.account import accounts_from_config
 from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ethereum_token,
                                     deserialize_ledger_action,
                                     deserialize_trade, serialize_balances)
-
-from buchfink.models import (Account, Config, ExchangeAccountConfig,
-                     ManualAccountConfig, ReportConfig)
-from buchfink.models.account import accounts_from_config
 
 logger = logging.getLogger(__name__)
 
@@ -519,9 +519,7 @@ class BuchfinkDB(DBHandler):
 
     def get_ethereum_transactions(
             self,
-            from_ts: Optional[Timestamp] = None,
-            to_ts: Optional[Timestamp] = None,
-            address: Optional[ChecksumEthAddress] = None,
+            filter_: ETHTransactionsFilterQuery
     ) -> List[EthereumTransaction]:
         return self._eth_tx
 
