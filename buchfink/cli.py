@@ -686,7 +686,6 @@ def cache(asset: Tuple[str], base_asset_: Optional[str]):
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
             if base_asset_ \
             else buchfink_db.get_main_currency()
-    historian = PriceHistorian()
 
     for symbol in asset:
         asset_ = buchfink_db.get_asset_by_symbol(symbol)
