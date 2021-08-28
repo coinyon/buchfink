@@ -39,7 +39,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     if logfile.exists():
         logfile.unlink()
     error_handler = logging.FileHandler(logfile)
-    error_handler.setLevel(logging.DEBUG)
+    error_handler.setLevel(logging.ERROR)
     error_handler.setFormatter(formatter)
     root_logger.addHandler(error_handler)
 
