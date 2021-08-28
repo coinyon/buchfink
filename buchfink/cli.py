@@ -295,9 +295,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                 txs = manager.ethereum.transactions.single_address_query_transactions(
                         account.address,
                         start_ts=0,
-                        end_ts=now,
-                        with_limit=False,
-                        only_cache=False
+                        end_ts=now
                 )
 
                 for txn in txs:
