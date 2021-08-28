@@ -675,5 +675,23 @@ def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestam
         ))
 
 
+@buchfink.command('cache')
+@click.argument('asset', nargs=-1)
+@click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
+def cache(asset: Tuple[str], base_asset_: Optional[str]):
+    """
+    Build a historical price cache
+    """
+    buchfink_db = BuchfinkDB()
+    base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
+            if base_asset_ \
+            else buchfink_db.get_main_currency()
+    historian = PriceHistorian()
+
+    for symbol in asset:
+        asset_ = buchfink_db.get_asset_by_symbol(symbol)
+        buchfink_db.cryptocompare.create_cache(asset_, base_asset, False)
+
+
 if __name__ == '__main__':
     buchfink()  # pylint: disable=no-value-for-parameter
