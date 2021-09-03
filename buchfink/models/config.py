@@ -85,10 +85,23 @@ class AssetConfig(BaseModel):
     cryptocompare: Optional[str] = None
 
 
+class HistoricalPriceConfig(BaseModel):
+    from_: str
+    to: str
+    timestamp: datetime
+    price: Optional[float]
+
+    class Config:
+        fields = {
+            'from_': 'from'
+        }
+
+
 class Config(BaseModel):
     accounts: List[AccountConfig] = []
     tokens: List[AssetConfig] = []
     reports: List[ReportConfig2] = []
+    prices: List[HistoricalPriceConfig] = []
     settings: Settings
 
 

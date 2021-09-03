@@ -4,6 +4,8 @@ master
 * New "actions" command to show ledger actions
 * Add ability to turn of fetching of trades, balances or actions for each account
 * "quote" subcommand now has a timestamp (-t) option to query historical prices
+* "cache" subcommand to build a historical prices cache
+* Can add manual historic prices to yaml
 
 0.0.9
 -----

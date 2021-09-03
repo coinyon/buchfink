@@ -38,6 +38,7 @@ from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.globaldb.updates import AssetsUpdater
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
+from rotkehlchen.history.typing import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
@@ -47,7 +48,8 @@ from rotkehlchen.user_messages import MessagesAggregator
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
                                 LedgerAction, Trade)
 from buchfink.models import (Account, Config, ExchangeAccountConfig,
-                             ManualAccountConfig, ReportConfig)
+                             HistoricalPriceConfig, ManualAccountConfig,
+                             ReportConfig)
 from buchfink.models.account import accounts_from_config
 from buchfink.serialization import (deserialize_asset, deserialize_balance,
                                     deserialize_ethereum_token,
@@ -547,3 +549,21 @@ class BuchfinkDB(DBHandler):
                     raise ValueError('Unable to add asset: ' + str(eth_token)) from exc
 
             self.asset_resolver.clean_memory_cache()
+
+    def apply_manual_prices(self):
+        from rotkehlchen.typing import Price, Timestamp, FVal
+
+        def convert_to_rotki_historical_price(historical_price: HistoricalPriceConfig) \
+                -> HistoricalPrice:
+            return HistoricalPrice(
+                from_asset=self.get_asset_by_symbol(historical_price.from_),
+                to_asset=self.get_asset_by_symbol(historical_price.to),
+                source=HistoricalPriceOracle.MANUAL,
+                price=Price(FVal(str(historical_price.price))),
+                timestamp=Timestamp(int(historical_price.timestamp.timestamp()))
+            )
+
+        self.globaldb.add_historical_prices([
+            convert_to_rotki_historical_price(historical_price)
+            for historical_price in self.config.prices
+        ])

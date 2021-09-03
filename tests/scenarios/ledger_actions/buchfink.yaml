@@ -8,10 +8,19 @@ accounts:
   - name: acc_gift
     file: acc_gift.yaml
 
+  - name: acc_unknown_price
+    file: acc_unknown_price.yaml
+
 reports:
   - name: all
-    from: "2015-01-01"
-    to: "2020-06-30"
+    from: "2020-01-01"
+    to: "2021-01-01"
+
+prices:
+  - from: HEX
+    to: USD
+    timestamp: '2020-02-15T19:51:26'
+    price: 0.01
 
 settings:
   main_currency: USD
