@@ -292,11 +292,13 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                 logger.info('Analyzing ethereum transactions for %s', name)
                 manager = buchfink_db.get_chain_manager(account)
 
-                txs = manager.ethereum.transactions.single_address_query_transactions(
+                manager.ethereum.transactions.single_address_query_transactions(
                         account.address,
                         start_ts=0,
                         end_ts=now
                 )
+
+                txs = buchfink_db.get_ethereum_transactions(None)
 
                 for txn in txs:
                     tx_hash = '0x' + txn.tx_hash.hex()
