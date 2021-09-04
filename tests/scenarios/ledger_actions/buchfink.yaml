@@ -8,8 +8,8 @@ accounts:
   - name: acc_gift
     file: acc_gift.yaml
 
-  - name: acc_unknown_price
-    file: acc_unknown_price.yaml
+  - name: acc_manual_price
+    file: acc_manual_price.yaml
 
 reports:
   - name: all
