@@ -88,7 +88,7 @@ class AssetConfig(BaseModel):
 class HistoricalPriceConfig(BaseModel):
     from_: str
     to: str
-    timestamp: datetime
+    at: datetime
     price: Optional[float]
 
     class Config:
