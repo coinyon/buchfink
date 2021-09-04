@@ -412,6 +412,7 @@ def run(name, from_date, to_date, external):
     "Run a full fetch + report cycle"
 
     buchfink_db = BuchfinkDB()
+    buchfink_db.apply_manual_prices()
 
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
@@ -535,6 +536,7 @@ def report_(keyword, external, report, year):
     "Generate reports for all report definition and output overview table"
 
     buchfink_db = BuchfinkDB()
+    buchfink_db.apply_manual_prices()
 
     results = {}
 
@@ -578,6 +580,7 @@ def allowances():
     "Show the amount of each asset that you could sell tax-free"
 
     buchfink_db = BuchfinkDB()
+    buchfink_db.apply_manual_prices()
 
     num_matched_accounts = 0
     all_trades = []
