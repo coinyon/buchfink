@@ -42,7 +42,8 @@ from rotkehlchen.history.typing import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
                                 ExternalService, ExternalServiceApiCredentials,
-                                Location, SupportedBlockchain, Timestamp)
+                                FVal, Location, Price, SupportedBlockchain,
+                                Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
@@ -551,10 +552,7 @@ class BuchfinkDB(DBHandler):
             self.asset_resolver.clean_memory_cache()
 
     def apply_manual_prices(self):
-        from rotkehlchen.typing import Price, Timestamp, FVal
-
-        def convert_to_rotki_historical_price(historical_price: HistoricalPriceConfig) \
-                -> HistoricalPrice:
+        def to_historical_price(historical_price: HistoricalPriceConfig) -> HistoricalPrice:
             return HistoricalPrice(
                 from_asset=self.get_asset_by_symbol(historical_price.from_),
                 to_asset=self.get_asset_by_symbol(historical_price.to),
@@ -563,7 +561,8 @@ class BuchfinkDB(DBHandler):
                 timestamp=Timestamp(int(historical_price.timestamp.timestamp()))
             )
 
+        # TODO: we must delete historical prices here
         self.globaldb.add_historical_prices([
-            convert_to_rotki_historical_price(historical_price)
+            to_historical_price(historical_price)
             for historical_price in self.config.prices
         ])
