@@ -1,6 +1,9 @@
 master
 ------
 
+0.0.10
+------
+
 * New "actions" command to show ledger actions
 * Add ability to turn of fetching of trades, balances or actions for each account
 * "quote" subcommand now has a timestamp (-t) option to query historical prices
