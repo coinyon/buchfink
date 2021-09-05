@@ -561,12 +561,12 @@ class BuchfinkDB(DBHandler):
                 timestamp=Timestamp(int(historical_price.at.timestamp()))
             )
 
-        ps = [to_historical_price(historical_price) for historical_price in self.config.prices]
-        for price in ps:
+        prices = [to_historical_price(historical_price) for historical_price in self.config.prices]
+        for price in prices:
             logger.debug('Adding %s', price)
             self.globaldb.delete_historical_prices(
                     price.from_asset,
                     price.to_asset,
                     HistoricalPriceOracle.MANUAL
             )
-        self.globaldb.add_historical_prices(ps)
+        self.globaldb.add_historical_prices(prices)
