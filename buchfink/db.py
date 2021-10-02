@@ -123,15 +123,17 @@ class BuchfinkDB(DBHandler):
         self.globaldb = GlobalDBHandler(self.cache_directory)
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
-        self.ethereum_manager = EthereumManager(
-            database=self,
-            ethrpc_endpoint=self.get_eth_rpc_endpoint(),
-            etherscan=self.etherscan,
-            msg_aggregator=self.msg_aggregator,
-            greenlet_manager=self.greenlet_manager,
-            connect_at_start=[]
-        )
-        self.inquirer.inject_ethereum(self.ethereum_manager)
+
+        eth_rpc_endpoint = self.get_eth_rpc_endpoint()
+        if eth_rpc_endpoint:
+            self.ethereum_manager = EthereumManager(
+                ethrpc_endpoint=eth_rpc_endpoint,
+                etherscan=self.etherscan,
+                msg_aggregator=self.msg_aggregator,
+                greenlet_manager=self.greenlet_manager,
+                connect_at_start=[]
+            )
+            self.inquirer.inject_ethereum(self.ethereum_manager)
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
