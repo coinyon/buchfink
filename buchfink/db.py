@@ -124,16 +124,14 @@ class BuchfinkDB(DBHandler):
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
-        eth_rpc_endpoint = self.get_eth_rpc_endpoint()
-        if eth_rpc_endpoint:
-            self.ethereum_manager = EthereumManager(
-                ethrpc_endpoint=eth_rpc_endpoint,
-                etherscan=self.etherscan,
-                msg_aggregator=self.msg_aggregator,
-                greenlet_manager=self.greenlet_manager,
-                connect_at_start=[]
-            )
-            self.inquirer.inject_ethereum(self.ethereum_manager)
+        self.ethereum_manager = EthereumManager(
+            ethrpc_endpoint=self.get_eth_rpc_endpoint(),
+            etherscan=self.etherscan,
+            msg_aggregator=self.msg_aggregator,
+            greenlet_manager=self.greenlet_manager,
+            connect_at_start=[]
+        )
+        self.inquirer.inject_ethereum(self.ethereum_manager)
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
@@ -148,8 +146,8 @@ class BuchfinkDB(DBHandler):
     def get_main_currency(self):
         return self.get_settings().main_currency
 
-    def get_eth_rpc_endpoint(self):
-        return self.config.settings.eth_rpc_endpoint
+    def get_eth_rpc_endpoint(self) -> str:
+        return self.config.settings.eth_rpc_endpoint or ''
 
     def get_all_accounts(self) -> List[Account]:
         return self.accounts
