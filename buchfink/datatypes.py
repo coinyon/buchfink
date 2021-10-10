@@ -5,6 +5,7 @@ from rotkehlchen.accounting.structures import (ActionType, Balance,
                                                BalanceSheet, BalanceType)
 from rotkehlchen.assets.asset import Asset, EthereumToken
 from rotkehlchen.chain.ethereum.trades import AMMTrade
+from rotkehlchen.chain.ethereum.structures import EthereumTxReceipt
 from rotkehlchen.exchanges.data_structures import Trade
 from rotkehlchen.fval import FVal
 from rotkehlchen.typing import TradeType, Timestamp

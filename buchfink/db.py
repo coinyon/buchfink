@@ -14,8 +14,7 @@ from rotkehlchen.assets.typing import AssetType
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
-from rotkehlchen.db.dbhandler import DBHandler
-from rotkehlchen.db.filtering import ETHTransactionsFilterQuery
+from rotkehlchen.db.dbhandler import DBHandler, detect_sqlcipher_version
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.errors import UnknownAsset
@@ -40,10 +39,9 @@ from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.typing import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.typing import (ChecksumEthAddress, EthereumTransaction,
-                                ExternalService, ExternalServiceApiCredentials,
-                                FVal, Location, Price, SupportedBlockchain,
-                                Timestamp)
+from rotkehlchen.typing import (ChecksumEthAddress, ExternalService,
+                                ExternalServiceApiCredentials, FVal, Location,
+                                Price, SupportedBlockchain, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
@@ -93,6 +91,7 @@ class BuchfinkDB(DBHandler):
         self.balances_directory.mkdir(exist_ok=True)
         self.cache_directory.mkdir(exist_ok=True)
         self.actions_directory.mkdir(exist_ok=True)
+        self.user_data_dir.mkdir(exist_ok=True)
         (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
         (self.cache_directory / 'history').mkdir(exist_ok=True)
         (self.cache_directory / 'inquirer').mkdir(exist_ok=True)
@@ -101,8 +100,6 @@ class BuchfinkDB(DBHandler):
         self.last_write_ts: Optional[Timestamp] = None
 
         self._amm_swaps = []  # type: List[AMMSwap]
-        self._eth_tx = []  # type: List[EthereumTransaction]
-        self._eth_receipts_store = pickledb.load(self.cache_directory / 'receipts.db', False)
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko()
         self.historian = PriceHistorian(
@@ -135,6 +132,11 @@ class BuchfinkDB(DBHandler):
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
+
+        self.sqlcipher_version = detect_sqlcipher_version()
+        password = "password"
+        self.connect(password)
+        self._run_actions_after_first_connection(password)
 
     def __del__(self):
         pass
@@ -319,7 +321,7 @@ class BuchfinkDB(DBHandler):
             eth_modules=eth_modules
         )
         # Monkey-patch function that uses singleton
-        manager.queried_addresses_for_module = lambda self, module = None: [account]
+        manager.queried_addresses_for_module = lambda self, module = None: [account.address]
         return manager
 
     def get_exchange(self, account: str) -> ExchangeInterface:
@@ -496,35 +498,11 @@ class BuchfinkDB(DBHandler):
     def get_used_query_range(self, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
         return None
 
-    def get_ethereum_transaction_receipt(self, tx_hash: str, manager: ChainManager):
-        receipt = self._eth_receipts_store.get(tx_hash)
-        if receipt:
-            return receipt
-
-        receipt = manager.ethereum.get_transaction_receipt(tx_hash)
-        self._eth_receipts_store.set(tx_hash, receipt)
-        self._eth_receipts_store.dump()
-        return receipt
-
     def get_ignored_action_ids(
             self,
             action_type: Optional[ActionType],
             ) -> Dict[ActionType, List[str]]:
         return {}
-
-    def add_ethereum_transactions(
-            self,
-            ethereum_transactions: List[EthereumTransaction],
-            from_etherscan: bool,
-    ) -> None:
-        self._eth_tx = []
-        self._eth_tx.extend(ethereum_transactions)
-
-    def get_ethereum_transactions(
-            self,
-            filter_: ETHTransactionsFilterQuery
-    ) -> List[EthereumTransaction]:
-        return self._eth_tx
 
     def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
         pass

@@ -5,7 +5,7 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.typing import EthereumTransaction
 from rotkehlchen.utils.misc import hexstr_to_int
 
-from .datatypes import FVal, LedgerAction, LedgerActionType
+from .datatypes import FVal, LedgerAction, LedgerActionType, EthereumTxReceipt
 from .models import Account
 from .serialization import serialize_timestamp
 
@@ -70,8 +70,8 @@ ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
 ADDR_UMA = '0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828'
 
 
-def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receipt: dict) \
-        -> List[LedgerAction]:
+def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
+        receipt: EthereumTxReceipt) -> List[LedgerAction]:
     actions = []  # type: List[LedgerAction]
 
     tx_time = serialize_timestamp(txn.timestamp)
@@ -79,9 +79,9 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
     if txn.from_address != account.address:
         return actions
 
-    for event in receipt['logs']:
-        if event['topics'][0] == CLAIMED and event['address'] == ADDR_UNISWAP_AIRDROP.lower():
-            amount = hexstr_to_int(event['data'][130:])
+    for event in receipt.logs:
+        if event.topics[0] == CLAIMED and event.address == ADDR_UNISWAP_AIRDROP.lower():
+            amount = hexstr_to_int(event.data[130:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -95,8 +95,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED and event['address'] == ADDR_MIRROR_AIRDROP.lower():
-            amount = hexstr_to_int(event['data'][130:])
+        elif event.topics[0] == CLAIMED and event.address == ADDR_MIRROR_AIRDROP.lower():
+            amount = hexstr_to_int(event.data[130:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -110,8 +110,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED and event['address'] == ADDR_POOL_AIRDROP.lower():
-            amount = hexstr_to_int(event['data'][130:])
+        elif event.topics[0] == CLAIMED and event.address == ADDR_POOL_AIRDROP.lower():
+            amount = hexstr_to_int(event.data[130:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -125,8 +125,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED and event['address'] == ADDR_IMX_AIRDROP.lower():
-            amount = hexstr_to_int(event['data'][130:])
+        elif event.topics[0] == CLAIMED and event.address == ADDR_IMX_AIRDROP.lower():
+            amount = hexstr_to_int(event.data[130:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -140,12 +140,12 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED:
+        elif event.topics[0] == CLAIMED:
             logger.warning('Unknown Claimed event for tx %s at %s', tx_hash, tx_time)
 
-        if event['topics'][0] == CLAIMED_3 and event['address'] == ADDR_BADGER_TREE.lower():
-            if hexstr_to_int(event['topics'][2]) == hexstr_to_int(ADDR_BADGER):
-                amount = hexstr_to_int(event['data'][2:66])
+        if event.topics[0] == CLAIMED_3 and event.address == ADDR_BADGER_TREE.lower():
+            if hexstr_to_int(event.topics[2]) == hexstr_to_int(ADDR_BADGER):
+                amount = hexstr_to_int(event.data[2:66])
                 token = symbol_to_asset_or_token('_ceth_0x3472a5a71965499acd81997a54bba8d852c6e53d')
                 actions += [LedgerAction(
                     identifier=None,
@@ -160,11 +160,11 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == CLAIMED_3:
+        elif event.topics[0] == CLAIMED_3:
             logger.warning('Unknown Claimed event for tx %s at %s', tx_hash, tx_time)
 
-        if event['topics'][0] == CLAIMED_2 and event['address'] == ADDR_XTOKEN_AIRDROP.lower():
-            amount = hexstr_to_int(event['data'])
+        if event.topics[0] == CLAIMED_2 and event.address == ADDR_XTOKEN_AIRDROP.lower():
+            amount = hexstr_to_int(event.data)
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -178,8 +178,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED_2 and event['address'] == ADDR_BALANCER_REWARDS.lower():
-            amount = hexstr_to_int(event['data'][66:])
+        elif event.topics[0] == CLAIMED_2 and event.address == ADDR_BALANCER_REWARDS.lower():
+            amount = hexstr_to_int(event.data[66:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -193,8 +193,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED_2 and event['address'] == ADDR_ROOK_REWARDS.lower():
-            amount = hexstr_to_int(event['data'][2:])
+        elif event.topics[0] == CLAIMED_2 and event.address == ADDR_ROOK_REWARDS.lower():
+            amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -208,11 +208,11 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED_2:
+        elif event.topics[0] == CLAIMED_2:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
-        if event['topics'][0] == CLAIMED_4 and event['address'] == ADDR_GITCOIN_AIRDROP.lower():
-            amount = hexstr_to_int(event['data'][2:][128:192])
+        if event.topics[0] == CLAIMED_4 and event.address == ADDR_GITCOIN_AIRDROP.lower():
+            amount = hexstr_to_int(event.data[2:][128:192])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -226,16 +226,16 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED_4:
+        elif event.topics[0] == CLAIMED_4:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
-        if event['topics'][0] == CLAIMED_5 and event['address'] in (
+        if event.topics[0] == CLAIMED_5 and event.address in (
                 ADDR_FOX_AIRDROP.lower(),
                 ADDR_FOX_AIRDROP_2.lower(),
                 ADDR_FOX_AIRDROP_3.lower(),
                 ADDR_FOX_AIRDROP_4.lower()
                 ):
-            amount = hexstr_to_int(event['data'][2:][64:128])
+            amount = hexstr_to_int(event.data[2:][64:128])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -249,11 +249,11 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == CLAIMED_5:
+        elif event.topics[0] == CLAIMED_5:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
-        if event['topics'][0] == REWARD_PAID and event['address'] in ADDR_PIEDAO_INCENTIVES:
-            amount = hexstr_to_int(event['data'][2:])
+        if event.topics[0] == REWARD_PAID and event.address in ADDR_PIEDAO_INCENTIVES:
+            amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -267,8 +267,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == REWARD_PAID and event['address'] == ADDR_INDEX_REWARDS.lower():
-            amount = hexstr_to_int(event['data'][2:])
+        elif event.topics[0] == REWARD_PAID and event.address == ADDR_INDEX_REWARDS.lower():
+            amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -282,8 +282,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == REWARD_PAID and event['address'] == ADDR_YFI_GOVERNANCE.lower():
-            amount = hexstr_to_int(event['data'][2:])
+        elif event.topics[0] == REWARD_PAID and event.address == ADDR_YFI_GOVERNANCE.lower():
+            amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -297,8 +297,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == REWARD_PAID and event['address'] in ADDR_CREAM_REWARDS:
-            amount = hexstr_to_int(event['data'][2:])
+        elif event.topics[0] == REWARD_PAID and event.address in ADDR_CREAM_REWARDS:
+            amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -312,8 +312,8 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == REWARD_PAID and event['address'] == ADDR_MIR_REWARDS.lower():
-            amount = hexstr_to_int(event['data'][2:])
+        elif event.topics[0] == REWARD_PAID and event.address == ADDR_MIR_REWARDS.lower():
+            amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
                 location='',
@@ -327,12 +327,12 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                 link=tx_hash
             )]
 
-        elif event['topics'][0] == REWARD_PAID:
+        elif event.topics[0] == REWARD_PAID:
             logger.warning('Unknown RewardPaid event for tx %s at %s', tx_hash, tx_time)
 
-        if event['topics'][0] == MINTED and event['address'] == ADDR_SWERVE_MINTER.lower():
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'][66:])
+        if event.topics[0] == MINTED and event.address == ADDR_SWERVE_MINTER.lower():
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data[66:])
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -346,12 +346,12 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == MINTED:
+        elif event.topics[0] == MINTED:
             logger.warning('Unknown Minted event for tx %s at %s', tx_hash, tx_time)
 
-        if event['topics'][0] == PURCHASE and event['address'] == ADDR_FEI_GENESIS_GROUP.lower():
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'])
+        if event.topics[0] == PURCHASE and event.address == ADDR_FEI_GENESIS_GROUP.lower():
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -365,13 +365,13 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == PURCHASE:
+        elif event.topics[0] == PURCHASE:
             logger.warning('Unknown Purchase event for tx %s at %s', tx_hash, tx_time)
 
-        if event['topics'][0] == TRANSFER and event['address'] == ADDR_DODO.lower():
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_DODO_REWARDS) and \
-                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'])
+        if event.topics[0] == TRANSFER and event.address == ADDR_DODO.lower():
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_DODO_REWARDS) and \
+                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -385,10 +385,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_SUSHI.lower():
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_SUSHI_REWARDS) and \
-                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'])
+        elif event.topics[0] == TRANSFER and event.address == ADDR_SUSHI.lower():
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_SUSHI_REWARDS) and \
+                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -402,11 +402,11 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_TORN.lower():
+        elif event.topics[0] == TRANSFER and event.address == ADDR_TORN.lower():
             asset = symbol_to_asset_or_token('_ceth_0x77777FeDdddFfC19Ff86DB637967013e6C6A116C')
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
-                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'])
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
+                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -420,14 +420,14 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_DAI.lower():
+        elif event.topics[0] == TRANSFER and event.address == ADDR_DAI.lower():
             # MakerDAO Mint
             # Until we clarify generalized lending support in Buchfink,
             # treat borrowed DAI as a gift you have to pay back
             asset = symbol_to_asset_or_token('DAI')
-            if hexstr_to_int(event['topics'][1]) == 0 and \
-                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'])
+            if hexstr_to_int(event.topics[1]) == 0 and \
+                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -441,12 +441,12 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        elif event['topics'][0] == TRANSFER and event['address'] == ADDR_UMA.lower():
+        elif event.topics[0] == TRANSFER and event.address == ADDR_UMA.lower():
             # UMA TVL Option Settlement
             asset = symbol_to_asset_or_token('_ceth_' + ADDR_UMA)
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(ADDR_UMA_TVL_OPT) and \
-                    hexstr_to_int(event['topics'][2]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'])
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_UMA_TVL_OPT) and \
+                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -460,9 +460,9 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        if event['topics'][0] == STAKEEND and event['address'] == ADDR_HEX.lower():
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
-                payout = hexstr_to_int(event['data'][2:][:18])
+        if event.topics[0] == STAKEEND and event.address == ADDR_HEX.lower():
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                payout = hexstr_to_int(event.data[2:][:18])
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -476,10 +476,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        if event['topics'][0] == HUNT and event['address'] == ADDR_BLACKPOOL_AIRDROP.lower():
+        if event.topics[0] == HUNT and event.address == ADDR_BLACKPOOL_AIRDROP.lower():
             asset = symbol_to_asset_or_token('_ceth_0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da')
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'][2:][64:128])
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data[2:][64:128])
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -493,10 +493,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        if event['topics'][0] == VESTED and event['address'] == ADDR_XTK_VESTING.lower():
+        if event.topics[0] == VESTED and event.address == ADDR_XTK_VESTING.lower():
             asset = symbol_to_asset_or_token('_ceth_0x7F3EDcdD180Dbe4819Bd98FeE8929b5cEdB3AdEB')
-            if hexstr_to_int(event['topics'][1]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event['data'][2:][64:128])
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data[2:][64:128])
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
@@ -512,10 +512,10 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
 
         # Until we clarify generalized lending support in Buchfink,
         # treat borrowed DAI as a gift you have to pay back
-        if event['topics'][0] == BORROW and event['address'] == ADDR_COMPOUND_DAI.lower():
+        if event.topics[0] == BORROW and event.address == ADDR_COMPOUND_DAI.lower():
             asset = symbol_to_asset_or_token('DAI')
-            borrower = hexstr_to_int(event['data'][2:][:64])
-            amount = hexstr_to_int(event['data'][2:][64:128])
+            borrower = hexstr_to_int(event.data[2:][:64])
+            amount = hexstr_to_int(event.data[2:][64:128])
             if borrower == hexstr_to_int(account.address):
                 actions += [LedgerAction(
                     identifier=None,
@@ -530,7 +530,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction, receip
                     link=tx_hash
                 )]
 
-        if event['topics'][0] == XFLOBBYEXIT and event['address'] == ADDR_HEX.lower():
+        if event.topics[0] == XFLOBBYEXIT and event.address == ADDR_HEX.lower():
             asset = symbol_to_asset_or_token('_ceth_' + ADDR_HEX)
 
             # Find another TRANSFER

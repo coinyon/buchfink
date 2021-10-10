@@ -6,18 +6,20 @@ import sys
 from datetime import datetime
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, cast
 
 import click
 import coloredlogs
 import yaml
 from rotkehlchen.chain.ethereum.trades import AMMTrade
+from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.constants import ZERO
 from rotkehlchen.history.price import PriceHistorian
+from rotkehlchen.typing import ChecksumEthAddress
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
-from buchfink.datatypes import FVal, LedgerAction, Trade
+from buchfink.datatypes import FVal, LedgerAction, Trade, Timestamp
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (deserialize_timestamp,
                                     serialize_ledger_actions,
@@ -25,7 +27,7 @@ from buchfink.serialization import (deserialize_timestamp,
 
 from .classification import classify_tx
 from .importers import zerion_csv
-from .models import Account, ReportConfig, FetchConfig
+from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
 from .report import run_report
 
@@ -291,18 +293,26 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
             if fetch_actions_for_this_account:
                 logger.info('Analyzing ethereum transactions for %s', name)
                 manager = buchfink_db.get_chain_manager(account)
+                address = cast(ChecksumEthAddress, account.address)
 
-                manager.ethereum.transactions.single_address_query_transactions(
-                        account.address,
-                        start_ts=0,
+                eth_transactions = EthTransactions(
+                        ethereum=buchfink_db.ethereum_manager,
+                        database=buchfink_db
+                )
+
+                eth_transactions.single_address_query_transactions(
+                        address,
+                        start_ts=Timestamp(0),
                         end_ts=now
                 )
 
-                txs = buchfink_db.get_ethereum_transactions(None)
+                txs, _ = eth_transactions.query(
+                        ETHTransactionsFilterQuery.make(addresses=[address])
+                )
 
                 for txn in txs:
                     tx_hash = '0x' + txn.tx_hash.hex()
-                    receipt = buchfink_db.get_ethereum_transaction_receipt(tx_hash, manager)
+                    receipt = eth_transactions.get_or_query_transaction_receipt(tx_hash)
 
                     acc_actions = classify_tx(account, tx_hash, txn, receipt)
                     if actions:
