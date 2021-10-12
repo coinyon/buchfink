@@ -6,7 +6,6 @@ from functools import reduce
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
-import pickledb
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
