@@ -545,13 +545,18 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
             asset = symbol_to_asset_or_token('_ceth_' + ADDR_HEX)
 
             # Find another TRANSFER
-            for ev2 in receipt['logs']:
-                if ev2['topics'][0] == TRANSFER and \
-                        ev2['address'] == ADDR_HEX.lower() and \
-                        hexstr_to_int(ev2['topics'][1]) == 0 and \
-                        hexstr_to_int(ev2['topics'][2]) == hexstr_to_int(account.address):
+            for ev2 in receipt.logs:
+                # Quick hack to make the classication work. Will refactor later.
+                ev2.data = '0x' + hex_or_bytes_to_str(ev2.data)  # type: ignore
+                ev2.address = str(ev2.address).lower()  # type: ignore
+                for i, topic in enumerate(ev2.topics):
+                    ev2.topics[i] = '0x' + hex_or_bytes_to_str(topic)  # type: ignore
+                if ev2.topics[0] == TRANSFER and \
+                        same_addr(ev2.address, ADDR_HEX) and \
+                        hexstr_to_int(ev2.topics[1]) == 0 and \
+                        hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address):
 
-                    amount = hexstr_to_int(ev2['data'][2:])
+                    amount = hexstr_to_int(ev2.data[2:])
                     # We will classify those as GIFT instead of purchase because
                     # we already paid earlier
                     actions += [LedgerAction(
