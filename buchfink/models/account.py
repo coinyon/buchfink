@@ -15,6 +15,7 @@ class Account(BaseModel):
     name: str
     account_type: AccountType
     address: Optional[Union[ChecksumEthAddress, str]]
+    tags: List[str]
     config: AccountConfig
 
 
@@ -37,7 +38,8 @@ def account_from_config(account_config: AccountConfig):
         name=account_config.name,
         account_type=account_type,
         address=address,
-        config=account_config
+        config=account_config,
+        tags=account_config.tags or []
     )
 
 
@@ -55,13 +57,13 @@ def account_from_string(acc_def: str, buchfink_db) -> Account:
             'name': acc_def,
             'ethereum': eth_address,
         }
-        return Account(name=acc_def, account_type='ethereum', address=eth_address, config=config)
+        return Account(name=acc_def, account_type='ethereum', address=eth_address, config=config, tags=[])
 
     if acc_def.lower().startswith('0x'):
         config = {
             'name': acc_def,
             'ethereum': acc_def,
         }
-        return Account(name=acc_def, account_type='ethereum', address=acc_def, config=config)
+        return Account(name=acc_def, account_type='ethereum', address=acc_def, config=config, tags=[])
 
     raise ValueError(acc_def)

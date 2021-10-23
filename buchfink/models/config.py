@@ -17,7 +17,7 @@ class ExchangeAccountConfig(BaseModel):
     secret: str
     passphrase: Optional[str] = None
     fetch: Optional[FetchConfig] = None
-
+    tags: Optional[List[str]]
 
 class EthereumAccountConfig(BaseModel):
     name: str
@@ -30,12 +30,14 @@ class BitcoinAccountConfig(BaseModel):
     name: str
     bitcoin: str
     fetch: Optional[FetchConfig] = None
+    tags: Optional[List[str]]
 
 
 class ManualAccountConfig(BaseModel):
     name: str
     file: str
     fetch: Optional[FetchConfig] = None
+    tags: Optional[List[str]]
 
 
 AccountConfig = Union[

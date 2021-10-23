@@ -94,7 +94,8 @@ def list_(keyword, account_type, output):
                     click.style(account.name, fg='green')
             )
             address = ' ({0})'.format(account.address) if account.address is not None else ''
-            click.echo(type_and_name + address)
+            tags = click.style(' {' + ', '.join(account.tags) + '}', fg='blue') if account.tags else ''
+            click.echo(type_and_name + address + tags)
         else:
             click.echo('{0}'.format(getattr(account, output)))
 
