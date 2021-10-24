@@ -30,6 +30,7 @@ STAKEEND = '0x72d9c5a7ab13846e08d9c838f9e866a1bb4a66a2fd3ba3c9e7da3cf9e394dfd7'
 VESTED = '0xfbeff59d2bfda0d79ea8a29f8c57c66d48c7a13eabbdb90908d9115ec41c9dc6'
 BORROW = '0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80'
 XFLOBBYEXIT = '0xa6b19fa7f41317a186e1d58e9d81f86a52f1102b6bce10b4eca83f37aaa58468'
+REWARDS_CLAIMED = '0xfc30cddea38e2bf4d6ea7d3f9ed3b6ad7f176419f4963bd81318067a4aee73fe'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -64,6 +65,7 @@ ADDR_FOX_AIRDROP_2 = '0x91B9A78658273913bf3F5444Cb5F2592d1123eA7'
 ADDR_FOX_AIRDROP_3 = '0xf4BBE639CCEd35210dA2018b0A31f4E1449B2a8a'
 ADDR_FOX_AIRDROP_4 = '0x7BC08798465B8475Db9BCA781C2Fd6063A09320D'
 ADDR_UMA_TVL_OPT = '0x0Ee5Bb3dEAe8a44FbDeB269941f735793F8312Ef'
+ADDR_DYDX_REWARDS = '0x01d3348601968aB85b4bb028979006eac235a588'
 
 ADDR_DODO = '0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd'
 ADDR_SUSHI = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
@@ -484,6 +486,23 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
                     timestamp=txn.timestamp,
                     asset=symbol_to_asset_or_token('_ceth_' + ADDR_HEX),
                     notes='HEX Payout for staking',
+                    link=tx_hash
+                )]
+
+        if event.topics[0] == REWARDS_CLAIMED and same_addr(event.address, ADDR_DYDX_REWARDS):
+            asset = symbol_to_asset_or_token('_ceth_0x92D6C1e31e14520e676a687F0a93788B716BEff5')
+            if hexstr_to_int(event.data[2:][:64]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data[2:][64:128])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=asset,
+                    notes='DYDX retroactive airdrop',
                     link=tx_hash
                 )]
 
