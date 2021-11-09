@@ -510,7 +510,7 @@ class BuchfinkDB(DBHandler):
         return []
 
     def perform_assets_updates(self):
-        self.assets_updater.perform_update(None, 'remote')
+        self.assets_updater.perform_update(None, None)
 
         for token in self.config.tokens:
             eth_token = deserialize_ethereum_token(token.dict())

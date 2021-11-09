@@ -19,6 +19,7 @@ class ExchangeAccountConfig(BaseModel):
     fetch: Optional[FetchConfig] = None
     tags: Optional[List[str]]
 
+
 class EthereumAccountConfig(BaseModel):
     name: str
     ethereum: str

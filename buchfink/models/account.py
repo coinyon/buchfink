@@ -57,13 +57,25 @@ def account_from_string(acc_def: str, buchfink_db) -> Account:
             'name': acc_def,
             'ethereum': eth_address,
         }
-        return Account(name=acc_def, account_type='ethereum', address=eth_address, config=config, tags=[])
+        return Account(
+                name=acc_def,
+                account_type='ethereum',
+                address=eth_address,
+                config=config,
+                tags=[]
+            )
 
     if acc_def.lower().startswith('0x'):
         config = {
             'name': acc_def,
             'ethereum': acc_def,
         }
-        return Account(name=acc_def, account_type='ethereum', address=acc_def, config=config, tags=[])
+        return Account(
+                name=acc_def,
+                account_type='ethereum',
+                address=acc_def,
+                config=config,
+                tags=[]
+            )
 
     raise ValueError(acc_def)

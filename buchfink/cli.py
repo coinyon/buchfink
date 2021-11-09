@@ -33,8 +33,8 @@ from .report import run_report
 
 logger = logging.getLogger(__name__)
 
-epoch_start_ts = datetime(2011, 1, 1).timestamp()
-epoch_end_ts = datetime(2031, 1, 1).timestamp()
+epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
+epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 
 
 @click.group()
@@ -94,7 +94,9 @@ def list_(keyword, account_type, output):
                     click.style(account.name, fg='green')
             )
             address = ' ({0})'.format(account.address) if account.address is not None else ''
-            tags = click.style(' {' + ', '.join(account.tags) + '}', fg='blue') if account.tags else ''
+            tags = click.style(' {' + ', '.join(account.tags) + '}', fg='blue') \
+                    if account.tags \
+                    else ''
             click.echo(type_and_name + address + tags)
         else:
             click.echo('{0}'.format(getattr(account, output)))
@@ -276,7 +278,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
             continue
 
         name = account.name
-        trades = []
+        trades = []  # type: List[Trade]
         actions = []
         fetch_config = account.config.fetch or FetchConfig()
 
@@ -315,6 +317,9 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                     tx_hash = '0x' + txn.tx_hash.hex()
                     receipt = eth_transactions.get_or_query_transaction_receipt(tx_hash)
 
+                    if receipt is None:
+                        raise ValueError('Could not get receipt')
+
                     acc_actions = classify_tx(account, tx_hash, txn, receipt)
                     if actions:
                         for act in actions:
@@ -326,7 +331,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 
                 manager = buchfink_db.get_chain_manager(account)
 
-                trades = manager.eth_modules['uniswap'].get_trades(
+                trades = manager.eth_modules['uniswap'].get_trades(  # type: ignore
                         addresses=manager.accounts.eth,
                         from_timestamp=int(epoch_start_ts),
                         to_timestamp=int(epoch_end_ts),
@@ -352,7 +357,7 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
                     )
 
                 else:
-                    trades = exchange.query_online_trade_history(
+                    trades, _ = exchange.query_online_trade_history(
                         start_ts=epoch_start_ts,
                         end_ts=epoch_end_ts
                     )
