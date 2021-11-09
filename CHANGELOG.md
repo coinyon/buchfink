@@ -1,6 +1,9 @@
 master
 ------
 
+0.0.11
+------
+
 * Can set a list of tags per account
 
 0.0.10
