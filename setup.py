@@ -27,7 +27,7 @@ setup(
     name='buchfink',
     author='Aleister Coinley',
     author_email='coinyon@uberhax0r.de',
-    description=('Plain Crypto Taxes'),
+    description=('Plaintext Crypto Portfolio'),
     license='BSD-3',
     keywords='accounting tax-report portfolio asset-management cryptocurrencies commandline',
     url='https://github.com/coinyon/buchfink',
