@@ -502,7 +502,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
                     rate_asset=None,
                     timestamp=txn.timestamp,
                     asset=asset,
-                    notes='DYDX retroactive airdrop',
+                    notes='dYdX retroactive airdrop',
                     link=tx_hash
                 )]
 
