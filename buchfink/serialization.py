@@ -55,6 +55,21 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
             link=action_dict.get('link', '')
         )
 
+    if 'loss' in action_dict:
+        amount, asset = deserialize_amount(action_dict['loss'])
+        return LedgerAction(
+            identifier=None,
+            location='',
+            action_type=LedgerActionType.LOSS,
+            amount=amount,
+            rate=None,
+            rate_asset=None,
+            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            asset=asset,
+            notes=action_dict.get('notes', ''),
+            link=action_dict.get('link', '')
+        )
+
     if 'gift' in action_dict:
         amount, asset = deserialize_amount(action_dict['gift'])
         return LedgerAction(
