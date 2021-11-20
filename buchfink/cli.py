@@ -30,6 +30,7 @@ from .importers import zerion_csv
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
 from .report import run_report
+from .dataframe import get_balances
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,30 @@ def list_(keyword, account_type, output):
             click.echo(type_and_name + address + tags)
         else:
             click.echo('{0}'.format(getattr(account, output)))
+
+
+@buchfink.command()
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--external', '-e', type=str, multiple=True,
+        help='Use adhoc / external account')
+def shell(keyword, external):
+
+    buchfink_db = BuchfinkDB()
+
+    if external:
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
+    else:
+        accounts = [
+            account
+            for account in buchfink_db.get_all_accounts()
+            if keyword is None or keyword in account.name
+        ]
+
+    currency = buchfink_db.get_main_currency()
+    currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
+
+    df = get_balances(buchfink_db, accounts)
+    import ipdb; ipdb.set_trace()
 
 
 @buchfink.command()

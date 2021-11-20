@@ -9,3 +9,4 @@ rotkehlchen @ git+https://github.com/rotki/rotki.git@develop#egg=rotkehlchen
 tabulate
 typing_extensions
 pydantic
+pandera
