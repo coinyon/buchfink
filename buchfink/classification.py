@@ -21,6 +21,7 @@ CLAIMED_2 = '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a'
 CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
 CLAIMED_4 = '0x04672052dcb6b5b19a9cc2ec1b8f447f1f5e47b5e24cfa5e4ffb640d63ca2be7'
 CLAIMED_5 = '0x528937b330082d892a98d4e428ab2dcca7844b51d227a1c0ae67f0b5261acbd9'
+CLAIM = '0x34fcbac0073d7c3d388e51312faf357774904998eeb8fca628b9e6f65ee1cbf7'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
@@ -66,6 +67,7 @@ ADDR_FOX_AIRDROP_3 = '0xf4BBE639CCEd35210dA2018b0A31f4E1449B2a8a'
 ADDR_FOX_AIRDROP_4 = '0x7BC08798465B8475Db9BCA781C2Fd6063A09320D'
 ADDR_UMA_TVL_OPT = '0x0Ee5Bb3dEAe8a44FbDeB269941f735793F8312Ef'
 ADDR_DYDX_REWARDS = '0x01d3348601968aB85b4bb028979006eac235a588'
+ADDR_THALES_AIRDROP = '0x0f33af99f3C124189B8dA7C7BE6Dc08C77a9ddc7'
 
 ADDR_DODO = '0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd'
 ADDR_SUSHI = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
@@ -590,4 +592,20 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
                         notes='XFLOBBYEXIT HEX mint',
                         link=tx_hash
                     )]
+
+        if event.topics[0] == CLAIM and same_addr(event.address, ADDR_THALES_AIRDROP):
+            amount = hexstr_to_int(event.data[2:][64:128])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.AIRDROP,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('_ceth_0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'),
+                notes='Thales retroactive airdrop',
+                link=tx_hash
+            )]
+
     return actions
