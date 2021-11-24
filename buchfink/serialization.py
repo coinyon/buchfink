@@ -9,9 +9,9 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.errors import UnknownAsset
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
 
-from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet, FVal,
-                                LedgerAction, LedgerActionType, Timestamp,
-                                Trade, TradeType, EthereumToken)
+from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet,
+                                EthereumToken, FVal, LedgerAction,
+                                LedgerActionType, Timestamp, Trade, TradeType)
 
 
 def serialize_timestamp(timestamp: int) -> str:
@@ -22,6 +22,18 @@ def deserialize_timestamp(timestamp: str) -> Timestamp:
     if timestamp.endswith('Z'):
         timestamp = timestamp[:-1]
     return int(datetime.fromisoformat(timestamp).timestamp())
+
+
+def deserialize_ledger_action_type(action_type: str) -> LedgerActionType:
+    if action_type == 'income':
+        return LedgerActionType.INCOME
+    if action_type == 'airdrop':
+        return LedgerActionType.AIRDROP
+    if action_type == 'loss':
+        return LedgerActionType.LOSS
+    if action_type == 'expense':
+        return LedgerActionType.EXPENSE
+    raise ValueError(f'Unknown ledger action type: {action_type}')
 
 
 def deserialize_ledger_action(action_dict) -> LedgerAction:

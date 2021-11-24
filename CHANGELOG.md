@@ -1,6 +1,9 @@
 master
 ------
 
+* Add --type/t flag to "actions" subcommand
+* Add fiat amount value to "actions" subcommand
+
 0.0.11
 ------
 

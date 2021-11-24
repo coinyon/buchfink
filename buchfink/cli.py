@@ -12,16 +12,19 @@ import click
 import coloredlogs
 import yaml
 from rotkehlchen.chain.ethereum.trades import AMMTrade
-from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
+from rotkehlchen.chain.ethereum.transactions import (
+    EthTransactions, ETHTransactionsFilterQuery)
 from rotkehlchen.constants import ZERO
+from rotkehlchen.errors import NoPriceForGivenTimestamp
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.typing import ChecksumEthAddress
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
-from buchfink.datatypes import FVal, LedgerAction, Trade, Timestamp
+from buchfink.datatypes import FVal, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import (deserialize_timestamp,
+from buchfink.serialization import (deserialize_ledger_action_type,
+                                    deserialize_timestamp,
                                     serialize_ledger_actions,
                                     serialize_timestamp, serialize_trades)
 
@@ -500,8 +503,9 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
 
 @buchfink.command('actions')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--type', '-t', 'action_type', type=str, default=None, help='Filter by action type')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
-def actions_(keyword, asset):
+def actions_(keyword, asset, action_type):
     "Show actions"
 
     buchfink_db = BuchfinkDB()
@@ -520,24 +524,43 @@ def actions_(keyword, asset):
         the_asset = buchfink_db.get_asset_by_symbol(asset)
         actions = [action for action in actions if the_asset in (action[0].asset,)]
 
+    if action_type is not None:
+        actions = [action for action in actions if action[0].action_type == deserialize_ledger_action_type(action_type)]
+
     actions = sorted(actions, key=lambda action_account: action_account[0].timestamp)
+
+    historian = PriceHistorian()
+
+    currency = buchfink_db.get_main_currency()
 
     if actions:
         table = []
         for (action, account) in actions:
+
+            try:
+                asset_currency = historian.query_historical_price(
+                        from_asset=action.asset,
+                        to_asset=currency,
+                        timestamp=action.timestamp
+                )
+            except NoPriceForGivenTimestamp:
+                asset_currency = FVal('0.0')
+
             table.append([
                 serialize_timestamp(action.timestamp),
                 str(action.action_type),
                 str(action.amount),
                 str(action.asset.symbol),
                 str(account.name),
+                str(asset_currency * action.amount),
             ])
         print(tabulate(table, headers=[
             'Time',
             'Type',
             'Amount',
             'Asset',
-            'Account'
+            'Account',
+            'Amount ' + str(currency.symbol)
         ]))
 
 
