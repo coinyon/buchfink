@@ -55,7 +55,7 @@ def with_buchfink_db(f):
 @click.pass_context
 def buchfink(ctx, log_level, config):
     ctx.ensure_object(dict)
-    ctx.obj['BUCHFINK_CONFIG'] = config
+    ctx.obj['BUCHFINK_CONFIG'] = config or './buchfink.yaml'
     coloredlogs.install(level=log_level, fmt='%(asctime)s %(levelname)s %(message)s')
 
 
@@ -80,7 +80,7 @@ def init(directory):
         logger.debug('Copying %s', init_file.name)
         shutil.copyfile(init_file, bf_dir / init_file.name)
 
-    buchfink_db = BuchfinkDB(bf_dir)
+    buchfink_db = BuchfinkDB(target_config)
 
     click.echo(
         click.style('Successfully initialized in {0}.'.format(

@@ -6,7 +6,7 @@ import os.path
 import pytest
 from click.testing import CliRunner
 
-from buchfink.cli import fetch_, init, report_, quote
+from buchfink.cli import fetch_, init, report_, quote, buchfink
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def test_second_init_should_fail():
         assert result.exception is None
         assert result.exit_code == 0
         result = runner.invoke(init)
-        logger.debug('output of %s: %s', 'init', result.output)
+        logger.warning('output of %s: %s', 'init', result.output)
         assert result.exit_code == 1
 
 
@@ -53,7 +53,10 @@ def test_init_and_subsequent_quote():
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
-        result = runner.invoke(quote, ['ETH', '-b', 'USD'])
-        logger.debug('output of %s: %s', 'init', result.output)
-        assert result.exit_code == 0
+        result = runner.invoke(buchfink, ['quote', 'ETH', '-b', 'USD'])
+        logger.debug('output of %s: %s', 'quote', result.output)
+        if result.exception:
+            logger.exception(result.exception)
+            raise result.exception
         assert result.exception is None
+        assert result.exit_code == 0

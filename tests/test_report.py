@@ -5,7 +5,8 @@ from buchfink.report import run_report
 
 
 def test_bullrun_config():
-    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'))
+    config = os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun', 'buchfink.yaml')
+    buchfink_db = BuchfinkDB(config)
 
     reports = list(buchfink_db.get_all_reports())
 
@@ -23,7 +24,8 @@ def test_bullrun_config():
 
 
 def test_manual_price():
-    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'))
+    config = os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions', 'buchfink.yaml')
+    buchfink_db = BuchfinkDB(config)
 
     buchfink_db.apply_manual_prices()
 
