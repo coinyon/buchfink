@@ -1,9 +1,11 @@
 import logging
+import os
 import os.path
 import re
 import shutil
 import sys
 from datetime import datetime
+from functools import update_wrapper
 from operator import itemgetter
 from pathlib import Path
 from typing import List, Optional, Tuple, cast
@@ -40,9 +42,20 @@ epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
 epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 
 
+def with_buchfink_db(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        return ctx.invoke(f, BuchfinkDB(ctx.obj['BUCHFINK_CONFIG']), *args, **kwargs)
+    return update_wrapper(new_func, f)
+
+
 @click.group()
 @click.option('--log-level', '-l', type=str, default='INFO')
-def buchfink(log_level):
+@click.option('--config', help='Buchfink config file', envvar='BUCHFINK_CONFIG')
+@click.pass_context
+def buchfink(ctx, log_level, config):
+    ctx.ensure_object(dict)
+    ctx.obj['BUCHFINK_CONFIG'] = config
     coloredlogs.install(level=log_level, fmt='%(asctime)s %(levelname)s %(message)s')
 
 
@@ -80,10 +93,9 @@ def init(directory):
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @click.option('--output', '-o', type=str, default=None, help='Output field')
-def list_(keyword, account_type, output):
+@with_buchfink_db
+def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
     "List accounts"
-    buchfink_db = BuchfinkDB()
-
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
             continue
@@ -119,10 +131,10 @@ def list_(keyword, account_type, output):
         default=0.0,
         help='Hide balances smaller than this amount (default 0)'
 )
-def balances(keyword, minimum_balance, fetch, total, external, denominate_asset):
+@with_buchfink_db
+def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total, external, denominate_asset):
     "Show balances across all accounts"
 
-    buchfink_db = BuchfinkDB()
     assets_sum = {}
     assets_usd_sum = {}
     liabilities_sum = {}
@@ -249,10 +261,10 @@ def balances(keyword, minimum_balance, fetch, total, external, denominate_asset)
 @click.option('--actions', 'fetch_actions', is_flag=True, help='Fetch actions only')
 @click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
 @click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
-def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, external):
+@with_buchfink_db
+def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, fetch_balances, fetch_trades, external):
     "Fetch trades for configured accounts"
 
-    buchfink_db = BuchfinkDB()
     buchfink_db.perform_assets_updates()
     now = ts_now()
     fetch_limited = fetch_actions or fetch_balances or fetch_trades
@@ -427,10 +439,9 @@ def fetch_(keyword, account_type, fetch_actions, fetch_balances, fetch_trades, e
 @click.option('--name', '-n', type=str, required=True)
 @click.option('--from', '-f', 'from_date', type=str, required=True)
 @click.option('--to', '-t', 'to_date', type=str, required=True)
-def run(name, from_date, to_date, external):
+@with_buchfink_db
+def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     "Run a full fetch + report cycle"
-
-    buchfink_db = BuchfinkDB()
     buchfink_db.apply_manual_prices()
 
     if external:
@@ -451,10 +462,9 @@ def run(name, from_date, to_date, external):
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
 @click.option('--fetch', '-f', is_flag=True, help='Fetch trades from sources')
-def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
+@with_buchfink_db
+def trades_(buchfink_db: BuchfinkDB, keyword, asset, fetch):  # pylint: disable=unused-argument
     "Show trades"
-
-    buchfink_db = BuchfinkDB()
 
     trades: List[Tuple[Trade, Account]] = []
     for account in buchfink_db.get_all_accounts():
@@ -505,10 +515,9 @@ def trades_(keyword, asset, fetch):  # pylint: disable=unused-argument
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--type', '-t', 'action_type', type=str, default=None, help='Filter by action type')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
-def actions_(keyword, asset, action_type):
+@with_buchfink_db
+def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
     "Show actions"
-
-    buchfink_db = BuchfinkDB()
 
     actions: List[Tuple[LedgerAction, Account]] = []
     for account in buchfink_db.get_all_accounts():
@@ -571,10 +580,10 @@ def actions_(keyword, asset, action_type):
 @click.option('--report', type=str, default=None, help='Filter by keyword in report name')
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
-def report_(keyword, external, report, year):
+@with_buchfink_db
+def report_(buchfink_db: BuchfinkDB, keyword, external, report, year):
     "Generate reports for all report definition and output overview table"
 
-    buchfink_db = BuchfinkDB()
     buchfink_db.apply_manual_prices()
 
     results = {}
@@ -614,11 +623,11 @@ def report_(keyword, external, report, year):
 
 
 @buchfink.command()
-def allowances():
+@with_buchfink_db
+def allowances(buchfink_db):
     # pylint: disable = W
     "Show the amount of each asset that you could sell tax-free"
 
-    buchfink_db = BuchfinkDB()
     buchfink_db.apply_manual_prices()
 
     num_matched_accounts = 0
@@ -668,7 +677,8 @@ def allowances():
 @click.option('--amount', '-n', type=float, default=1.0)
 @click.option('--timestamp', '-t', type=str, default=None)
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
-def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestamp: Optional[str]):
+@with_buchfink_db
+def quote(buchfink_db: BuchfinkDB, asset: Tuple[str], amount: float, base_asset_: Optional[str], timestamp: Optional[str]):
     """
     Show a price quote. In addition to the options flags, the following short syntax
     is also supported:
@@ -679,7 +689,6 @@ def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestam
 
         buchfink quote 2.5 ETH/BTC
     """
-    buchfink_db = BuchfinkDB()
     buchfink_db.perform_assets_updates()
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
             if base_asset_ \
@@ -720,11 +729,11 @@ def quote(asset: Tuple[str], amount: float, base_asset_: Optional[str], timestam
 @buchfink.command('cache')
 @click.argument('asset', nargs=-1)
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
-def cache(asset: Tuple[str], base_asset_: Optional[str]):
+@with_buchfink_db
+def cache(buchfink_db: BuchfinkDB, asset: Tuple[str], base_asset_: Optional[str]):
     """
     Build a historical price cache
     """
-    buchfink_db = BuchfinkDB()
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
             if base_asset_ \
             else buchfink_db.get_main_currency()
@@ -735,4 +744,4 @@ def cache(asset: Tuple[str], base_asset_: Optional[str]):
 
 
 if __name__ == '__main__':
-    buchfink()  # pylint: disable=no-value-for-parameter
+    buchfink(obj={})  # pylint: disable=no-value-for-parameter

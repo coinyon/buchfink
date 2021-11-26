@@ -1,5 +1,6 @@
 import logging
 import operator
+import os
 import os.path
 from datetime import datetime
 from functools import reduce
@@ -68,11 +69,14 @@ class BuchfinkDB(DBHandler):
     3) load and parse Buchfink config
     """
 
-    def __init__(self, data_directory='.'):
+    def __init__(self, config_file='./buchfink.yaml'):
         # pylint: disable=super-init-not-called
-        self.data_directory = Path(data_directory)
-        with open(self.data_directory / 'buchfink.yaml', 'r') as cfg:
+        self.config_file = Path(config_file)
+
+        with open(self.config_file, 'r') as cfg:
             yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
+
+        self.data_directory = self.config_file.parent
         self.config = Config(**yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
         self._active_eth_address = None  # type: Optional[ChecksumEthAddress]

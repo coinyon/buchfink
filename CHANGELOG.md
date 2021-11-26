@@ -3,6 +3,7 @@ master
 
 * Add --type/t flag to "actions" subcommand
 * Add fiat amount value to "actions" subcommand
+* Can give path to config file via option and environment variable
 
 0.0.11
 ------
