@@ -42,11 +42,11 @@ epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
 epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 
 
-def with_buchfink_db(f):
+def with_buchfink_db(func):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
-        return ctx.invoke(f, BuchfinkDB(ctx.obj['BUCHFINK_CONFIG']), *args, **kwargs)
-    return update_wrapper(new_func, f)
+        return ctx.invoke(func, BuchfinkDB(ctx.obj['BUCHFINK_CONFIG']), *args, **kwargs)
+    return update_wrapper(new_func, func)
 
 
 @click.group()
@@ -132,7 +132,8 @@ def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
         help='Hide balances smaller than this amount (default 0)'
 )
 @with_buchfink_db
-def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total, external, denominate_asset):
+def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
+        external, denominate_asset):
     "Show balances across all accounts"
 
     assets_sum = {}  # type: Dict[Asset, FVal]
@@ -262,7 +263,8 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total, ex
 @click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
 @click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
 @with_buchfink_db
-def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, fetch_balances, fetch_trades, external):
+def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
+        fetch_balances, fetch_trades, external):
     "Fetch trades for configured accounts"
 
     buchfink_db.perform_assets_updates()
@@ -534,7 +536,11 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
         actions = [action for action in actions if the_asset in (action[0].asset,)]
 
     if action_type is not None:
-        actions = [action for action in actions if action[0].action_type == deserialize_ledger_action_type(action_type)]
+        actions = [
+                action
+                for action in actions
+                if action[0].action_type == deserialize_ledger_action_type(action_type)
+                ]
 
     actions = sorted(actions, key=lambda action_account: action_account[0].timestamp)
 
@@ -678,7 +684,8 @@ def allowances(buchfink_db):
 @click.option('--timestamp', '-t', type=str, default=None)
 @click.option('--base-asset', '-b', 'base_asset_', type=str, default=None)
 @with_buchfink_db
-def quote(buchfink_db: BuchfinkDB, asset: Tuple[str], amount: float, base_asset_: Optional[str], timestamp: Optional[str]):
+def quote(buchfink_db: BuchfinkDB, asset: Tuple[str], amount: float,
+        base_asset_: Optional[str], timestamp: Optional[str]):
     """
     Show a price quote. In addition to the options flags, the following short syntax
     is also supported:
@@ -744,4 +751,4 @@ def cache(buchfink_db: BuchfinkDB, asset: Tuple[str], base_asset_: Optional[str]
 
 
 if __name__ == '__main__':
-    buchfink(obj={})  # pylint: disable=no-value-for-parameter
+    buchfink(obj={})  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
