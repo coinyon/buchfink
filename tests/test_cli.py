@@ -21,11 +21,11 @@ def test_run_on_ens_domain():
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
-        result = runner.invoke(fetch_, ['-e', 'coinyon.eth'])
+        result = runner.invoke(buchfink, ['fetch', '-e', 'coinyon.eth'])
         logger.debug('output of %s: %s', 'fetch', result.output)
         assert result.exception is None
         assert result.exit_code == 0
-        result = runner.invoke(report_, ['-e', 'coinyon.eth', '--year', '2020'])
+        result = runner.invoke(buchfink, ['report', '-e', 'coinyon.eth', '--year', '2020'])
         logger.debug('output of %s: %s', 'report', result.output)
         assert result.exception is None
         assert result.exit_code == 0
