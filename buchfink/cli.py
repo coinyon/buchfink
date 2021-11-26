@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import update_wrapper
 from operator import itemgetter
 from pathlib import Path
-from typing import List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 import click
 import coloredlogs
@@ -23,7 +23,7 @@ from rotkehlchen.typing import ChecksumEthAddress
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
-from buchfink.datatypes import FVal, LedgerAction, Timestamp, Trade
+from buchfink.datatypes import FVal, LedgerAction, Timestamp, Trade, Asset
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (deserialize_ledger_action_type,
                                     deserialize_timestamp,
@@ -135,10 +135,10 @@ def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
 def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total, external, denominate_asset):
     "Show balances across all accounts"
 
-    assets_sum = {}
-    assets_usd_sum = {}
-    liabilities_sum = {}
-    liabilities_usd_sum = {}
+    assets_sum = {}  # type: Dict[Asset, FVal]
+    assets_usd_sum = {}  # type: Dict[Asset, FVal]
+    liabilities_sum = {}  # type: Dict[Asset, FVal]
+    liabilities_usd_sum = {}  # type: Dict[Asset, FVal]
 
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
@@ -294,7 +294,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, fetch_
 
         name = account.name
         trades = []  # type: List[Trade]
-        actions = []
+        actions = []  # type: List[LedgerAction]
         fetch_config = account.config.fetch or FetchConfig()
 
         fetch_actions_for_this_account = (not fetch_limited or fetch_actions) and \
