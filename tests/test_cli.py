@@ -6,9 +6,15 @@ import os.path
 import pytest
 from click.testing import CliRunner
 
-from buchfink.cli import fetch_, init, report_, quote, buchfink
+from buchfink.cli import buchfink, fetch_, init, quote, report_
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def remove_buchfink_config_envvar(monkeypatch):
+    monkeypatch.delenv("BUCHFINK_CONFIG", raising=False)
+    yield
 
 
 @pytest.mark.blockchain_data
