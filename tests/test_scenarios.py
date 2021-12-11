@@ -1,6 +1,5 @@
 import os.path
 import shutil
-from datetime import datetime
 
 from buchfink.db import BuchfinkDB
 from buchfink.report import run_report
@@ -9,10 +8,9 @@ from buchfink.report import run_report
 def test_bullrun_full_taxes(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'exchange1']
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
@@ -30,10 +28,9 @@ def test_bullrun_full_taxes(tmp_path):
 def test_bullrun_no_taxes(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'exchange2']
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
@@ -51,10 +48,9 @@ def test_bullrun_no_taxes(tmp_path):
 def test_ledger_actions_income(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_income']
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)
@@ -70,15 +66,11 @@ def test_ledger_actions_income(tmp_path):
 
 
 def test_ledger_actions_airdrop(tmp_path):
-    start_ts = datetime.fromisoformat('2015-01-01').timestamp()
-    end_ts = datetime.fromisoformat('2019-01-01').timestamp()
-
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_airdrop']
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
 
@@ -95,10 +87,9 @@ def test_ledger_actions_airdrop(tmp_path):
 def test_ledger_actions_gift(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_gift']
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)

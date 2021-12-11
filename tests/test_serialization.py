@@ -81,10 +81,9 @@ def test_datetime_deserialization():
 def test_assets(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     assert buchfink_db.get_asset_by_symbol('ETH') == Asset('ETH')
     assert buchfink_db.get_asset_by_symbol('DAI') is not None
@@ -98,10 +97,9 @@ def test_assets(tmp_path):
 def test_serialize_deserialize_balance(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     bal = serialize_balance(Balance(FVal('0.5')), Asset('ETH'))
     balance, asset = deserialize_balance(bal, buchfink_db)
     assert str(balance.amount) == '0.5'
@@ -111,10 +109,9 @@ def test_serialize_deserialize_balance(tmp_path):
 def test_serialize_deserialize_balance_secondary(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            tmp_path,
-            dirs_exist_ok=True
+            os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink.yaml'))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     A_STAKEDAO = buchfink_db.get_asset_by_symbol('_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F')
     bal = serialize_balance(Balance(FVal('1.5')), A_STAKEDAO)
     balance, asset = deserialize_balance(bal, buchfink_db)
