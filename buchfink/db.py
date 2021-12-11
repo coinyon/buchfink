@@ -14,7 +14,7 @@ from rotkehlchen.assets.typing import AssetType
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
-from rotkehlchen.db.dbhandler import DBHandler, detect_sqlcipher_version
+from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.errors import UnknownAsset
@@ -70,7 +70,6 @@ class BuchfinkDB(DBHandler):
     """
 
     def __init__(self, config_file='./buchfink.yaml'):
-        # pylint: disable=super-init-not-called
         self.config_file = Path(config_file)
 
         with open(self.config_file, 'r') as cfg:
@@ -136,13 +135,7 @@ class BuchfinkDB(DBHandler):
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
 
-        self.sqlcipher_version = detect_sqlcipher_version()
-        password = "password"
-        self.connect(password)
-        self._run_actions_after_first_connection(password)
-
-    def __del__(self):
-        pass
+        super().__init__(self.user_data_dir, 'password', self.msg_aggregator, None)
 
     def get_asset_by_symbol(self, symbol: str) -> Asset:
         # TODO: this indirection function could incorporate a custom mapping from yaml config

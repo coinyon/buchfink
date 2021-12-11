@@ -7,7 +7,7 @@ accounts:
 reports:
   - name: all
     from: "2015-01-01"
-    to: "2020-06-30"
+    to: "2019-07-30"
 
 settings:
   main_currency: USD

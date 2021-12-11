@@ -16,7 +16,7 @@ def test_bullrun_config():
 
     assert report.name == 'all'
     assert report.from_dt.year == 2015
-    assert report.to_dt.year == 2020
+    assert report.to_dt.year == 2019
 
     result = run_report(buchfink_db, buchfink_db.get_all_accounts(), report)
 
@@ -31,11 +31,11 @@ def test_manual_price():
 
     reports = list(buchfink_db.get_all_reports())
 
-    assert len(reports) == 1
+    assert len(reports) == 2
 
-    report = reports[0]
+    report = reports[1]
 
-    assert report.name == 'all'
+    assert report.name == '2020'
     assert report.from_dt.year == 2020
     assert report.to_dt.year == 2021
 

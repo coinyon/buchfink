@@ -2,7 +2,7 @@
 "Load Zerion export CSV and output trades"
 import logging
 import os.path
-from typing import List
+from typing import List, Any
 
 import pandas as pd
 from rotkehlchen.errors import UnknownAsset
@@ -36,7 +36,8 @@ def get_trades(account: Account) -> List[Trade]:
     db = BuchfinkDB()
 
     trades = []
-    for row in df.to_dict(orient="records"):
+    for row2 in df.to_dict(orient="records"):
+        row = row2  # type: Any
         try:
             if row['Buy Currency Address']:
                 base_asset = db.get_asset_by_symbol('_ceth_' + row['Buy Currency Address'])

@@ -5,8 +5,10 @@ from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
+from rotkehlchen.db.cache_handler import DBAccountingReports
 
 from buchfink.db import BuchfinkDB
+from buchfink.datatypes import Timestamp
 
 from .models import Account, ReportConfig
 
@@ -15,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: ReportConfig):
     name = report_config.name
-    start_ts = report_config.from_dt.timestamp()
-    end_ts = report_config.to_dt.timestamp()
+    start_ts = Timestamp(int(report_config.from_dt.timestamp()))
+    end_ts = Timestamp(int(report_config.to_dt.timestamp()))
     num_matched_accounts = 0
     all_trades = []
     all_actions = []
@@ -54,11 +56,23 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             len(all_trades), len(all_actions), num_matched_accounts)
 
     accountant = buchfink_db.get_accountant()
-    result = accountant.process_history(start_ts, end_ts, all_trades, [], [], [], [], all_actions)
+    report_id = accountant.process_history(
+            start_ts,
+            end_ts,
+            all_trades,
+            [],
+            [],
+            [],
+            [],
+            all_actions
+        )
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
+    dbpnl = DBAccountingReports(accountant.csvexporter.database)
+    results, _ = dbpnl.get_reports(report_id=report_id, with_limit=False)
+    overview_data = results[0]
 
     with (folder / 'report.yaml').open('w') as report_file:
-        yaml.dump({'overview': result['overview']}, stream=report_file)
+        yaml.dump({'overview': overview_data}, stream=report_file)
 
     logger.info('Report information has been written to: %s',
             buchfink_db.reports_directory / Path(name)
@@ -78,8 +92,8 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
         rendered_report = template.render({
             "name": report_config.name,
             "title": report_config.title,
-            "overview": result['overview'],
-            "events": result['all_events']
+            "overview": overview_data,
+            "events": []  # TODO result['all_events']
         })
 
         # we should get ext from template path. could also be json, csv, ...
@@ -91,4 +105,4 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
         logger.info("Rendered temmplate to 'report%s'.", ext)
 
-    return result
+    return {'overview': overview_data}
