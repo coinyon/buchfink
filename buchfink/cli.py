@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import update_wrapper
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 import click
 import coloredlogs
@@ -23,7 +23,7 @@ from rotkehlchen.typing import ChecksumEthAddress
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
-from buchfink.datatypes import FVal, LedgerAction, Timestamp, Trade, Asset
+from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (deserialize_ledger_action_type,
                                     deserialize_timestamp,
@@ -295,7 +295,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
             continue
 
         name = account.name
-        trades = []  # type: List[Trade]
+        trades = []  # type: List[Union[AMMTrade, Trade]]
         actions = []  # type: List[LedgerAction]
         fetch_config = account.config.fetch or FetchConfig()
 
@@ -348,12 +348,25 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
 
                 manager = buchfink_db.get_chain_manager(account)
 
-                trades = manager.eth_modules['uniswap'].get_trades(  # type: ignore
-                        addresses=manager.accounts.eth,
-                        from_timestamp=int(epoch_start_ts),
-                        to_timestamp=int(epoch_end_ts),
-                        only_cache=False
-                    )
+                trades = []
+
+                amm_module = manager.get_module('uniswap')
+                if amm_module:
+                    trades.extend(amm_module.get_trades(
+                            addresses=manager.accounts.eth,
+                            from_timestamp=epoch_start_ts,
+                            to_timestamp=epoch_end_ts,
+                            only_cache=False
+                        ))
+
+                amm_module = manager.get_module('sushiswap')
+                if amm_module:
+                    trades.extend(amm_module.get_trades(
+                            addresses=manager.accounts.eth,
+                            from_timestamp=epoch_start_ts,
+                            to_timestamp=epoch_end_ts,
+                            only_cache=False
+                        ))
 
                 trades.extend(zerion_csv.get_trades(account))
 
