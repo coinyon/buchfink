@@ -1,4 +1,5 @@
 import logging
+import sys
 import operator
 import os
 import os.path
@@ -136,6 +137,17 @@ class BuchfinkDB(DBHandler):
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
 
         super().__init__(self.user_data_dir, 'password', self.msg_aggregator, None)
+
+    def __del__(self) -> None:
+        try:
+            super().__del__()
+        except NameError:
+            # This weird construction is present because rotki used "open" in
+            # the __del__ method, while Python is shutting down and "open" is
+            # no longer available. So, ignore any NameError IF Python is shutting
+            # down (sys.meta_path is None)
+            if sys.meta_path is not None:
+                raise
 
     def get_asset_by_symbol(self, symbol: str) -> Asset:
         # TODO: this indirection function could incorporate a custom mapping from yaml config
