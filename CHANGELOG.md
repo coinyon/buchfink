@@ -1,6 +1,8 @@
 master
 ------
 
+* Add NFT support
+
 0.0.12
 ------
 

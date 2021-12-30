@@ -27,7 +27,7 @@ from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (deserialize_ledger_action_type,
                                     deserialize_timestamp,
-                                    serialize_ledger_actions,
+                                    serialize_ledger_actions, serialize_nfts,
                                     serialize_timestamp, serialize_trades)
 
 from .classification import classify_tx
@@ -261,15 +261,16 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @click.option('--actions', 'fetch_actions', is_flag=True, help='Fetch actions only')
 @click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
+@click.option('--nfts', 'fetch_nfts', is_flag=True, help='Fetch NFT balances only')
 @click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
 @with_buchfink_db
 def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
-        fetch_balances, fetch_trades, external):
+        fetch_balances, fetch_trades, fetch_nfts, external):
     "Fetch trades for configured accounts"
 
     buchfink_db.perform_assets_updates()
     now = ts_now()
-    fetch_limited = fetch_actions or fetch_balances or fetch_trades
+    fetch_limited = fetch_actions or fetch_balances or fetch_trades or fetch_nfts
 
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
@@ -306,6 +307,9 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                 fetch_config.balances
 
         fetch_trades_for_this_account = (not fetch_limited or fetch_trades) and \
+                fetch_config.trades
+
+        fetch_nfts_for_this_account = (not fetch_limited or fetch_nfts) and \
                 fetch_config.trades
 
         if account.account_type == "ethereum":
@@ -446,6 +450,14 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
         if fetch_balances_for_this_account:
             buchfink_db.fetch_balances(account)
             logger.info('Fetched balances from %s', name)
+
+        if fetch_nfts_for_this_account:
+            nfts = buchfink_db.query_nfts(account)
+            if nfts:
+                with open(buchfink_db.balances_directory / (name + "_nfts.yaml"), "w") as yaml_file:
+                    yaml.dump({
+                        "nfts": serialize_nfts(nfts)
+                    }, stream=yaml_file, sort_keys=True)
 
 
 @buchfink.command()

@@ -46,7 +46,7 @@ from rotkehlchen.typing import (ChecksumEthAddress, ExternalService,
 from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
-                                LedgerAction, Trade)
+                                LedgerAction, Trade, NFT)
 from buchfink.models import (Account, Config, ExchangeAccountConfig,
                              HistoricalPriceConfig, ManualAccountConfig,
                              ReportConfig)
@@ -428,6 +428,16 @@ class BuchfinkDB(DBHandler):
             return self.get_balances_from_file(account.config.file)
 
         return BalanceSheet(assets={}, liabilities={})
+
+    def query_nfts(self, account) -> List[NFT]:
+        if account.account_type == "ethereum":
+            manager = self.get_chain_manager(account)
+            nfts = manager.get_module('nfts')
+            nft_result = nfts.get_all_info(addresses=[account.address], ignore_cache=True)
+            print(nft_result)
+            if account.address in nft_result.addresses:
+                return nft_result.addresses[account.address]
+        return []
 
     def fetch_balances(self, account):
         query_sheet = self.query_balances(account)

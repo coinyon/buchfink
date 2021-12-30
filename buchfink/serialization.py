@@ -9,7 +9,7 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.errors import UnknownAsset
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
 
-from buchfink.datatypes import (AMMTrade, Asset, Balance, BalanceSheet,
+from buchfink.datatypes import (NFT, AMMTrade, Asset, Balance, BalanceSheet,
                                 EthereumToken, FVal, LedgerAction,
                                 LedgerActionType, Timestamp, Trade, TradeType)
 
@@ -322,14 +322,14 @@ def serialize_ledger_action(action: LedgerAction):
     return ser_action
 
 
-def serialize_trades(trades: List[Trade]) -> List[Any]:
+def serialize_trades(trades: List[Trade]) -> List[dict]:
     return [
         serialize_trade(trade) for trade in
         sorted(trades, key=lambda trade: trade.timestamp)
     ]
 
 
-def serialize_ledger_actions(actions: List[LedgerAction]) -> List[Any]:
+def serialize_ledger_actions(actions: List[LedgerAction]) -> List[dict]:
     return [
         serialize_ledger_action(action) for action in
         sorted(actions, key=lambda action: action.timestamp)
@@ -379,3 +379,19 @@ def deserialize_ethereum_token(token_data: dict) -> EthereumToken:
             coingecko=token_data.get('coingecko')
     )
     return token
+
+
+def serialize_nft(nft: NFT) -> Dict[str, Any]:
+    obj = nft.serialize()
+    return {
+        'id': obj['token_identifier'],
+        'collection_name': obj['collection']['name'],
+        'name': obj['name']
+    }
+
+
+def serialize_nfts(nfts: List[NFT]) -> List[Dict[str, Any]]:
+    return [
+        serialize_nft(nft) for nft in
+        sorted(nfts, key=lambda nft: nft.token_identifier)
+    ]
