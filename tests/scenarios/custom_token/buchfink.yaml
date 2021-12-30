@@ -5,9 +5,17 @@ accounts:
 tokens:
   - type: ethereum
     name: Impermax
-    address: '0x7b35ce522cb72e4077baeb96cb923a5529764a00'
+    address: '0x7b35Ce522CB72e4077BaeB96Cb923A5529764a00'
     symbol: IMX
     coingecko: impermax
+    decimals: 18
+    cryptocompare: ~
+
+  - type: ethereum
+    name: Fantasy
+    address: '0x1111111111111111111111111111111111111111'
+    symbol: FANTASY
+    coingecko: fantasy
     decimals: 18
     cryptocompare: ~
 

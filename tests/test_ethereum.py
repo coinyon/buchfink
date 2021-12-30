@@ -1,4 +1,5 @@
 import os.path
+import shutil
 from datetime import datetime
 
 import pytest
@@ -18,7 +19,12 @@ def test_ethereum_balances():
     assert sheet.assets['ETH'].amount == FVal('147699.424503407102942053')
 
 
-def test_custom_ethereum_token():
-    buchfink_db = BuchfinkDB(os.path.join(os.path.dirname(__file__), 'scenarios', 'custom_token', 'buchfink.yaml'))
+def test_custom_ethereum_token(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'custom_token'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     buchfink_db.perform_assets_updates()
-    assert buchfink_db.get_asset_by_symbol('IMX') is not None
+    assert buchfink_db.get_asset_by_symbol('_ceth_0x7b35Ce522CB72e4077BaeB96Cb923A5529764a00') is not None
+    assert buchfink_db.get_asset_by_symbol('FANTASY') is not None
