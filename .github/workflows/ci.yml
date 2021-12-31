@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - nfts
   pull_request:
     branches:
       - master
