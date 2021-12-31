@@ -491,8 +491,17 @@ class BuchfinkDB(DBHandler):
     def write_balances(self, account: Account, balances: BalanceSheet):
         path = self.balances_directory / (account.name + '.yaml')
 
+        try:
+            with path.open('r') as balances_file:
+                contents = yaml.load(balances_file, Loader=yaml.SafeLoader)
+                if contents is None:
+                    contents = {}
+        except FileNotFoundError:
+            contents = {}
+
         with path.open('w') as balances_file:
-            yaml.dump(serialize_balances(balances), stream=balances_file)
+            contents.update(serialize_balances(balances))
+            yaml.dump(contents, stream=balances_file, sort_keys=True)
 
     def get_amm_swaps(
             self,

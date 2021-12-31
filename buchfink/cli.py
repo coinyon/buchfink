@@ -454,10 +454,17 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
         if fetch_nfts_for_this_account:
             nfts = buchfink_db.query_nfts(account)
             if nfts:
-                with open(buchfink_db.balances_directory / (name + "_nfts.yaml"), "w") as yaml_file:
-                    yaml.dump({
-                        "nfts": serialize_nfts(nfts)
-                    }, stream=yaml_file, sort_keys=True)
+                try:
+                    with open(buchfink_db.balances_directory / (name + ".yaml"), "r") as yaml_file:
+                        contents = yaml.load(yaml_file, Loader=yaml.SafeLoader)
+                        if contents is None:
+                            contents = {}
+                except FileNotFoundError:
+                    contents = {}
+
+                with open(buchfink_db.balances_directory / (name + ".yaml"), "w") as yaml_file:
+                    contents['nfts'] = serialize_nfts(nfts)
+                    yaml.dump(contents, stream=yaml_file, sort_keys=True)
 
 
 @buchfink.command()
