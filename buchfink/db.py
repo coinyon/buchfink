@@ -434,7 +434,6 @@ class BuchfinkDB(DBHandler):
             manager = self.get_chain_manager(account)
             nfts = manager.get_module('nfts')
             nft_result = nfts.get_all_info(addresses=[account.address], ignore_cache=True)
-            print(nft_result)
             if account.address in nft_result.addresses:
                 return nft_result.addresses[account.address]
         return []
