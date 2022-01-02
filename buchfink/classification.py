@@ -22,6 +22,7 @@ CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
 CLAIMED_4 = '0x04672052dcb6b5b19a9cc2ec1b8f447f1f5e47b5e24cfa5e4ffb640d63ca2be7'
 CLAIMED_5 = '0x528937b330082d892a98d4e428ab2dcca7844b51d227a1c0ae67f0b5261acbd9'
 CLAIM = '0x34fcbac0073d7c3d388e51312faf357774904998eeb8fca628b9e6f65ee1cbf7'
+CLAIM_2 = '0x47cee97cb7acd717b3c0aa1435d004cd5b3c8c57d70dbceb4e4458bbd60e39d4'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
@@ -77,6 +78,7 @@ ADDR_COMPOUND_DAI = '0x5d3a536E4D6DbD6114cc1Ead35777bAB948E3643'
 ADDR_DAI = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
 ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
 ADDR_UMA = '0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828'
+ADDR_ENS = '0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
@@ -605,6 +607,21 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
                 timestamp=txn.timestamp,
                 asset=symbol_to_asset_or_token('_ceth_0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'),
                 notes='Thales retroactive airdrop',
+                link=tx_hash
+            )]
+
+        if event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_ENS):
+            amount = hexstr_to_int(event.data[2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.AIRDROP,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('_ceth_' + ADDR_ENS),
+                notes='ENS retroactive airdrop',
                 link=tx_hash
             )]
 
