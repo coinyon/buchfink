@@ -31,6 +31,11 @@ def test_run_on_ens_domain():
         logger.debug('output of %s: %s', 'fetch', result.output)
         assert result.exception is None
         assert result.exit_code == 0
+
+        assert os.path.exists(os.path.join(d, 'trades/coinyon.eth.yaml'))
+        assert os.path.exists(os.path.join(d, 'actions/coinyon.eth.yaml'))
+        assert os.path.exists(os.path.join(d, 'balances/coinyon.eth.yaml'))
+
         result = runner.invoke(buchfink, ['report', '-e', 'coinyon.eth', '--year', '2020'])
         logger.debug('output of %s: %s', 'report', result.output)
         assert result.exception is None
