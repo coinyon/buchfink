@@ -1,4 +1,4 @@
-"Test buchfink cli app"
+'Buchfink cli app integration tests'
 import logging
 import os
 import os.path
@@ -6,7 +6,7 @@ import os.path
 import pytest
 from click.testing import CliRunner
 
-from buchfink.cli import buchfink, fetch_, init, quote, report_
+from buchfink.cli import buchfink, init
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def test_run_on_ens_domain():
     runner = CliRunner()
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
-        result = runner.invoke(init)
+        result = runner.invoke(buchfink, ['init'])
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
@@ -42,11 +42,11 @@ def test_second_init_should_fail():
     runner = CliRunner()
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
-        result = runner.invoke(init)
+        result = runner.invoke(buchfink, ['init'])
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
-        result = runner.invoke(init)
+        result = runner.invoke(buchfink, ['init'])
         logger.warning('output of %s: %s', 'init', result.output)
         assert result.exit_code == 1
 
@@ -55,7 +55,7 @@ def test_init_and_subsequent_quote():
     runner = CliRunner()
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
-        result = runner.invoke(init)
+        result = runner.invoke(buchfink, ['init'])
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
