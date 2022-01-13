@@ -21,6 +21,7 @@ CLAIMED_2 = '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a'
 CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
 CLAIMED_4 = '0x04672052dcb6b5b19a9cc2ec1b8f447f1f5e47b5e24cfa5e4ffb640d63ca2be7'
 CLAIMED_5 = '0x528937b330082d892a98d4e428ab2dcca7844b51d227a1c0ae67f0b5261acbd9'
+CLAIMED_6 = '0xb94bf7f9302edf52a596286915a69b4b0685574cffdedd0712e3c62f2550f0ba'
 CLAIM = '0x34fcbac0073d7c3d388e51312faf357774904998eeb8fca628b9e6f65ee1cbf7'
 CLAIM_2 = '0x47cee97cb7acd717b3c0aa1435d004cd5b3c8c57d70dbceb4e4458bbd60e39d4'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
@@ -58,6 +59,7 @@ ADDR_DODO_REWARDS = '0x0e504d3e053885a82bd1cb5c29cbaae5b3673be4'
 ADDR_IMX_AIRDROP = '0x2011b5d4d5287cc9d3462b4e8af0e4daf29e3c1d'
 ADDR_ROOK_REWARDS = '0x2777b798fdfb906d42b89cf8f9de541db05dd6a1'
 ADDR_SUSHI_REWARDS = '0xc2edad668740f1aa35e4d8f227fb8e17dca888cd'
+ADDR_SUSHI_VESTING = '0xcBE6B83e77cdc011Cc18F6f0Df8444E5783ed982'
 ADDR_GITCOIN_AIRDROP = '0xde3e5a990bce7fc60a6f017e7c4a95fc4939299e'
 ADDR_BLACKPOOL_AIRDROP = '0x6b63564a8b3f145b3ef085bcc197c0ff64e9a140'
 ADDR_TORN_VTORN = '0x3eFA30704D2b8BBAc821307230376556cF8CC39e'
@@ -267,6 +269,24 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
             )]
 
         elif event.topics[0] == CLAIMED_5:
+            logger.warning('Unknown Claimed event for tx: %s', tx_hash)
+
+        if event.topics[0] == CLAIMED_6 and same_addr(event.address, ADDR_SUSHI_VESTING):
+            amount = hexstr_to_int(event.data[2:][64:128])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('SUSHI'),
+                notes='SUSHI rewards vesting',
+                link=tx_hash
+            )]
+
+        elif event.topics[0] == CLAIMED_6:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
         if event.topics[0] == REWARD_PAID and event.address in ADDR_PIEDAO_INCENTIVES:
