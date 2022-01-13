@@ -5,7 +5,7 @@ from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from rotkehlchen.db.cache_handler import DBAccountingReports
+from rotkehlchen.db.reports import DBAccountingReports
 
 from buchfink.db import BuchfinkDB
 from buchfink.datatypes import Timestamp
