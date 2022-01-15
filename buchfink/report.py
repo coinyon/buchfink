@@ -1,14 +1,16 @@
 import datetime
+import json
 import logging
 from pathlib import Path
 from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
+from rotkehlchen.accounting.typing import NamedJson, SchemaEventType
 from rotkehlchen.db.reports import DBAccountingReports
 
-from buchfink.db import BuchfinkDB
 from buchfink.datatypes import Timestamp
+from buchfink.db import BuchfinkDB
 
 from .models import Account, ReportConfig
 
@@ -89,11 +91,19 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
         env.globals['float'] = float
         env.globals['str'] = str
         template = env.get_template(report_config.template)
+
+        # This is a little hacky but works for now
+        cursor = buchfink_db.conn_transient.cursor()
+        cursor.execute('SELECT event_type, data FROM pnl_events WHERE report_id = ? and event_type = ?', (report_id, 'A'))
+        def deserialize(row):
+            return NamedJson.deserialize_from_db(row).data
+        events = [deserialize(row) for row in cursor.fetchall()]
+
         rendered_report = template.render({
             "name": report_config.name,
             "title": report_config.title,
             "overview": overview_data,
-            "events": []  # TODO result['all_events']
+            "events": events
         })
 
         # we should get ext from template path. could also be json, csv, ...

@@ -1,0 +1,66 @@
+<style>
+<div class="header">
+  <h3>{{ title }}</h3>
+</div>
+<table>
+  <thead>
+    <tr>
+      <th>
+        Time
+      </th>
+      <th>
+        Event
+      </th>
+      <th>
+        Amount
+      </th>
+      <th>
+        Token
+      </th>
+      <th>
+        Received
+      </th>
+      <th>
+        Cost basis
+      </th>
+      <th>
+        P/L
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for event in events %}
+  <tr>
+    <td>
+      {{ datetime.datetime.fromtimestamp(event['time']) }}
+    </td>
+    <td>
+      {{ event['type'] }}
+    </td>
+    <td class="number">
+      {{ "{0:0.6f}".format(float(event['paid_in_asset'])) }}
+    </td>
+    <td>
+      {{ event['paid_asset'] }}
+    </td>
+    <td class="number">
+      {{ "{0:0.2f}".format(float(event['taxable_received_in_profit_currency'])) }}
+    </td>
+    <td class="number">
+      {{ "{0:0.2f}".format(float(event['taxable_bought_cost_in_profit_currency'])) }}
+    </td>
+    <td class="number">
+      {{ "{0:0.2f}".format(float(event['net_profit_or_loss'])) }}
+    </td>
+  </tr>
+  {% endfor %}
+  <tr>
+    <td colspan=6>
+      Total
+    </td>
+    <td class="number">
+      {{ "{0:0.2f}".format(float(overview['total_taxable_profit_loss'])) }}
+    </td>
+  </tr>
+  </tbody>
+</table>

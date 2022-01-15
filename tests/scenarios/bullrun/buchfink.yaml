@@ -9,6 +9,11 @@ reports:
     from: "2015-01-01"
     to: "2019-07-30"
 
+  - name: withtemplate
+    template: templates/template.html
+    from: "2015-01-01"
+    to: "2019-07-30"
+
 settings:
   main_currency: USD
   taxfree_after_period: 31536000

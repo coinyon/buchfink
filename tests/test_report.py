@@ -14,11 +14,33 @@ def test_bullrun_config(tmp_path):
 
     reports = list(buchfink_db.get_all_reports())
 
-    assert len(reports) == 1
+    assert len(reports) == 2
 
     report = reports[0]
 
     assert report.name == 'all'
+    assert report.from_dt.year == 2015
+    assert report.to_dt.year == 2019
+
+    result = run_report(buchfink_db, buchfink_db.get_all_accounts(), report)
+
+    assert result['overview']['total_taxable_profit_loss'] == '15000'
+
+
+def test_bullrun_report_template(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+
+    reports = list(buchfink_db.get_all_reports())
+
+    assert len(reports) == 2
+
+    report = reports[1]
+
+    assert report.name == 'withtemplate'
     assert report.from_dt.year == 2015
     assert report.to_dt.year == 2019
 
