@@ -1,12 +1,16 @@
 import os.path
+import shutil
 
 from buchfink.db import BuchfinkDB
 from buchfink.report import run_report
 
 
-def test_bullrun_config():
-    config = os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun', 'buchfink.yaml')
-    buchfink_db = BuchfinkDB(config)
+def test_bullrun_config(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     reports = list(buchfink_db.get_all_reports())
 
@@ -23,9 +27,12 @@ def test_bullrun_config():
     assert result['overview']['total_taxable_profit_loss'] == '15000'
 
 
-def test_manual_price():
-    config = os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions', 'buchfink.yaml')
-    buchfink_db = BuchfinkDB(config)
+def test_manual_price(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     buchfink_db.apply_manual_prices()
 
