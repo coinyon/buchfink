@@ -1,12 +1,11 @@
 import datetime
-import json
 import logging
 from pathlib import Path
 from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from rotkehlchen.accounting.typing import NamedJson, SchemaEventType
+from rotkehlchen.accounting.typing import NamedJson
 from rotkehlchen.db.reports import DBAccountingReports
 
 from buchfink.datatypes import Timestamp
@@ -94,7 +93,12 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
         # This is a little hacky but works for now
         cursor = buchfink_db.conn_transient.cursor()
-        cursor.execute('SELECT event_type, data FROM pnl_events WHERE report_id = ? and event_type = ?', (report_id, 'A'))
+        cursor.execute(
+                'SELECT event_type, data FROM pnl_events '
+                'WHERE report_id = ? and event_type = ?',
+                (report_id, 'A')
+            )
+
         def deserialize(row):
             return NamedJson.deserialize_from_db(row).data
         events = [deserialize(row) for row in cursor.fetchall()]
