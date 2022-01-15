@@ -34,6 +34,7 @@ VESTED = '0xfbeff59d2bfda0d79ea8a29f8c57c66d48c7a13eabbdb90908d9115ec41c9dc6'
 BORROW = '0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80'
 XFLOBBYEXIT = '0xa6b19fa7f41317a186e1d58e9d81f86a52f1102b6bce10b4eca83f37aaa58468'
 REWARDS_CLAIMED = '0xfc30cddea38e2bf4d6ea7d3f9ed3b6ad7f176419f4963bd81318067a4aee73fe'
+WITHDRAWN = '0x6b4651e8f4162f82274a25e57a29f7ed9156d17078e76dd4d05f04ba08831aa4'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -81,6 +82,7 @@ ADDR_DAI = '0x6B175474E89094C44Da98b954EedeAC495271d0F'
 ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
 ADDR_UMA = '0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828'
 ADDR_ENS = '0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72'
+ADDR_XDAI_EASYSTAKING = '0xecbCd6D7264e3c9eAc24C7130Ed3cd2B38F5A7AD'
 
 
 def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
@@ -561,6 +563,24 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
                     timestamp=txn.timestamp,
                     asset=asset,
                     notes='XTK Rewards for LP staking',
+                    link=tx_hash
+                )]
+
+        if event.topics[0] == WITHDRAWN and same_addr(event.address, ADDR_XDAI_EASYSTAKING):
+            asset = symbol_to_asset_or_token('_ceth_0x0Ae055097C6d159879521C384F1D2123D1f195e6')
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                # accruedEmission
+                amount = hexstr_to_int(event.data[2:][64*3:64*4])
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=asset,
+                    notes='STAKE rewards for easystaking',
                     link=tx_hash
                 )]
 
