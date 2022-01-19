@@ -570,7 +570,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
             asset = symbol_to_asset_or_token('_ceth_0x0Ae055097C6d159879521C384F1D2123D1f195e6')
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 # accruedEmission
-                amount = hexstr_to_int(event.data[2:][64*3:64*4])
+                amount = hexstr_to_int(event.data[2:][64 * 3:64 * 4])
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
