@@ -271,6 +271,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
     buchfink_db.perform_assets_updates()
     now = ts_now()
     fetch_limited = fetch_actions or fetch_balances or fetch_trades or fetch_nfts
+    error_occured = False
 
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
@@ -448,11 +449,23 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                 }, stream=yaml_file, sort_keys=True)
 
         if fetch_balances_for_this_account:
-            buchfink_db.fetch_balances(account)
+
+            try:
+                buchfink_db.fetch_balances(account)
+            except IOError:
+                logger.exception('Exception during fetch_balances')
+                error_occured = True
+                continue
             logger.info('Fetched balances from %s', name)
 
         if fetch_nfts_for_this_account:
-            nfts = buchfink_db.query_nfts(account)
+            try:
+                nfts = buchfink_db.query_nfts(account)
+            except IOError:
+                logger.exception('Exception during query_nfts')
+                error_occured = True
+                continue
+
             if nfts:
                 try:
                     with open(buchfink_db.balances_directory / (name + ".yaml"), "r") as yaml_file:
@@ -465,6 +478,10 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                 with open(buchfink_db.balances_directory / (name + ".yaml"), "w") as yaml_file:
                     contents['nfts'] = serialize_nfts(nfts)
                     yaml.dump(contents, stream=yaml_file, sort_keys=True)
+
+    if error_occured:
+        print("One or more errors occured")
+        # TODO: RETURN exit code 1 on error
 
 
 @buchfink.command()
