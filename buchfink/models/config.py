@@ -67,6 +67,7 @@ class ExternalServicesConfig(BaseModel):
     cryptocompare: Optional[str]
     loopring: Optional[str]
     beaconchain: Optional[str]
+    opensea: Optional[str]
 
 
 class Settings(BaseModel):
