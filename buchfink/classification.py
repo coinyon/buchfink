@@ -16,6 +16,10 @@ def same_addr(addr1, addr2):
     return str(addr1).lower() == str(addr2).lower()
 
 
+def addr_in(addr, addrs):
+    return addr.lower() in [addr.lower() for addr in addrs]
+
+
 CLAIMED = '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026'
 CLAIMED_2 = '0xd8138f8a3f377c5259ca548e70e4c2de94f129f5a11036a15b69513cba2b426a'
 CLAIMED_3 = '0x6f9c9826be5976f3f82a3490c52a83328ce2ec7be9e62dcb39c26da5148d7c76'
@@ -39,11 +43,14 @@ WITHDRAWN = '0x6b4651e8f4162f82274a25e57a29f7ed9156d17078e76dd4d05f04ba08831aa4'
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
 ADDR_PIEDAO_INCENTIVES = (
-    '0x8314337d2b13e1A61EadF0FD1686b2134D43762F'.lower(),
+    '0x8314337d2b13e1A61EadF0FD1686b2134D43762F',
     '0xb9a4bca06f14a982fcd14907d31dfacadc8ff88e',
     '0xb8e59ce1359d80e4834228edd6a3f560e7534438'
 )
-ADDR_INDEX_REWARDS = '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986'
+ADDR_INDEX_REWARDS = (
+    '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986',
+    '0xB93b505Ed567982E2b6756177ddD23ab5745f309'
+)
 ADDR_YFI_GOVERNANCE = '0xba37b002abafdd8e89a1995da52740bbc013d992'
 ADDR_CREAM_REWARDS = (
     '0x224061756c150e5048a1e4a3e6e066db35037462',
@@ -291,7 +298,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
         elif event.topics[0] == CLAIMED_6:
             logger.warning('Unknown Claimed event for tx: %s', tx_hash)
 
-        if event.topics[0] == REWARD_PAID and event.address in ADDR_PIEDAO_INCENTIVES:
+        if event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_PIEDAO_INCENTIVES):
             amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
@@ -306,7 +313,7 @@ def classify_tx(account: Account, tx_hash: str, txn: EthereumTransaction,
                 link=tx_hash
             )]
 
-        elif event.topics[0] == REWARD_PAID and same_addr(event.address, ADDR_INDEX_REWARDS):
+        elif event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_INDEX_REWARDS):
             amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
