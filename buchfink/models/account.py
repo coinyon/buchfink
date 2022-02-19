@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
 from pydantic import BaseModel
-from rotkehlchen.typing import ChecksumEthAddress
+from rotkehlchen.types import ChecksumEthAddress
 from typing_extensions import Literal
 
 from .config import (AccountConfig, BitcoinAccountConfig, Config,

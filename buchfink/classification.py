@@ -2,7 +2,7 @@ import logging
 from typing import List
 
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
-from rotkehlchen.typing import EthereumTransaction
+from rotkehlchen.types import EthereumTransaction
 from rotkehlchen.utils.misc import hexstr_to_int, hex_or_bytes_to_str
 
 from .datatypes import FVal, LedgerAction, LedgerActionType, EthereumTxReceipt

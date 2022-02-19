@@ -11,7 +11,7 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
-from rotkehlchen.assets.typing import AssetType
+from rotkehlchen.assets.types import AssetType
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.manager import ChainManager
@@ -38,9 +38,9 @@ from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.globaldb.updates import AssetsUpdater
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
-from rotkehlchen.history.typing import HistoricalPrice, HistoricalPriceOracle
+from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.typing import (ChecksumEthAddress, ExternalService,
+from rotkehlchen.types import (ChecksumEthAddress, ExternalService,
                                 ExternalServiceApiCredentials, FVal, Location,
                                 Price, SupportedBlockchain, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator

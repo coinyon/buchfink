@@ -19,7 +19,7 @@ from rotkehlchen.chain.ethereum.transactions import (
 from rotkehlchen.constants import ZERO
 from rotkehlchen.errors import NoPriceForGivenTimestamp
 from rotkehlchen.history.price import PriceHistorian
-from rotkehlchen.typing import ChecksumEthAddress
+from rotkehlchen.types import ChecksumEthAddress
 from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 

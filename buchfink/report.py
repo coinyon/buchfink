@@ -5,7 +5,7 @@ from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from rotkehlchen.accounting.typing import NamedJson
+from rotkehlchen.accounting.types import NamedJson
 from rotkehlchen.db.reports import DBAccountingReports
 
 from buchfink.datatypes import Timestamp
@@ -65,7 +65,8 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             [],
             [],
             [],
-            all_actions
+            all_actions,
+            []
         )
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
