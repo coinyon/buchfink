@@ -92,7 +92,11 @@ ADDR_ENS = '0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72'
 ADDR_XDAI_EASYSTAKING = '0xecbCd6D7264e3c9eAc24C7130Ed3cd2B38F5A7AD'
 
 
-def classify_tx(account: Account, txn: EthereumTransaction, receipt: EthereumTxReceipt) -> List[LedgerAction]:
+def classify_tx(
+        account: Account,
+        txn: EthereumTransaction,
+        receipt: EthereumTxReceipt
+) -> List[LedgerAction]:
     actions = []  # type: List[LedgerAction]
 
     tx_time = serialize_timestamp(txn.timestamp)

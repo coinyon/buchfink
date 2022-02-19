@@ -337,7 +337,6 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                 )
 
                 for txn in txs:
-                    tx_hash = '0x' + txn.tx_hash.hex()
                     receipt = eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
 
                     if receipt is None:
