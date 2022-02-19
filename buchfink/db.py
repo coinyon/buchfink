@@ -1,8 +1,8 @@
 import logging
-import sys
 import operator
 import os
 import os.path
+import sys
 from datetime import datetime
 from functools import reduce
 from pathlib import Path
@@ -18,7 +18,7 @@ from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
-from rotkehlchen.errors import UnknownAsset
+from rotkehlchen.errors import InputError, UnknownAsset
 from rotkehlchen.exchanges import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
@@ -40,13 +40,14 @@ from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.types import (ChecksumEthAddress, ExternalService,
-                                ExternalServiceApiCredentials, FVal, Location,
-                                Price, SupportedBlockchain, Timestamp)
+from rotkehlchen.types import (BlockchainAccountData, ChecksumEthAddress,
+                               ExternalService, ExternalServiceApiCredentials,
+                               FVal, Location, Price, SupportedBlockchain,
+                               Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 
-from buchfink.datatypes import (ActionType, Asset, Balance, BalanceSheet,
-                                LedgerAction, Trade, NFT)
+from buchfink.datatypes import (NFT, ActionType, Asset, Balance, BalanceSheet,
+                                LedgerAction, Trade)
 from buchfink.models import (Account, Config, ExchangeAccountConfig,
                              HistoricalPriceConfig, ManualAccountConfig,
                              ReportConfig)
@@ -312,6 +313,15 @@ class BuchfinkDB(DBHandler):
             eth_modules = [mod for mod in eth_modules if mod not in PREMIUM_ONLY_ETH_MODULES]
 
         logger.debug('Creating ChainManager with modules: %s', eth_modules)
+
+        # Make sure the account is added to the DB
+        try:
+            assert account.address is not None
+            self.add_blockchain_accounts(SupportedBlockchain.ETHEREUM, [
+                BlockchainAccountData(address=account.address, label=account.name, tags=[])
+            ])
+        except InputError:
+            pass
 
         manager = ChainManager(
             database=self,
