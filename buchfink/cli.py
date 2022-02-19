@@ -342,11 +342,10 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                     if receipt is None:
                         raise ValueError('Could not get receipt')
 
-                    acc_actions = classify_tx(account, tx_hash, txn, receipt)
-                    if actions:
-                        for act in actions:
-                            logger.debug('Found action: %s', act)
-                    actions.extend(acc_actions)
+                    additional_actions = classify_tx(account, tx_hash, txn, receipt)
+                    for act in additional_actions:
+                        logger.debug('Found action: %s', act)
+                    actions.extend(additional_actions)
 
             if fetch_trades_for_this_account:
                 logger.info('Fetching trades for %s', name)
