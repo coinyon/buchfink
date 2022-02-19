@@ -373,7 +373,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                             only_cache=False
                         ))
 
-                trades.extend(zerion_csv.get_trades(account))
+                trades.extend(zerion_csv.get_trades(buchfink_db, account))
 
         elif account.account_type == "exchange":
 

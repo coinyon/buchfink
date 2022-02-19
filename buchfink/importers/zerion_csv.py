@@ -15,7 +15,7 @@ from buchfink.serialization import deserialize_timestamp
 logger = logging.getLogger(__name__)
 
 
-def get_trades(account: Account) -> List[Trade]:
+def get_trades(db: BuchfinkDB, account: Account) -> List[Trade]:
     zerion_path = 'zerion/' + account.name + '.csv'
     if not os.path.exists(zerion_path):
         return []
@@ -32,8 +32,6 @@ def get_trades(account: Account) -> List[Trade]:
     df.loc[df['Buy Currency Address'].isna(), 'Buy Currency Address'] = ''
     df.loc[df['Sell Currency Address'].isna(), 'Sell Currency Address'] = ''
     df.loc[df['Fee Currency'].isna(), 'Fee Currency'] = ''
-
-    db = BuchfinkDB()
 
     trades = []
     for row2 in df.to_dict(orient="records"):
