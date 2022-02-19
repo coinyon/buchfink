@@ -332,7 +332,8 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                 )
 
                 txs, _ = eth_transactions.query(
-                        ETHTransactionsFilterQuery.make(addresses=[address])
+                        ETHTransactionsFilterQuery.make(addresses=[address]),
+                        only_cache=True
                 )
 
                 for txn in txs:
@@ -342,7 +343,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                     if receipt is None:
                         raise ValueError('Could not get receipt')
 
-                    additional_actions = classify_tx(account, tx_hash, txn, receipt)
+                    additional_actions = classify_tx(account, txn, receipt)
                     for act in additional_actions:
                         logger.debug('Found action: %s', act)
                     actions.extend(additional_actions)
