@@ -548,14 +548,24 @@ class BuchfinkDB(DBHandler):
 
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, None)
+        self.sync_config_assets()
+
+    def sync_config_assets(self):
+        'Sync assets defined in config with database'
 
         for token in self.config.tokens:
             eth_token = deserialize_ethereum_token(token.dict())
             identifier = '_ceth_' + eth_token.ethereum_address
 
             try:
-                self.get_asset_by_symbol(identifier)
-                logger.debug('Asset already exists: %s', eth_token)
+                asset = self.get_asset_by_symbol(identifier)
+                logger.debug('Asset already exists: %s %s', eth_token, asset.to_dict())
+
+                # This could be more involved
+                if eth_token.coingecko and not (asset.has_coingecko() and eth_token.coingecko == asset.to_coingecko()):
+                    logger.info('Updating asset db for token: %s', eth_token)
+                    self.globaldb.edit_ethereum_token(eth_token)
+
             except UnknownAsset:
                 self.globaldb.add_asset(identifier, AssetType.ETHEREUM_TOKEN, eth_token)
                 try:
