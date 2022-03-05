@@ -56,7 +56,7 @@ def test_manual_price(tmp_path):
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
-    buchfink_db.apply_manual_prices()
+    buchfink_db.sync_manual_prices()
 
     reports = list(buchfink_db.get_all_reports())
 

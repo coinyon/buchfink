@@ -575,7 +575,7 @@ class BuchfinkDB(DBHandler):
 
             self.asset_resolver.clean_memory_cache()
 
-    def apply_manual_prices(self):
+    def sync_manual_prices(self):
         def to_historical_price(historical_price: HistoricalPriceConfig) -> HistoricalPrice:
             return HistoricalPrice(
                 from_asset=self.get_asset_by_symbol(historical_price.from_),

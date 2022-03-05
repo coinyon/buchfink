@@ -492,7 +492,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
 @with_buchfink_db
 def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     "Run a full fetch + report cycle"
-    buchfink_db.apply_manual_prices()
+    buchfink_db.sync_manual_prices()
 
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
@@ -638,7 +638,7 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
 def report_(buchfink_db: BuchfinkDB, keyword, external, report, year):
     "Generate reports for all report definition and output overview table"
 
-    buchfink_db.apply_manual_prices()
+    buchfink_db.sync_manual_prices()
 
     results = {}
 
@@ -682,7 +682,7 @@ def allowances(buchfink_db):
     # pylint: disable = W
     "Show the amount of each asset that you could sell tax-free"
 
-    buchfink_db.apply_manual_prices()
+    buchfink_db.sync_manual_prices()
 
     num_matched_accounts = 0
     all_trades = []
@@ -745,6 +745,8 @@ def quote(buchfink_db: BuchfinkDB, asset: Tuple[str], amount: float,
         buchfink quote 2.5 ETH/BTC
     """
     buchfink_db.perform_assets_updates()
+    buchfink_db.sync_manual_prices()
+
     base_asset = buchfink_db.get_asset_by_symbol(base_asset_) \
             if base_asset_ \
             else buchfink_db.get_main_currency()
