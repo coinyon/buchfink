@@ -19,9 +19,13 @@ def serialize_timestamp(timestamp: int) -> str:
 
 
 def deserialize_timestamp(timestamp: str) -> Timestamp:
+    'Converts ISO date or a UNIX timestamp to a Timestamp'
     if timestamp.endswith('Z'):
         timestamp = timestamp[:-1]
-    return int(datetime.fromisoformat(timestamp).timestamp())
+    try:
+        return int(datetime.fromisoformat(timestamp).timestamp())
+    except ValueError:
+        return int(timestamp)
 
 
 def deserialize_ledger_action_type(action_type: str) -> LedgerActionType:
