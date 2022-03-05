@@ -45,12 +45,12 @@ epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 def with_buchfink_db(func):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
-        db = BuchfinkDB(ctx.obj['BUCHFINK_CONFIG'])
+        buchfink_db = BuchfinkDB(ctx.obj['BUCHFINK_CONFIG'])
         try:
-            ctx.invoke(func, db, *args, **kwargs)
+            ctx.invoke(func, buchfink_db, *args, **kwargs)
         finally:
             # Explicitly close connections
-            db.__del__()
+            buchfink_db.__del__()
     return update_wrapper(new_func, func)
 
 
