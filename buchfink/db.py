@@ -562,7 +562,9 @@ class BuchfinkDB(DBHandler):
                 logger.debug('Asset already exists: %s %s', eth_token, asset.to_dict())
 
                 # This could be more involved
-                if eth_token.coingecko and not (asset.has_coingecko() and eth_token.coingecko == asset.to_coingecko()):
+                if eth_token.coingecko and not (
+                        asset.has_coingecko() and eth_token.coingecko == asset.to_coingecko()
+                        ):
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_ethereum_token(eth_token)
 
