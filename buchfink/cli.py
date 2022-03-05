@@ -88,6 +88,8 @@ def init(directory):
             ), fg='green')
     )
 
+    buchfink_db.__del__()
+
 
 @buchfink.command('list')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
