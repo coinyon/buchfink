@@ -3,7 +3,7 @@ from typing import List
 
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.types import EthereumTransaction
-from rotkehlchen.utils.misc import hexstr_to_int, hex_or_bytes_to_str
+from rotkehlchen.utils.misc import hexstr_to_int, hex_or_bytes_to_str, hex_or_bytes_to_address
 
 from .datatypes import FVal, LedgerAction, LedgerActionType, EthereumTxReceipt
 from .models import Account
@@ -42,10 +42,12 @@ WITHDRAWN = '0x6b4651e8f4162f82274a25e57a29f7ed9156d17078e76dd4d05f04ba08831aa4'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
+ADDR_PIEDAO_DOUGH = '0xad32A8e6220741182940c5aBF610bDE99E737b2D'
 ADDR_PIEDAO_INCENTIVES = (
     '0x8314337d2b13e1A61EadF0FD1686b2134D43762F',
     '0xb9a4bca06f14a982fcd14907d31dfacadc8ff88e',
-    '0xb8e59ce1359d80e4834228edd6a3f560e7534438'
+    '0xb8e59ce1359d80e4834228edd6a3f560e7534438',
+    '0x3bFdA5285416eB06Ebc8bc0aBf7d105813af06d0',
 )
 ADDR_INDEX_REWARDS = (
     '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986',
@@ -301,22 +303,7 @@ def classify_tx(
         elif event.topics[0] == CLAIMED_6:
             logger.warning('Unknown Claimed event for tx: %s', txn.tx_hash.hex())
 
-        if event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_PIEDAO_INCENTIVES):
-            amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
-                identifier=None,
-                location='',
-                action_type=LedgerActionType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('DOUGH'),
-                notes='rewards for providing liquidity',
-                link=txn.tx_hash.hex()
-            )]
-
-        elif event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_INDEX_REWARDS):
+        if event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_INDEX_REWARDS):
             amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
                 identifier=None,
@@ -506,6 +493,23 @@ def classify_tx(
                     timestamp=txn.timestamp,
                     asset=asset,
                     notes='UMA TVL option settlement',
+                    link=txn.tx_hash.hex()
+                )]
+
+        elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_PIEDAO_DOUGH):
+            if addr_in(hex_or_bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES) and \
+                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data)
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('DOUGH'),
+                    notes='rewards for providing liquidity',
                     link=txn.tx_hash.hex()
                 )]
 
