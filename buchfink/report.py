@@ -96,6 +96,8 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     folder = buchfink_db.reports_directory / Path(name)
 
     assert folder.exists()
+    if report_config.template is None:
+        raise ValueError('No template defined in report')
 
     # This is a little hacky and breaks our philosophy as we explicitely deal
     # with DB identifier here
