@@ -1,5 +1,6 @@
 import datetime
 import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import List
 
@@ -102,12 +103,20 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
         overview_data = yaml.load(report_file, Loader=yaml.SafeLoader)['overview']
         report_id = overview_data['identifier']
 
+    @lru_cache
+    def asset_symbol(symbol):
+        if not symbol:
+            return ''
+        asset = buchfink_db.get_asset_by_symbol(symbol)
+        return asset.symbol
+
     # Look for templates relative to the data_directory, that is the directory where
     # the buchfink.yaml is residing.
     env = Environment(loader=FileSystemLoader(buchfink_db.data_directory))
     env.globals['datetime'] = datetime
     env.globals['float'] = float
     env.globals['str'] = str
+    env.globals['asset_symbol'] = asset_symbol
     template = env.get_template(report_config.template)
 
     # This is a little hacky but works for now
