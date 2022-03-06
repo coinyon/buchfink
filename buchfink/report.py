@@ -68,7 +68,12 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             all_actions,
             []
         )
+
+    root_logger.removeHandler(file_handler)
+    root_logger.removeHandler(error_handler)
+
     accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
+
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
     results, _ = dbpnl.get_reports(report_id=report_id, with_limit=False)
     overview_data = results[0]
@@ -80,44 +85,55 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             buchfink_db.reports_directory / Path(name)
     )
 
-    root_logger.removeHandler(file_handler)
-    root_logger.removeHandler(error_handler)
+    return {
+        'overview': overview_data
+    }
 
-    if report_config.template:
-        # Look for templates relative to the data_directory, that is the directory where
-        # the buchfink.yaml is residing.
-        env = Environment(loader=FileSystemLoader(buchfink_db.data_directory))
-        env.globals['datetime'] = datetime
-        env.globals['float'] = float
-        env.globals['str'] = str
-        template = env.get_template(report_config.template)
 
-        # This is a little hacky but works for now
-        cursor = buchfink_db.conn_transient.cursor()
-        cursor.execute(
-                'SELECT event_type, data FROM pnl_events '
-                'WHERE report_id = ? and event_type = ?',
-                (report_id, 'A')
-            )
+def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
+    name = report_config.name
+    folder = buchfink_db.reports_directory / Path(name)
 
-        def deserialize(row):
-            return NamedJson.deserialize_from_db(row).data
-        events = [deserialize(row) for row in cursor.fetchall()]
+    assert folder.exists()
 
-        rendered_report = template.render({
-            "name": report_config.name,
-            "title": report_config.title,
-            "overview": overview_data,
-            "events": events
-        })
+    # This is a little hacky and breaks our philosophy as we explicitely deal
+    # with DB identifier here
+    with (folder / 'report.yaml').open('r') as report_file:
+        overview_data = yaml.load(report_file, Loader=yaml.SafeLoader)['overview']
+        report_id = overview_data['identifier']
 
-        # we should get ext from template path. could also be json, csv, ...
-        ext = '.html'
+    # Look for templates relative to the data_directory, that is the directory where
+    # the buchfink.yaml is residing.
+    env = Environment(loader=FileSystemLoader(buchfink_db.data_directory))
+    env.globals['datetime'] = datetime
+    env.globals['float'] = float
+    env.globals['str'] = str
+    template = env.get_template(report_config.template)
 
-        # to save the results
-        with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as reportf:
-            reportf.write(rendered_report)
+    # This is a little hacky but works for now
+    cursor = buchfink_db.conn_transient.cursor()
+    cursor.execute(
+            'SELECT event_type, data FROM pnl_events '
+            'WHERE report_id = ? and event_type = ?',
+            (report_id, 'A')
+        )
 
-        logger.info("Rendered temmplate to 'report%s'.", ext)
+    def deserialize(row):
+        return NamedJson.deserialize_from_db(row).data
+    events = [deserialize(row) for row in cursor.fetchall()]
 
-    return {'overview': overview_data}
+    rendered_report = template.render({
+        "name": report_config.name,
+        "title": report_config.title,
+        "overview": overview_data,
+        "events": events
+    })
+
+    # we should get ext from template path. could also be json, csv, ...
+    ext = '.html'
+
+    # to save the results
+    with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as reportf:
+        reportf.write(rendered_report)
+
+    logger.info("Rendered temmplate to 'report%s'.", ext)

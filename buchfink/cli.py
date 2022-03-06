@@ -34,7 +34,7 @@ from .classification import classify_tx
 from .importers import zerion_csv
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
-from .report import run_report
+from .report import run_report, render_report
 
 logger = logging.getLogger(__name__)
 
@@ -640,13 +640,15 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
         help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--report', type=str, default=None, help='Filter by keyword in report name')
+@click.option('--render-only', is_flag=True, help='Do not actually run the report but only render the template')
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
 @with_buchfink_db
-def report_(buchfink_db: BuchfinkDB, keyword, external, report, year):
+def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only):
     "Generate reports for all report definition and output overview table"
 
-    buchfink_db.sync_manual_prices()
+    if not render_only:
+        buchfink_db.sync_manual_prices()
 
     results = {}
 
@@ -672,16 +674,20 @@ def report_(buchfink_db: BuchfinkDB, keyword, external, report, year):
 
     for _report in reports:
         name = str(_report.name)
-        results[name] = run_report(buchfink_db, accounts, _report)
+        if not render_only:
+            results[name] = run_report(buchfink_db, accounts, _report)
+        if _report.template:
+            render_report(buchfink_db, _report)
 
-    table = []
-    for report_name, result in results.items():
-        table.append([
-            report_name,
-            result['overview']['total_profit_loss'],
-            result['overview']['total_taxable_profit_loss']
-        ])
-    print(tabulate(table, headers=['Report', 'Profit/Loss', 'Taxable P/L']))
+    if results:
+        table = []
+        for report_name, result in results.items():
+            table.append([
+                report_name,
+                result['overview']['total_profit_loss'],
+                result['overview']['total_taxable_profit_loss']
+            ])
+        print(tabulate(table, headers=['Report', 'Profit/Loss', 'Taxable P/L']))
 
 
 @buchfink.command()

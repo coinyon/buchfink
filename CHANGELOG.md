@@ -2,6 +2,7 @@ master
 ------
 
 * Add NFT support
+* Ability to rerender report template without running report
 
 0.0.12
 ------
