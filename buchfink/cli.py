@@ -640,7 +640,8 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
         help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--report', type=str, default=None, help='Filter by keyword in report name')
-@click.option('--render-only', is_flag=True, help='Do not actually run the report but only render the template')
+@click.option('--render-only', is_flag=True,
+        help='Do not actually run the report but only render the template')
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
 @with_buchfink_db
