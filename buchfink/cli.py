@@ -34,7 +34,7 @@ from .classification import classify_tx
 from .importers import zerion_csv
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
-from .report import run_report, render_report
+from .report import render_report, run_report
 
 logger = logging.getLogger(__name__)
 
