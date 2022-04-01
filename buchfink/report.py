@@ -57,7 +57,6 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
         if account.account_type == "ethereum":
             tx_tuples = buchfink_db.get_eth_transactions(account)
             all_transactions.extend([tx_tuple[0] for tx_tuple in tx_tuples])
-        buchfink_db.get_eth_transactions
 
     logger.info('Collected %d trades / %d actions from %d exchange account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
