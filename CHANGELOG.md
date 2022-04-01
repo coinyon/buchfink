@@ -3,6 +3,7 @@ master
 
 * Add NFT support
 * Ability to rerender report template without running report
+* Add Ethereum gas costs to tax reports
 
 0.0.12
 ------
