@@ -18,7 +18,6 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.errors import NoPriceForGivenTimestamp
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.types import ChecksumEthAddress
-from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 
 from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade
