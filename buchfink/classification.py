@@ -39,6 +39,7 @@ BORROW = '0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80'
 XFLOBBYEXIT = '0xa6b19fa7f41317a186e1d58e9d81f86a52f1102b6bce10b4eca83f37aaa58468'
 REWARDS_CLAIMED = '0xfc30cddea38e2bf4d6ea7d3f9ed3b6ad7f176419f4963bd81318067a4aee73fe'
 WITHDRAWN = '0x6b4651e8f4162f82274a25e57a29f7ed9156d17078e76dd4d05f04ba08831aa4'
+MINT = '0xce84afc26010d49051ae429b96ad50c0ef3a958a5c5bdc44c80e090dee642dbe'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -92,6 +93,7 @@ ADDR_BADGER = '0x3472A5A71965499acd81997a54BBA8D852C6E53d'
 ADDR_UMA = '0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828'
 ADDR_ENS = '0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72'
 ADDR_XDAI_EASYSTAKING = '0xecbCd6D7264e3c9eAc24C7130Ed3cd2B38F5A7AD'
+ADDR_HEDRON = '0x3819f64f282bf135d62168C1e513280dAF905e06'
 
 
 def classify_tx(
@@ -545,6 +547,36 @@ def classify_tx(
                     notes='dYdX retroactive airdrop',
                     link=txn.tx_hash.hex()
                 )]
+
+        if event.topics[0] == MINT and same_addr(event.address, ADDR_HEDRON):
+            asset = symbol_to_asset_or_token('_ceth_' + ADDR_HEDRON)
+
+            # Find another TRANSFER
+            for ev2 in receipt.logs:
+                # Quick hack to make the classication work. Will refactor later.
+                ev2.data = '0x' + hex_or_bytes_to_str(ev2.data)  # type: ignore
+                ev2.address = str(ev2.address).lower()  # type: ignore
+                for i, topic in enumerate(ev2.topics):
+                    ev2.topics[i] = '0x' + hex_or_bytes_to_str(topic)  # type: ignore
+                if ev2.topics[0] == TRANSFER and \
+                        same_addr(ev2.address, ADDR_HEDRON) and \
+                        hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address):
+
+                    amount = hexstr_to_int(ev2.data[2:])
+                    # We will classify those as GIFT instead of purchase because
+                    # we already paid earlier
+                    actions += [LedgerAction(
+                        identifier=None,
+                        location='',
+                        action_type=LedgerActionType.AIRDROP,
+                        amount=FVal(amount) / FVal(1e8),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='HEDRON airdrop mint',
+                        link=txn.tx_hash.hex()
+                    )]
 
         if event.topics[0] == HUNT and same_addr(event.address, ADDR_BLACKPOOL_AIRDROP):
             asset = symbol_to_asset_or_token('_ceth_0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da')
