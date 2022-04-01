@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from functools import reduce
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
@@ -14,6 +14,8 @@ from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.types import AssetType
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
+from rotkehlchen.chain.ethereum.transactions import (
+    EthTransactions, ETHTransactionsFilterQuery)
 from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
@@ -41,13 +43,14 @@ from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.types import (BlockchainAccountData, ChecksumEthAddress,
-                               ExternalService, ExternalServiceApiCredentials,
-                               FVal, Location, Price, SupportedBlockchain,
-                               Timestamp)
+                               ExternalService,
+                               ExternalServiceApiCredentials, FVal, Location,
+                               Price, SupportedBlockchain, Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
+from rotkehlchen.utils.misc import ts_now
 
 from buchfink.datatypes import (NFT, ActionType, Asset, Balance, BalanceSheet,
-                                LedgerAction, Trade)
+                                LedgerAction, Trade, EthereumTransaction, EthereumTxReceipt)
 from buchfink.models import (Account, Config, ExchangeAccountConfig,
                              HistoricalPriceConfig, ManualAccountConfig,
                              ReportConfig)
@@ -187,6 +190,36 @@ class BuchfinkDB(DBHandler):
 
     def get_ignored_assets(self):
         return []
+
+    def get_eth_transactions(self, account: Account, with_receipts: bool = False) \
+            -> List[Tuple[EthereumTransaction, Optional[EthereumTxReceipt]]]:
+        address = cast(ChecksumEthAddress, account.address)
+
+        now = ts_now()
+
+        eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
+
+        eth_transactions.single_address_query_transactions(
+                address,
+                start_ts=Timestamp(0),
+                end_ts=now
+        )
+
+        txs, txs_total_count = eth_transactions.query(
+                ETHTransactionsFilterQuery.make(addresses=[address]),
+                only_cache=True
+        )
+
+        assert len(txs) == txs_total_count
+
+        result = []
+        for tx in txs:
+            receipt = None
+            if with_receipts:
+                receipt = eth_transactions.get_or_query_transaction_receipt(tx.tx_hash)
+            result.append([tx, receipt])
+
+        return result
 
     def get_external_service_credentials(
             self,

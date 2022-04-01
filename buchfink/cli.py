@@ -325,28 +325,9 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
 
             if fetch_actions_for_this_account:
                 logger.info('Analyzing ethereum transactions for %s', name)
-                manager = buchfink_db.get_chain_manager(account)
-                address = cast(ChecksumEthAddress, account.address)
+                txs_and_receipts = buchfink_db.get_eth_transactions(account, with_receipts=True)
 
-                eth_transactions = EthTransactions(
-                        ethereum=buchfink_db.ethereum_manager,
-                        database=buchfink_db
-                )
-
-                eth_transactions.single_address_query_transactions(
-                        address,
-                        start_ts=Timestamp(0),
-                        end_ts=now
-                )
-
-                txs, _ = eth_transactions.query(
-                        ETHTransactionsFilterQuery.make(addresses=[address]),
-                        only_cache=True
-                )
-
-                for txn in txs:
-                    receipt = eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
-
+                for (txn, receipt) in txs_and_receipts:
                     if receipt is None:
                         raise ValueError('Could not get receipt')
 

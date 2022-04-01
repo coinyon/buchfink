@@ -24,6 +24,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     num_matched_accounts = 0
     all_trades = []
     all_actions = []
+    all_transactions = []
 
     root_logger = logging.getLogger('')
     formatter = logging.Formatter('%(levelname)s: %(message)s')
@@ -53,6 +54,10 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
         num_matched_accounts += 1
         all_trades.extend(buchfink_db.get_local_trades_for_account(account))
         all_actions.extend(buchfink_db.get_local_ledger_actions_for_account(account))
+        if account.account_type == "ethereum":
+            tx_tuples = buchfink_db.get_eth_transactions(account)
+            all_transactions.extend([tx_tuple[0] for tx_tuple in tx_tuples])
+        buchfink_db.get_eth_transactions
 
     logger.info('Collected %d trades / %d actions from %d exchange account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
@@ -64,7 +69,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             all_trades,
             [],
             [],
-            [],
+            all_transactions,
             [],
             all_actions,
             []

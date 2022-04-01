@@ -8,5 +8,5 @@ from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.chain.ethereum.structures import EthereumTxReceipt
 from rotkehlchen.exchanges.data_structures import Trade
 from rotkehlchen.fval import FVal
-from rotkehlchen.types import TradeType, Timestamp
+from rotkehlchen.types import TradeType, Timestamp, EthereumTransaction
 from rotkehlchen.chain.ethereum.modules.nfts import NFT
