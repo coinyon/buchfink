@@ -213,11 +213,11 @@ class BuchfinkDB(DBHandler):
         assert len(txs) == txs_total_count
 
         result = []
-        for tx in txs:
+        for txn in txs:
             receipt = None
             if with_receipts:
-                receipt = eth_transactions.get_or_query_transaction_receipt(tx.tx_hash)
-            result.append([tx, receipt])
+                receipt = eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
+            result.append([txn, receipt])
 
         return result
 

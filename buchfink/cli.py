@@ -8,14 +8,12 @@ from datetime import datetime
 from functools import update_wrapper
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, List, Optional, Tuple, Union
 
 import click
 import coloredlogs
 import yaml
 from rotkehlchen.chain.ethereum.trades import AMMTrade
-from rotkehlchen.chain.ethereum.transactions import (
-    EthTransactions, ETHTransactionsFilterQuery)
 from rotkehlchen.constants import ZERO
 from rotkehlchen.errors import NoPriceForGivenTimestamp
 from rotkehlchen.history.price import PriceHistorian
@@ -277,7 +275,6 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
     "Fetch trades for configured accounts"
 
     buchfink_db.perform_assets_updates()
-    now = ts_now()
     fetch_limited = fetch_actions or fetch_balances or fetch_trades or fetch_nfts
     error_occured = False
 
