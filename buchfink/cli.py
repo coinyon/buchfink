@@ -771,9 +771,10 @@ def quote(buchfink_db: BuchfinkDB, asset: Tuple[str], amount: float,
             )
         else:
             asset_usd = FVal(buchfink_db.inquirer.find_usd_price(asset_))
-        click.echo('{} {} = {} {}'.format(
+        click.echo('{} {} ({}) = {} {}'.format(
                 click.style(f'{amount}', fg='white'),
                 click.style(asset_.symbol, fg='green'),
+                click.style(asset_.name, fg='white'),
                 click.style(f'{FVal(amount) * asset_usd / base_in_usd}', fg='white'),
                 click.style(base_asset.symbol, fg='green')
         ))
