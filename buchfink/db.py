@@ -217,7 +217,7 @@ class BuchfinkDB(DBHandler):
             receipt = None
             if with_receipts:
                 receipt = eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
-            result.append([txn, receipt])
+            result.append((txn, receipt))
 
         return result
 
