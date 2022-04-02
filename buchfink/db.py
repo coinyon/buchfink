@@ -191,11 +191,28 @@ class BuchfinkDB(DBHandler):
     def get_ignored_assets(self):
         return []
 
+    def sync_accounts(self, accounts: List[Account]) -> None:
+        for account in accounts:
+            if account.account_type != "ethereum":
+                continue
+
+            try:
+                assert account.address is not None
+                self.add_blockchain_accounts(SupportedBlockchain.ETHEREUM, [
+                    BlockchainAccountData(address=account.address, label=account.name, tags=[])
+                ])
+            except InputError:
+                pass
+
     def get_eth_transactions(self, account: Account, with_receipts: bool = False) \
             -> List[Tuple[EthereumTransaction, Optional[EthereumTxReceipt]]]:
+
+        assert account.account_type == "ethereum"
         address = cast(ChecksumEthAddress, account.address)
 
         now = ts_now()
+
+        self.sync_accounts([account])
 
         eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
 
@@ -347,14 +364,7 @@ class BuchfinkDB(DBHandler):
 
         logger.debug('Creating ChainManager with modules: %s', eth_modules)
 
-        # Make sure the account is added to the DB
-        try:
-            assert account.address is not None
-            self.add_blockchain_accounts(SupportedBlockchain.ETHEREUM, [
-                BlockchainAccountData(address=account.address, label=account.name, tags=[])
-            ])
-        except InputError:
-            pass
+        self.sync_accounts([account])
 
         manager = ChainManager(
             database=self,
