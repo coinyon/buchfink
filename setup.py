@@ -21,7 +21,7 @@ install_requirements = list(set(
     if not requirement.lstrip().startswith('#')
 ))
 
-version = '0.0.12'
+version = '0.0.13'
 
 setup(
     name='buchfink',

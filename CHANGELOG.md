@@ -1,9 +1,13 @@
 master
 ------
 
+0.0.13
+------
+
 * Add NFT support
 * Ability to rerender report template without running report
 * Add Ethereum gas costs to tax reports
+* Requires Python 3.9 now due to upstream dependency
 
 0.0.12
 ------
