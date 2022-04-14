@@ -12,6 +12,7 @@ import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.types import AssetType
+from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import (
@@ -43,14 +44,15 @@ from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.types import (BlockchainAccountData, ChecksumEthAddress,
-                               ExternalService,
-                               ExternalServiceApiCredentials, FVal, Location,
-                               Price, SupportedBlockchain, Timestamp)
+                               ExternalService, ExternalServiceApiCredentials,
+                               FVal, Location, Price, SupportedBlockchain,
+                               Timestamp)
 from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
 
 from buchfink.datatypes import (NFT, ActionType, Asset, Balance, BalanceSheet,
-                                LedgerAction, Trade, EthereumTransaction, EthereumTxReceipt)
+                                EthereumTransaction, EthereumTxReceipt,
+                                LedgerAction, Trade)
 from buchfink.models import (Account, Config, ExchangeAccountConfig,
                              HistoricalPriceConfig, ManualAccountConfig,
                              ReportConfig)
@@ -107,6 +109,7 @@ class BuchfinkDB(DBHandler):
         self.last_write_ts: Optional[Timestamp] = None
 
         self._amm_swaps = []  # type: List[AMMSwap]
+        self.msg_aggregator = MessagesAggregator()
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko()
         self.historian = PriceHistorian(
@@ -118,7 +121,6 @@ class BuchfinkDB(DBHandler):
                 self.cryptocompare,
                 self.coingecko
             )
-        self.msg_aggregator = MessagesAggregator()
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
         # Initialize blockchain querying modules
@@ -134,6 +136,11 @@ class BuchfinkDB(DBHandler):
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
             connect_at_start=[]
+        )
+        self.evm_tx_decoder = EVMTransactionDecoder(
+            database=self,
+            ethereum_manager=self.ethereum_manager,
+            msg_aggregator=self.msg_aggregator,
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
@@ -254,7 +261,7 @@ class BuchfinkDB(DBHandler):
         return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
     def get_accountant(self) -> Accountant:
-        return Accountant(self, None, self.msg_aggregator, True, premium=None)
+        return Accountant(self, self.msg_aggregator, self.evm_tx_decoder, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
         accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[])  # type: dict
