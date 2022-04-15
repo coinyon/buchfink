@@ -61,7 +61,9 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     logger.info('Collected %d trades / %d actions from %d exchange account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
 
-    timestamp = lambda act: act.get_timestamp()
+    def timestamp(act):
+        return act.get_timestamp()
+
     all_events = sorted(all_trades + all_transactions + all_actions, key=timestamp)
     accountant = buchfink_db.get_accountant()
     report_id = accountant.process_history(start_ts, end_ts, all_events)
