@@ -24,7 +24,7 @@ def test_bullrun_config(tmp_path):
 
     result = run_report(buchfink_db, buchfink_db.get_all_accounts(), report)
 
-    assert result['overview']['total_taxable_profit_loss'] == '15000'
+    assert result['overview']['trade']['taxable'] == '15000'
 
 
 def test_bullrun_report_template(tmp_path):
@@ -46,7 +46,7 @@ def test_bullrun_report_template(tmp_path):
 
     result = run_report(buchfink_db, buchfink_db.get_all_accounts(), report)
 
-    assert result['overview']['total_taxable_profit_loss'] == '15000'
+    assert result['overview']['trade']['taxable'] == '15000'
 
 
 def test_manual_price(tmp_path):
@@ -75,4 +75,4 @@ def test_manual_price(tmp_path):
     # Even we made 30 USD, only 20 is taxable, because
     # price was 0.01 at buy (see acc_manual_price.yaml)
     # and 0.03 at sell (coingecko)
-    assert float(result['overview']['total_taxable_profit_loss']) == 20.0
+    assert float(result['overview']['trade']['taxable']) == 20.0

@@ -20,9 +20,7 @@ def test_bullrun_full_taxes(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['general_trade_profit_loss'] == '15000'
-    assert result['overview']['taxable_trade_profit_loss'] == '15000'
-    assert result['overview']['total_taxable_profit_loss'] == '15000'
+    assert result['overview']['trade']['taxable'] == '15000'
 
 
 def test_bullrun_no_taxes(tmp_path):
@@ -40,9 +38,8 @@ def test_bullrun_no_taxes(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['general_trade_profit_loss'] == '7000'
-    assert result['overview']['taxable_trade_profit_loss'] == '0'
-    assert result['overview']['total_taxable_profit_loss'] == '0'
+    assert result['overview']['trade']['taxable'] == '0'
+    assert result['overview']['trade']['free'] == '7000'
 
 
 def test_ledger_actions_income(tmp_path):
@@ -60,9 +57,7 @@ def test_ledger_actions_income(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['general_trade_profit_loss'] == '2092.35'
-    assert result['overview']['taxable_trade_profit_loss'] == '2092.35'
-    assert result['overview']['total_taxable_profit_loss'] == '3000.00'
+    assert result['overview']['trade']['taxable'] == '2092.35'
 
 
 def test_ledger_actions_airdrop(tmp_path):
@@ -79,9 +74,7 @@ def test_ledger_actions_airdrop(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['general_trade_profit_loss'] == '2092.35'
-    assert result['overview']['taxable_trade_profit_loss'] == '2092.35'
-    assert result['overview']['total_taxable_profit_loss'] == '2092.35'
+    assert result['overview']['trade']['taxable'] == '2092.35'
 
 
 def test_ledger_actions_gift(tmp_path):
@@ -94,12 +87,9 @@ def test_ledger_actions_gift(tmp_path):
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)
     assert len(ledger_actions) == 1
-
     assert len(trades) == 1
 
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['general_trade_profit_loss'] == '2092.35'
-    assert result['overview']['taxable_trade_profit_loss'] == '2092.35'
-    assert result['overview']['total_taxable_profit_loss'] == '2092.35'
+    assert result['overview']['trade']['taxable'] == '2092.35'

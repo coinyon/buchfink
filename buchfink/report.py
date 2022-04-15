@@ -61,38 +61,31 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     logger.info('Collected %d trades / %d actions from %d exchange account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
 
+    timestamp = lambda act: act.get_timestamp()
+    all_events = sorted(all_trades + all_transactions + all_actions, key=timestamp)
     accountant = buchfink_db.get_accountant()
-    report_id = accountant.process_history(
-            start_ts,
-            end_ts,
-            all_trades,
-            [],
-            [],
-            all_transactions,
-            [],
-            all_actions,
-            []
-        )
+    report_id = accountant.process_history(start_ts, end_ts, all_events)
 
     root_logger.removeHandler(file_handler)
     root_logger.removeHandler(error_handler)
 
-    accountant.csvexporter.create_files(buchfink_db.reports_directory / Path(name))
+    accountant.export(buchfink_db.reports_directory / Path(name))
 
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
     results, _ = dbpnl.get_reports(report_id=report_id, with_limit=False)
     overview_data = results[0]
 
+    overview_data.pop('identifier')
+    overview_data.pop('size_on_disk')
+
     with (folder / 'report.yaml').open('w') as report_file:
-        yaml.dump({'overview': overview_data}, stream=report_file)
+        yaml.dump(overview_data, stream=report_file)
 
     logger.info('Report information has been written to: %s',
             buchfink_db.reports_directory / Path(name)
     )
 
-    return {
-        'overview': overview_data
-    }
+    return overview_data
 
 
 def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
