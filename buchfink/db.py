@@ -22,7 +22,7 @@ from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.errors import InputError, UnknownAsset
-from rotkehlchen.exchanges import ExchangeInterface
+from rotkehlchen.exchanges.exchange import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
