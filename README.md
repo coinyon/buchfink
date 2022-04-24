@@ -1,5 +1,4 @@
-Buchfink - Plaintext Crypto Portfolio
-=====================================
+# Buchfink - Plaintext Crypto Portfolio
 
 ![Tests](https://github.com/coinyon/buchfink/workflows/Tests/badge.svg)
 
