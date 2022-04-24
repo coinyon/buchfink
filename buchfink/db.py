@@ -14,6 +14,9 @@ from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.types import AssetType
 from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
+from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
+from rotkehlchen.chain.ethereum.oracles.uniswap import (UniswapV2Oracle,
+                                                        UniswapV3Oracle)
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import (
     EthTransactions, ETHTransactionsFilterQuery)
@@ -143,6 +146,14 @@ class BuchfinkDB(DBHandler):
             msg_aggregator=self.msg_aggregator,
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
+        uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_manager)
+        uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_manager)
+        saddle_oracle = SaddleOracle(self.ethereum_manager)
+        Inquirer().add_defi_oracles(
+            uniswap_v2=uniswap_v2_oracle,
+            uniswap_v3=uniswap_v3_oracle,
+            saddle=saddle_oracle,
+        )
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
