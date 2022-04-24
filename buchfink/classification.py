@@ -2,11 +2,9 @@ import logging
 from typing import List
 
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
-from rotkehlchen.utils.misc import (hex_or_bytes_to_address,
-                                    hex_or_bytes_to_str, hexstr_to_int)
+from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_str, hexstr_to_int
 
-from .datatypes import (EthereumTransaction, EthereumTxReceipt, FVal,
-                        LedgerAction, LedgerActionType)
+from .datatypes import EthereumTransaction, EthereumTxReceipt, FVal, LedgerAction, LedgerActionType
 from .models import Account
 from .serialization import serialize_timestamp
 

@@ -21,10 +21,14 @@ from tabulate import tabulate
 from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
-from buchfink.serialization import (deserialize_ledger_action_type,
-                                    deserialize_timestamp,
-                                    serialize_ledger_actions, serialize_nfts,
-                                    serialize_timestamp, serialize_trades)
+from buchfink.serialization import (
+    deserialize_ledger_action_type,
+    deserialize_timestamp,
+    serialize_ledger_actions,
+    serialize_nfts,
+    serialize_timestamp,
+    serialize_trades
+)
 
 from .classification import classify_tx
 from .importers import zerion_csv

@@ -15,11 +15,9 @@ from rotkehlchen.assets.types import AssetType
 from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
-from rotkehlchen.chain.ethereum.oracles.uniswap import (UniswapV2Oracle,
-                                                        UniswapV3Oracle)
+from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.trades import AMMSwap
-from rotkehlchen.chain.ethereum.transactions import (
-    EthTransactions, ETHTransactionsFilterQuery)
+from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
@@ -45,25 +43,49 @@ from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
-from rotkehlchen.types import (BlockchainAccountData, ChecksumEthAddress,
-                               ExternalService, ExternalServiceApiCredentials,
-                               FVal, Location, Price, SupportedBlockchain,
-                               Timestamp)
+from rotkehlchen.types import (
+    BlockchainAccountData,
+    ChecksumEthAddress,
+    ExternalService,
+    ExternalServiceApiCredentials,
+    FVal,
+    Location,
+    Price,
+    SupportedBlockchain,
+    Timestamp
+)
 from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
 
-from buchfink.datatypes import (NFT, ActionType, Asset, Balance, BalanceSheet,
-                                EthereumTransaction, EthereumTxReceipt,
-                                LedgerAction, Trade)
+from buchfink.datatypes import (
+    NFT,
+    ActionType,
+    Asset,
+    Balance,
+    BalanceSheet,
+    EthereumTransaction,
+    EthereumTxReceipt,
+    LedgerAction,
+    Trade
+)
 from buchfink.exceptions import InputError, UnknownAsset
-from buchfink.models import (Account, Config, ExchangeAccountConfig,
-                             HistoricalPriceConfig, ManualAccountConfig,
-                             ReportConfig)
+from buchfink.models import (
+    Account,
+    Config,
+    ExchangeAccountConfig,
+    HistoricalPriceConfig,
+    ManualAccountConfig,
+    ReportConfig
+)
 from buchfink.models.account import accounts_from_config
-from buchfink.serialization import (deserialize_asset, deserialize_balance,
-                                    deserialize_ethereum_token,
-                                    deserialize_ledger_action,
-                                    deserialize_trade, serialize_balances)
+from buchfink.serialization import (
+    deserialize_asset,
+    deserialize_balance,
+    deserialize_ethereum_token,
+    deserialize_ledger_action,
+    deserialize_trade,
+    serialize_balances
+)
 
 logger = logging.getLogger(__name__)
 

@@ -8,9 +8,20 @@ import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
 
-from buchfink.datatypes import (NFT, AMMTrade, Asset, Balance, BalanceSheet,
-                                EthereumToken, FVal, LedgerAction,
-                                LedgerActionType, Timestamp, Trade, TradeType)
+from buchfink.datatypes import (
+    NFT,
+    AMMTrade,
+    Asset,
+    Balance,
+    BalanceSheet,
+    EthereumToken,
+    FVal,
+    LedgerAction,
+    LedgerActionType,
+    Timestamp,
+    Trade,
+    TradeType
+)
 from buchfink.exceptions import UnknownAsset
 
 

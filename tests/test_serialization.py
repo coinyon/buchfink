@@ -6,15 +6,19 @@ from decimal import Decimal
 import pytest
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.globaldb import GlobalDBHandler
-from rotkehlchen.serialization.deserialize import \
-    deserialize_timestamp_from_date
+from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
 from buchfink.datatypes import Asset, Balance, FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import (deserialize_asset, deserialize_balance,
-                                    deserialize_trade, serialize_asset,
-                                    serialize_balance, serialize_decimal,
-                                    serialize_trade)
+from buchfink.serialization import (
+    deserialize_asset,
+    deserialize_balance,
+    deserialize_trade,
+    serialize_asset,
+    serialize_balance,
+    serialize_decimal,
+    serialize_trade
+)
 
 
 @pytest.fixture
