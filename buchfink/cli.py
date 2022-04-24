@@ -426,10 +426,15 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                 else:
                     logger.warning('Removing duplicate trade: %s', trade)
 
-            with open(buchfink_db.trades_directory / (name + ".yaml"), "w") as yaml_file:
-                yaml.dump({
-                    "trades": serialize_trades(unique_trades)
-                }, stream=yaml_file, sort_keys=True)
+            trades_path = buchfink_db.trades_directory / (name + ".yaml")
+            if trades:
+                with open(trades_path, "w") as yaml_file:
+                    yaml.dump({
+                        "trades": serialize_trades(unique_trades)
+                    }, stream=yaml_file, sort_keys=True)
+            elif os.path.exists(trades_path):
+                # If we have no trades, make sure that the according yaml does not exist
+                os.unlink(trades_path)
 
         if fetch_balances_for_this_account:
 
