@@ -15,12 +15,12 @@ import coloredlogs
 import yaml
 from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.constants import ZERO
-from rotkehlchen.errors import NoPriceForGivenTimestamp
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 
 from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
+from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (deserialize_ledger_action_type,
                                     deserialize_timestamp,
                                     serialize_ledger_actions, serialize_nfts,

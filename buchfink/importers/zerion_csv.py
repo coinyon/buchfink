@@ -2,13 +2,13 @@
 "Load Zerion export CSV and output trades"
 import logging
 import os.path
-from typing import List, Any
+from typing import Any, List
 
 import pandas as pd
-from rotkehlchen.errors import UnknownAsset
 
 from buchfink.datatypes import FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
+from buchfink.exceptions import UnknownAsset
 from buchfink.models import Account
 from buchfink.serialization import deserialize_timestamp
 

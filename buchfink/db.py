@@ -21,14 +21,13 @@ from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
-from rotkehlchen.errors import InputError, UnknownAsset
-from rotkehlchen.exchanges.exchange import ExchangeInterface
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
 from rotkehlchen.exchanges.bittrex import Bittrex
 from rotkehlchen.exchanges.coinbase import Coinbase
 from rotkehlchen.exchanges.coinbasepro import Coinbasepro
+from rotkehlchen.exchanges.exchange import ExchangeInterface
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
@@ -53,6 +52,7 @@ from rotkehlchen.utils.misc import ts_now
 from buchfink.datatypes import (NFT, ActionType, Asset, Balance, BalanceSheet,
                                 EthereumTransaction, EthereumTxReceipt,
                                 LedgerAction, Trade)
+from buchfink.exceptions import InputError, UnknownAsset
 from buchfink.models import (Account, Config, ExchangeAccountConfig,
                              HistoricalPriceConfig, ManualAccountConfig,
                              ReportConfig)
