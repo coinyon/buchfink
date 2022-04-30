@@ -99,7 +99,8 @@ def init(directory):
 
 @buchfink.command('list')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
+@click.option('--type', '-t', 'account_type', type=str, default=None,
+        help='Filter by account type')
 @click.option('--output', '-o', type=str, default=None, help='Output field')
 @with_buchfink_db
 def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
@@ -266,7 +267,8 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
+@click.option('--type', '-t', 'account_type', type=str, default=None,
+        help='Filter by account type')
 @click.option('--actions', 'fetch_actions', is_flag=True, help='Fetch actions only')
 @click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
 @click.option('--nfts', 'fetch_nfts', is_flag=True, help='Fetch NFT balances only')
@@ -799,6 +801,48 @@ def cache(buchfink_db: BuchfinkDB, asset: Tuple[str], base_asset_: Optional[str]
     for symbol in asset:
         asset_ = buchfink_db.get_asset_by_symbol(symbol)
         buchfink_db.cryptocompare.create_cache(asset_, base_asset, False)
+
+
+@buchfink.command('explore')
+@click.option('--external', '-e', type=str, multiple=True,
+        help='Use adhoc / external account')
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
+@with_buchfink_db
+def explore(buchfink_db: BuchfinkDB, keyword, account_type, external):
+    "Show block explorer for account"
+
+    if external:
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
+    else:
+        accounts = buchfink_db.get_all_accounts()
+
+    # TODO: This should move to BuchfinkDB.get_accounts()
+    if keyword is not None:
+        if keyword.startswith('/') and keyword.endswith('/'):
+            keyword_re = re.compile(keyword[1:-1])
+            accounts = [acc for acc in accounts if keyword_re.search(acc.name)]
+        else:
+            accounts = [acc for acc in accounts if keyword in acc.name]
+
+    logger.info(
+            'Collected %d account(s): %s',
+            len(accounts),
+            ', '.join([acc.name for acc in accounts])
+        )
+
+    if len(accounts) == 0:
+        click.echo(click.style('No accounts selected', fg='red'))
+        sys.exit(1)
+    elif len(accounts) > 1:
+        click.echo(click.style('More than one account selected', fg='red'))
+        sys.exit(1)
+    else:
+        account = accounts[0]
+        import webbrowser
+        if account.account_type == "ethereum":
+            webbrowser.open('https://etherscan.io/address/{0}'.format(account.address))
+
 
 
 if __name__ == '__main__':

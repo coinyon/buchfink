@@ -180,7 +180,9 @@ def classify_tx(
         if event.topics[0] == CLAIMED_3 and same_addr(event.address, ADDR_BADGER_TREE):
             if hexstr_to_int(event.topics[2]) == hexstr_to_int(ADDR_BADGER):
                 amount = hexstr_to_int(event.data[2:66])
-                token = symbol_to_asset_or_token('_ceth_0x3472a5a71965499acd81997a54bba8d852c6e53d')
+                token = symbol_to_asset_or_token(
+                    '_ceth_0x3472a5a71965499acd81997a54bba8d852c6e53d'
+                )
                 actions += [LedgerAction(
                     identifier=None,
                     location='',
