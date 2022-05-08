@@ -112,19 +112,25 @@ class BuchfinkDB(DBHandler):
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
         self._active_eth_address = None  # type: Optional[ChecksumEthAddress]
 
+        # Buchfink directories, these include the YAML storage and the reports
+        # etc. Basically these are the ones you want version-controlled.
         self.reports_directory = self.data_directory / "reports"
         self.trades_directory = self.data_directory / "trades"
-        self.cache_directory = self.data_directory / "cache"
         self.actions_directory = self.data_directory / "actions"
         self.balances_directory = self.data_directory / "balances"
         self.annotations_directory = self.data_directory / "annotations"
-        self.user_data_dir = self.data_directory / "user"
-
         self.reports_directory.mkdir(exist_ok=True)
         self.trades_directory.mkdir(exist_ok=True)
-        self.balances_directory.mkdir(exist_ok=True)
-        self.cache_directory.mkdir(exist_ok=True)
         self.actions_directory.mkdir(exist_ok=True)
+        self.balances_directory.mkdir(exist_ok=True)
+        self.annotations_directory.mkdir(exist_ok=True)
+
+        # Rotki files, these are treated as a cache from Buchfinks perspective.
+        # You should be able to delete them and have them automatically rebuild
+        # by Buchfink. Ignore them in version control.
+        self.cache_directory = self.data_directory / "cache"
+        self.user_data_dir = self.cache_directory / "user"
+        self.cache_directory.mkdir(exist_ok=True)
         self.user_data_dir.mkdir(exist_ok=True)
         (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
         (self.cache_directory / 'history').mkdir(exist_ok=True)
