@@ -12,6 +12,7 @@ import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.types import AssetType
+from rotkehlchen.chain.ethereum.accounting.aggregator import EVMAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
@@ -168,9 +169,11 @@ class BuchfinkDB(DBHandler):
             greenlet_manager=self.greenlet_manager,
             connect_at_start=[]
         )
+        self.eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
         self.evm_tx_decoder = EVMTransactionDecoder(
             database=self,
             ethereum_manager=self.ethereum_manager,
+            eth_transactions=self.eth_transactions,
             msg_aggregator=self.msg_aggregator,
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
@@ -260,8 +263,6 @@ class BuchfinkDB(DBHandler):
 
         self.sync_accounts([account])
 
-        eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
-
         eth_transactions.single_address_query_transactions(
                 address,
                 start_ts=Timestamp(0),
@@ -300,7 +301,13 @@ class BuchfinkDB(DBHandler):
         return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
     def get_accountant(self) -> Accountant:
-        return Accountant(self, self.msg_aggregator, self.evm_tx_decoder, premium=None)
+
+        evm_accounting_aggregator = EVMAccountingAggregator(
+            ethereum_manager=self.ethereum_manager,
+            msg_aggregator=self.msg_aggregator,
+        )
+
+        return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
         accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[])  # type: dict
