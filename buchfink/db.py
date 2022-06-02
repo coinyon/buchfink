@@ -129,7 +129,7 @@ class BuchfinkDB(DBHandler):
         # Rotki files, these are treated as a cache from Buchfinks perspective.
         # You should be able to delete them and have them automatically rebuild
         # by Buchfink. Ignore them in version control.
-        self.cache_directory = self.data_directory / "cache"
+        self.cache_directory = self.data_directory / ".buchfink"
         self.user_data_dir = self.cache_directory / "user"
         self.cache_directory.mkdir(exist_ok=True)
         self.user_data_dir.mkdir(exist_ok=True)
