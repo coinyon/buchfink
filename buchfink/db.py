@@ -263,13 +263,13 @@ class BuchfinkDB(DBHandler):
 
         self.sync_accounts([account])
 
-        eth_transactions.single_address_query_transactions(
+        self.eth_transactions.single_address_query_transactions(
                 address,
                 start_ts=Timestamp(0),
                 end_ts=now
         )
 
-        txs, txs_total_count = eth_transactions.query(
+        txs, txs_total_count = self.eth_transactions.query(
                 ETHTransactionsFilterQuery.make(addresses=[address]),
                 only_cache=True
         )
@@ -280,7 +280,7 @@ class BuchfinkDB(DBHandler):
         for txn in txs:
             receipt = None
             if with_receipts:
-                receipt = eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
+                receipt = self.eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
             result.append((txn, receipt))
 
         return result
