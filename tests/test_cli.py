@@ -47,11 +47,11 @@ def test_second_init_should_fail():
     runner = CliRunner()
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
-        result = runner.invoke(buchfink, ['init'])
+        result = runner.invoke(buchfink, ['init'], catch_exceptions=False)
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
-        result = runner.invoke(buchfink, ['init'])
+        result = runner.invoke(buchfink, ['init'], catch_exceptions=False)
         logger.warning('output of %s: %s', 'init', result.output)
         assert result.exit_code == 1
 
