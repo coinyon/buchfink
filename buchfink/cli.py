@@ -4,6 +4,7 @@ import os.path
 import re
 import shutil
 import sys
+import webbrowser
 from datetime import datetime
 from functools import update_wrapper
 from operator import itemgetter
@@ -50,7 +51,7 @@ def with_buchfink_db(func):
             ctx.invoke(func, buchfink_db, *args, **kwargs)
         finally:
             # Explicitly close connections
-            buchfink_db.__del__()
+            buchfink_db.__del__()  # pylint: disable=unnecessary-dunder-call
     return update_wrapper(new_func, func)
 
 
@@ -94,7 +95,7 @@ def init(directory):
     )
 
     # Explicitly close connections
-    buchfink_db.__del__()
+    buchfink_db.__del__()  # pylint: disable=unnecessary-dunder-call
 
 
 @buchfink.command('list')
@@ -807,9 +808,8 @@ def cache(buchfink_db: BuchfinkDB, asset: Tuple[str], base_asset_: Optional[str]
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @with_buchfink_db
-def explore(buchfink_db: BuchfinkDB, keyword, account_type, external):
+def explore(buchfink_db: BuchfinkDB, keyword, external):
     "Show block explorer for account"
 
     if external:
@@ -839,7 +839,7 @@ def explore(buchfink_db: BuchfinkDB, keyword, account_type, external):
         sys.exit(1)
     else:
         account = accounts[0]
-        import webbrowser
+
         if account.account_type == "ethereum":
             webbrowser.open('https://etherscan.io/address/{0}'.format(account.address))
 
