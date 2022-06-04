@@ -659,11 +659,11 @@ class BuchfinkDB(DBHandler):
 
                 # This could be more involved
                 asset_dict = asset.to_dict()
-                if eth_token.coingecko and not (eth_token.coingecko == asset_dict['coingecko']):
+                if eth_token.coingecko and not eth_token.coingecko == asset_dict['coingecko']:
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_ethereum_token(eth_token)
 
-                if eth_token.decimals and not (eth_token.decimals == asset_dict['decimals']):
+                if eth_token.decimals and not eth_token.decimals == asset_dict['decimals']:
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_ethereum_token(eth_token)
 
