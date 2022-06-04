@@ -844,6 +844,5 @@ def explore(buchfink_db: BuchfinkDB, keyword, external):
             webbrowser.open('https://etherscan.io/address/{0}'.format(account.address))
 
 
-
 if __name__ == '__main__':
     buchfink(obj={})  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter
