@@ -162,13 +162,20 @@ class BuchfinkDB(DBHandler):
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
+        eth_rpc_endpoint = self.get_eth_rpc_endpoint()
         self.ethereum_manager = EthereumManager(
-            ethrpc_endpoint=self.get_eth_rpc_endpoint(),
+            ethrpc_endpoint=eth_rpc_endpoint,
             etherscan=self.etherscan,
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
             connect_at_start=[]
         )
+
+        if eth_rpc_endpoint:
+            # If we have an RPC endpoint configured, set it again (we do this
+            # because this will attempt to connect to the node)
+            self.ethereum_manager.set_rpc_endpoint(eth_rpc_endpoint)
+
         self.eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
         self.evm_tx_decoder = EVMTransactionDecoder(
             database=self,
