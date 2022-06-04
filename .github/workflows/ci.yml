@@ -51,4 +51,4 @@ jobs:
           py.test --version
           make lint typecheck
       - name: Test with pytest
-        run: pytest -vv --maxfail=2
+        run: pytest -vv --maxfail=2 -m 'not blockchain_data'
