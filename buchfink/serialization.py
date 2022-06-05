@@ -337,17 +337,23 @@ def serialize_ledger_action(action: LedgerAction):
     return ser_action
 
 
-def serialize_trades(trades: List[Trade]) -> List[dict]:
+def serialize_trades(trades: List[Union[Trade, AMMTrade]]) -> List[dict]:
+
+    def trade_sort_key(trade):
+        if isinstance(trade, AMMTrade):
+            return (trade.timestamp, trade.tx_hash)
+        else:
+            return (trade.timestamp, trade.link)
+
     return [
-        serialize_trade(trade) for trade in
-        sorted(trades, key=lambda trade: trade.timestamp)
+        serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)
     ]
 
 
 def serialize_ledger_actions(actions: List[LedgerAction]) -> List[dict]:
     return [
         serialize_ledger_action(action) for action in
-        sorted(actions, key=lambda action: action.timestamp)
+        sorted(actions, key=lambda action: (action.timestamp, action.link))
     ]
 
 
