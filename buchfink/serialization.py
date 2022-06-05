@@ -342,8 +342,7 @@ def serialize_trades(trades: List[Union[Trade, AMMTrade]]) -> List[dict]:
     def trade_sort_key(trade):
         if isinstance(trade, AMMTrade):
             return (trade.timestamp, trade.tx_hash)
-        else:
-            return (trade.timestamp, trade.link)
+        return (trade.timestamp, trade.link)
 
     return [
         serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)
