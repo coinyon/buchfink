@@ -46,8 +46,8 @@ def get_trades(db: BuchfinkDB, account: Account) -> List[Trade]:
             else:
                 quote_asset = db.get_asset_by_symbol(row['Sell Currency'])
             fee_asset = db.get_asset_by_symbol(row['Fee Currency'])
-        except (UnknownAsset, ValueError):
-            logger.exception(row)
+        except UnknownAsset as e:
+            logger.warning('Ignoring unknown asset %s', e)
             continue
         trades.append(Trade(
             deserialize_timestamp(row['Timestamp']),
