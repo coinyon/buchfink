@@ -1,6 +1,8 @@
 master
 ------
 
+* Can use own ETH RPC for blockchain queries
+
 0.0.13
 ------
 
