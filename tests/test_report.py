@@ -68,7 +68,7 @@ def test_manual_price(tmp_path):
     assert report.from_dt.year == 2020
     assert report.to_dt.year == 2021
 
-    acc = [a for a in buchfink_db.get_all_accounts() if a.name=='acc_manual_price']
+    acc = [a for a in buchfink_db.get_all_accounts() if a.name == 'acc_manual_price']
 
     result = run_report(buchfink_db, acc, report)
 

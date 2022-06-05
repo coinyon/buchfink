@@ -2,10 +2,10 @@ all: lint typecheck test
 
 lint:
 	pylint buchfink
-	pycodestyle buchfink
+	pycodestyle buchfink tests/*.py
 
 typecheck:
-	mypy buchfink
+	mypy buchfink tests/*.py
 
 test:
 	py.test

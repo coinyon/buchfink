@@ -49,7 +49,7 @@ def test_trade_serialization(dummy_trade):
     assert dummy_trade == trade
 
 
-def test_trade_serialization(dummy_trade):
+def test_trade_serialization_2(dummy_trade):
     assert serialize_decimal(Decimal('1234.234e-10')) == '0.0000001234234'
     assert serialize_decimal(Decimal('1234.23410')) == '1234.2341'
 
@@ -94,7 +94,9 @@ def test_assets(tmp_path):
 
     assert deserialize_asset(serialize_asset(Asset('ETH'))) == Asset('ETH')
 
-    A_STAKEDAO = buchfink_db.get_asset_by_symbol('_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F')
+    A_STAKEDAO = buchfink_db.get_asset_by_symbol(
+            '_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
+    )
     assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
 
 
@@ -116,7 +118,9 @@ def test_serialize_deserialize_balance_secondary(tmp_path):
             os.path.join(tmp_path, 'buchfink')
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
-    A_STAKEDAO = buchfink_db.get_asset_by_symbol('_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F')
+    A_STAKEDAO = buchfink_db.get_asset_by_symbol(
+            '_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
+    )
     bal = serialize_balance(Balance(FVal('1.5')), A_STAKEDAO)
     balance, asset = deserialize_balance(bal, buchfink_db)
     assert str(balance.amount) == '1.5'
