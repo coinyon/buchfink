@@ -36,6 +36,14 @@ setup(
         "buchfink": ["data/init/buchfink.yaml", "data/init/.gitignore"],
     },
     install_requires=install_requirements,
+    extras_require={
+        "test": [
+            "pylint",
+            "pytest",
+            "mypy==0.790",
+            "pycodestyle"
+        ]
+    },
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
     long_description=read('README.md'),
