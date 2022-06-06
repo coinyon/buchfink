@@ -5,7 +5,7 @@ pickledb
 python-dateutil
 PyYAML>=5.0
 # if you change the following, please also update the reference in .github/workflows/ci.yml
-rotkehlchen @ git+https://github.com/coinyon/rotki.git@add-dxdaomesa-json#egg=rotkehlchen
+rotkehlchen @ git+https://github.com/rotki/rotki.git@develop#egg=rotkehlchen
 tabulate
 typing_extensions
 pydantic
