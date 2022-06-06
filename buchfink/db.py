@@ -317,7 +317,7 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
-        accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[])  # type: dict
+        accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
         if self._active_eth_address:
             accs['eth'].append(self._active_eth_address)
         return BlockchainAccounts(**accs)
