@@ -613,6 +613,13 @@ class BuchfinkDB(DBHandler):
 
         with path.open('w') as balances_file:
             contents.update(serialize_balances(balances))
+
+            if not balances.liabilities and 'liabilities' in contents:
+                del contents['liabilities']
+
+            if not balances.assets and 'assets' in contents:
+                del contents['assets']
+
             yaml.dump(contents, stream=balances_file, sort_keys=True)
 
     def get_amm_swaps(
