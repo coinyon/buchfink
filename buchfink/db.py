@@ -409,9 +409,9 @@ class BuchfinkDB(DBHandler):
 
     def get_chain_manager(self, account: Account) -> ChainManager:
         if account.account_type == "ethereum":
-            accounts = BlockchainAccounts(eth=[account.address], btc=[], ksm=[], dot=[], avax=[])
+            accounts = BlockchainAccounts(eth=[account.address], btc=[], ksm=[], dot=[], avax=[], bch=[])
         elif account.account_type == "bitcoin":
-            accounts = BlockchainAccounts(eth=[], btc=[account.address], ksm=[], dot=[], avax=[])
+            accounts = BlockchainAccounts(eth=[], btc=[account.address], ksm=[], dot=[], avax=[], bch=[])
         else:
             raise ValueError('Unable to create chain manager for account')
 
