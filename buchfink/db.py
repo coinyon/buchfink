@@ -91,6 +91,7 @@ from buchfink.serialization import (
 logger = logging.getLogger(__name__)
 
 PREMIUM_ONLY_ETH_MODULES = ['adex']
+BLOCKCHAIN_INIT_ACCOUNTS = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
 
 
 class BuchfinkDB(DBHandler):
@@ -317,7 +318,7 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
 
     def get_blockchain_accounts(self) -> BlockchainAccounts:
-        accs = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
+        accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
         if self._active_eth_address:
             accs['eth'].append(self._active_eth_address)
         return BlockchainAccounts(**accs)
@@ -409,9 +410,13 @@ class BuchfinkDB(DBHandler):
 
     def get_chain_manager(self, account: Account) -> ChainManager:
         if account.account_type == "ethereum":
-            accounts = BlockchainAccounts(eth=[account.address], btc=[], ksm=[], dot=[], avax=[], bch=[])
+            accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
+            accs['eth'] = [account.address]
+            accounts = BlockchainAccounts(**accs)
         elif account.account_type == "bitcoin":
-            accounts = BlockchainAccounts(eth=[], btc=[account.address], ksm=[], dot=[], avax=[], bch=[])
+            accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
+            accs['btc'] = [account.address]
+            accounts = BlockchainAccounts(**accs)
         else:
             raise ValueError('Unable to create chain manager for account')
 
