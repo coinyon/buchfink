@@ -2,6 +2,7 @@ coloredlogs
 jinja2
 pandas
 pickledb
+pyqrcode
 python-dateutil
 PyYAML>=5.0
 # if you change the following, please also update the reference in .github/workflows/ci.yml

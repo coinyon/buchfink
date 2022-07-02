@@ -1,6 +1,7 @@
 master
 ------
 
+* Can print QR code for blockchain accounts (buchfink list -o qrcode)
 * Can use own ETH RPC for blockchain queries
 
 0.0.13

@@ -2,6 +2,7 @@
 import logging
 import os
 import os.path
+import shutil
 
 import pytest
 from click.testing import CliRunner
@@ -69,5 +70,29 @@ def test_init_and_subsequent_quote():
         if result.exception:
             logger.exception(result.exception)
             raise result.exception
+        assert result.exception is None
+        assert result.exit_code == 0
+
+
+def test_ethereum_qrcode():
+    runner = CliRunner()
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
+        shutil.copytree(
+                os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum'),
+                d,
+                dirs_exist_ok=True
+        )
+        result = runner.invoke(buchfink, ['list'])
+        logger.debug('output of %s: %s', 'list', result.output)
+        assert result.exception is None
+        assert result.exit_code == 0
+        result = runner.invoke(buchfink, ['list', '-o', 'address'])
+        logger.debug('output of %s: %s', 'init', result.output)
+        assert result.output == '0xD57479B8287666B44978255F1677E412d454d4f0\n'
+        assert result.exception is None
+        assert result.exit_code == 0
+        result = runner.invoke(buchfink, ['list', '-o', 'qrcode'])
+        logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
