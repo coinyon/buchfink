@@ -11,7 +11,7 @@ on:
     - cron: '0 4 * * *' # run at 4 AM UTC
 
 jobs:
-  build:
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -27,6 +27,31 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install '.[test]'
+      - name: Typecheck & Lint
+        run: |
+          pylint --version
+          mypy --version
+          py.test --version
+          make lint typecheck
+      - name: Test with pytest
+        run: pytest -vv --maxfail=2 -m 'not blockchain_data'
+  test_develop:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: [3.9]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install '.[test]'
+          pip install 'git+https://github.com/rotki/rotki.git@develop#egg=rotkehlchen'
       - name: Typecheck & Lint
         run: |
           pylint --version
