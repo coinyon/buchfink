@@ -126,8 +126,8 @@ def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
             click.echo(type_and_name + address + tags)
         elif output == 'qrcode':
             if account.address:
-                qr = pyqrcode.create(account.address)
-                click.echo(qr.terminal(quiet_zone=1))
+                qrcode = pyqrcode.create(account.address)
+                click.echo(qrcode.terminal(quiet_zone=1))
             else:
                 click.echo('Can not create qrcode for {0}'.format(account.name))
         else:

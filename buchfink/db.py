@@ -44,6 +44,7 @@ from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
+from rotkehlchen.logging import TRACE, add_logging_level
 from rotkehlchen.types import (
     BlockchainAccountData,
     ChecksumEthAddress,
@@ -94,8 +95,8 @@ PREMIUM_ONLY_ETH_MODULES = ['adex']
 BLOCKCHAIN_INIT_ACCOUNTS = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
 
 if __debug__:
-    from rotkehlchen.logging import TRACE, add_logging_level
     add_logging_level('TRACE', TRACE)
+
 
 class BuchfinkDB(DBHandler):
     """
@@ -108,7 +109,6 @@ class BuchfinkDB(DBHandler):
 
     def __init__(self, config_file='./buchfink.yaml'):
         self.config_file = Path(config_file)
-
 
         with open(self.config_file, 'r') as cfg:
             yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
@@ -237,7 +237,7 @@ class BuchfinkDB(DBHandler):
                 to_dt=datetime.fromisoformat(str(report.to))
             )
 
-    def get_settings(self, have_premium: bool = False) -> DBSettings:
+    def get_settings(self, cursor=None, have_premium: bool = False) -> DBSettings:
         clean_settings = self.config.settings.dict()
         if 'external_services' in clean_settings:
             del clean_settings['external_services']
@@ -249,7 +249,7 @@ class BuchfinkDB(DBHandler):
 
         return db_settings_from_dict(clean_settings, self.msg_aggregator)
 
-    def get_ignored_assets(self, cursor):
+    def get_ignored_assets(self, write_cursor):
         return []
 
     def sync_accounts(self, accounts: List[Account]) -> None:
@@ -264,7 +264,11 @@ class BuchfinkDB(DBHandler):
                         write_cursor=cursor,
                         blockchain=SupportedBlockchain.ETHEREUM,
                         account_data=[
-                            BlockchainAccountData(address=account.address, label=account.name, tags=[])
+                            BlockchainAccountData(
+                                address=account.address,
+                                label=account.name,
+                                tags=[]
+                            )
                         ]
                     )
             except InputError:
@@ -298,7 +302,10 @@ class BuchfinkDB(DBHandler):
             for txn in txs:
                 receipt = None
                 if with_receipts:
-                    receipt = self.eth_transactions.get_or_query_transaction_receipt(cursor, txn.tx_hash)
+                    receipt = self.eth_transactions.get_or_query_transaction_receipt(
+                            cursor,
+                            txn.tx_hash
+                    )
                 result.append((txn, receipt))
 
         return result
@@ -504,7 +511,7 @@ class BuchfinkDB(DBHandler):
     def get_tokens_for_address_if_time(self, cursor, address, current_time):
         return None
 
-    def save_tokens_for_address(self, cursor, address, tokens):
+    def save_tokens_for_address(self, write_cursor, address, tokens):
         pass
 
     def query_balances(self, account) -> BalanceSheet:
@@ -647,14 +654,26 @@ class BuchfinkDB(DBHandler):
     ) -> List[AMMSwap]:
         return self._amm_swaps
 
-    def add_amm_swaps(self, cursor, swaps: List[AMMSwap]) -> None:
+    def add_amm_swaps(self, write_cursor, swaps: List[AMMSwap]) -> None:
         self._amm_swaps = []
         self._amm_swaps.extend(swaps)
 
-    def update_used_query_range(self, write_cursor, name: str, start_ts: Timestamp, end_ts: Timestamp) -> None:
+    def update_used_query_range(
+            self,
+            write_cursor,
+            name: str,
+            start_ts: Timestamp,
+            end_ts: Timestamp
+    ) -> None:
         pass
 
-    def update_used_block_query_range(self, name: str, from_block: int, to_block: int) -> None:
+    def update_used_block_query_range(
+            self,
+            write_cursor,
+            name: str,
+            from_block: int,
+            to_block: int
+    ) -> None:
         pass
 
     def get_used_query_range(self, cursor, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
@@ -667,8 +686,8 @@ class BuchfinkDB(DBHandler):
             ) -> Dict[ActionType, List[str]]:
         return {}
 
-    #def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
-    #    pass
+    # def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
+    #     pass
 
     def get_binance_pairs(self, name: str, location: Location) -> List[str]:
         return []
