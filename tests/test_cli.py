@@ -89,7 +89,7 @@ def test_ethereum_qrcode():
         assert result.exit_code == 0
         result = runner.invoke(buchfink, ['list', '-o', 'address'])
         logger.debug('output of %s: %s', 'init', result.output)
-        assert result.output == '0xD57479B8287666B44978255F1677E412d454d4f0\n'
+        assert '0xD57479B8287666B44978255F1677E412d454d4f0\n' in result.output
         assert result.exception is None
         assert result.exit_code == 0
         result = runner.invoke(buchfink, ['list', '-o', 'qrcode'])
