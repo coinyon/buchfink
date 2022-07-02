@@ -93,6 +93,9 @@ logger = logging.getLogger(__name__)
 PREMIUM_ONLY_ETH_MODULES = ['adex']
 BLOCKCHAIN_INIT_ACCOUNTS = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
 
+if __debug__:
+    from rotkehlchen.logging import TRACE, add_logging_level
+    add_logging_level('TRACE', TRACE)
 
 class BuchfinkDB(DBHandler):
     """
@@ -105,6 +108,7 @@ class BuchfinkDB(DBHandler):
 
     def __init__(self, config_file='./buchfink.yaml'):
         self.config_file = Path(config_file)
+
 
         with open(self.config_file, 'r') as cfg:
             yaml_config = yaml.load(cfg, Loader=yaml.SafeLoader)
@@ -177,6 +181,8 @@ class BuchfinkDB(DBHandler):
             # because this will attempt to connect to the node)
             self.ethereum_manager.set_rpc_endpoint(eth_rpc_endpoint)
 
+        super().__init__(self.user_data_dir, 'password', self.msg_aggregator, None)
+
         self.eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
         self.evm_tx_decoder = EVMTransactionDecoder(
             database=self,
@@ -196,8 +202,6 @@ class BuchfinkDB(DBHandler):
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
-
-        super().__init__(self.user_data_dir, 'password', self.msg_aggregator, None)
 
     def __del__(self) -> None:
         try:
@@ -245,7 +249,7 @@ class BuchfinkDB(DBHandler):
 
         return db_settings_from_dict(clean_settings, self.msg_aggregator)
 
-    def get_ignored_assets(self):
+    def get_ignored_assets(self, cursor):
         return []
 
     def sync_accounts(self, accounts: List[Account]) -> None:
@@ -255,9 +259,14 @@ class BuchfinkDB(DBHandler):
 
             try:
                 assert account.address is not None
-                self.add_blockchain_accounts(SupportedBlockchain.ETHEREUM, [
-                    BlockchainAccountData(address=account.address, label=account.name, tags=[])
-                ])
+                with self.user_write() as cursor:
+                    self.add_blockchain_accounts(
+                        write_cursor=cursor,
+                        blockchain=SupportedBlockchain.ETHEREUM,
+                        account_data=[
+                            BlockchainAccountData(address=account.address, label=account.name, tags=[])
+                        ]
+                    )
             except InputError:
                 pass
 
@@ -284,12 +293,13 @@ class BuchfinkDB(DBHandler):
 
         assert len(txs) == txs_total_count
 
-        result = []
-        for txn in txs:
-            receipt = None
-            if with_receipts:
-                receipt = self.eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
-            result.append((txn, receipt))
+        with self.user_write() as cursor:
+            result = []
+            for txn in txs:
+                receipt = None
+                if with_receipts:
+                    receipt = self.eth_transactions.get_or_query_transaction_receipt(cursor, txn.tx_hash)
+                result.append((txn, receipt))
 
         return result
 
@@ -317,7 +327,7 @@ class BuchfinkDB(DBHandler):
 
         return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
 
-    def get_blockchain_accounts(self) -> BlockchainAccounts:
+    def get_blockchain_accounts(self, cursor) -> BlockchainAccounts:
         accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
         if self._active_eth_address:
             accs['eth'].append(self._active_eth_address)
@@ -491,10 +501,10 @@ class BuchfinkDB(DBHandler):
 
         return exchange
 
-    def get_tokens_for_address_if_time(self, address, current_time):
+    def get_tokens_for_address_if_time(self, cursor, address, current_time):
         return None
 
-    def save_tokens_for_address(self, address, tokens):
+    def save_tokens_for_address(self, cursor, address, tokens):
         pass
 
     def query_balances(self, account) -> BalanceSheet:
@@ -629,6 +639,7 @@ class BuchfinkDB(DBHandler):
 
     def get_amm_swaps(
             self,
+            cursor,
             from_ts: Optional[Timestamp] = None,
             to_ts: Optional[Timestamp] = None,
             location: Optional[Location] = None,
@@ -636,27 +647,28 @@ class BuchfinkDB(DBHandler):
     ) -> List[AMMSwap]:
         return self._amm_swaps
 
-    def add_amm_swaps(self, swaps: List[AMMSwap]) -> None:
+    def add_amm_swaps(self, cursor, swaps: List[AMMSwap]) -> None:
         self._amm_swaps = []
         self._amm_swaps.extend(swaps)
 
-    def update_used_query_range(self, name: str, start_ts: Timestamp, end_ts: Timestamp) -> None:
+    def update_used_query_range(self, write_cursor, name: str, start_ts: Timestamp, end_ts: Timestamp) -> None:
         pass
 
     def update_used_block_query_range(self, name: str, from_block: int, to_block: int) -> None:
         pass
 
-    def get_used_query_range(self, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
+    def get_used_query_range(self, cursor, name: str) -> Optional[Tuple[Timestamp, Timestamp]]:
         return None
 
     def get_ignored_action_ids(
             self,
+            cursor,
             action_type: Optional[ActionType],
             ) -> Dict[ActionType, List[str]]:
         return {}
 
-    def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
-        pass
+    #def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
+    #    pass
 
     def get_binance_pairs(self, name: str, location: Location) -> List[str]:
         return []
