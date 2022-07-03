@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
+from rotkehlchen.types import Location
 
 from buchfink.datatypes import (
     NFT,
@@ -16,6 +17,9 @@ from buchfink.datatypes import (
     BalanceSheet,
     EthereumToken,
     FVal,
+    HistoryBaseEntry,
+    HistoryEventSubType,
+    HistoryEventType,
     LedgerAction,
     LedgerActionType,
     Timestamp,
@@ -29,6 +33,10 @@ def serialize_timestamp(timestamp: int) -> str:
     return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
 
 
+def serialize_timestamp_ms(timestamp_ms: int) -> str:
+    return datetime.fromtimestamp(timestamp_ms / 1000, tz=timezone.utc).isoformat()
+
+
 def deserialize_timestamp(timestamp: str) -> Timestamp:
     'Converts ISO date or a UNIX timestamp to a Timestamp'
     if timestamp.endswith('Z'):
@@ -37,6 +45,10 @@ def deserialize_timestamp(timestamp: str) -> Timestamp:
         return int(datetime.fromisoformat(timestamp).timestamp())
     except ValueError:
         return int(timestamp)
+
+
+def deserialize_timestamp_ms(timestamp: str) -> Timestamp:
+    return deserialize_timestamp(timestamp) * 1000
 
 
 def deserialize_ledger_action_type(action_type: str) -> LedgerActionType:
@@ -354,6 +366,68 @@ def serialize_ledger_actions(actions: List[LedgerAction]) -> List[dict]:
         serialize_ledger_action(action) for action in
         sorted(actions, key=lambda action: (action.timestamp, action.link))
     ]
+
+
+def serialize_event(event: HistoryBaseEntry) -> dict:
+    ser_event = event.serialize()
+    ser_event['timestamp'] = serialize_timestamp_ms(event.timestamp)
+
+    if event.event_type == HistoryEventType.SPEND and \
+            event.event_subtype == HistoryEventSubType.FEE:
+        ser_event['spend_fee'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    if 'identifier' in ser_event:
+        del ser_event['identifier']
+
+    if 'location' in ser_event:
+        del ser_event['location']
+
+    if 'location_label' in ser_event:
+        del ser_event['location_label']
+
+    if 'event_identifier' in ser_event:
+        ser_event['link'] = ser_event['event_identifier']
+        del ser_event['event_identifier']
+
+    return ser_event
+
+
+def serialize_events(actions: List[Union[LedgerAction, HistoryBaseEntry]]) -> List[dict]:
+
+    return [
+        serialize_ledger_action(action) if
+        isinstance(action, LedgerAction) else
+        serialize_event(action)
+        for action in
+        sorted(actions, key=lambda action: (action.get_timestamp(),))
+    ]
+
+
+def deserialize_event(event_dict) -> HistoryBaseEntry:
+
+    if 'spend_fee' in event_dict:
+        amount, asset = deserialize_amount(event_dict['spend_fee'])
+        return HistoryBaseEntry(
+            event_identifier=event_dict['link'],
+            sequence_index=event_dict['sequence_index'],
+            timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
+            location=Location.BLOCKCHAIN,
+            event_type=HistoryEventType.SPEND,
+            event_subtype=HistoryEventSubType.FEE,
+            asset=asset,
+            balance=Balance(amount, 0),
+            location_label=None,
+            notes=event_dict.get('notes'),
+            counterparty=event_dict.get('counterparty'),
+            identifier=None,
+            extra_data=None
+        )
+
+    raise NotImplementedError()
 
 
 def deserialize_tradetype(trade_type: str) -> TradeType:

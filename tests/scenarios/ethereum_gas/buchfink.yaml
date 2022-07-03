@@ -1,0 +1,14 @@
+accounts:
+  - name: whale
+    ethereum: '0xD57479B8287666B44978255F1677E412d454d4f0'
+  - name: whale2
+    ethereum: '0xD57479B821111111111111111111111111111111'
+
+reports:
+  - name: all
+    from: "2021-01-01"
+    to: "2021-12-30"
+
+settings:
+  main_currency: USD
+  taxfree_after_period: 7776000  # ~3 months

@@ -1,6 +1,8 @@
 import os.path
 import shutil
 
+import pytest
+
 from buchfink.db import BuchfinkDB
 from buchfink.report import run_report
 
@@ -76,3 +78,34 @@ def test_manual_price(tmp_path):
     # price was 0.01 at buy (see acc_manual_price.yaml)
     # and 0.03 at sell (coingecko)
     assert float(result['overview']['trade']['taxable']) == 20.0
+
+
+def test_ethereum_gas_report(tmp_path):
+    shutil.copytree(
+        os.path.join(os.path.dirname(__file__), "scenarios", "ethereum_gas"),
+        os.path.join(tmp_path, "buchfink"),
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
+    buchfink_db.perform_assets_updates()
+
+    reports = list(buchfink_db.get_all_reports())
+
+    assert len(reports) == 1
+
+    report = reports[0]
+
+    assert report.name == 'all'
+
+    whale1, whale2 = buchfink_db.get_all_accounts()
+
+    result = run_report(buchfink_db, [whale1], report)
+
+    assert float(result['overview']['trade']['taxable']) == 500.0
+    assert float(result['overview']['transaction event']['taxable']) == \
+            pytest.approx(-64.816, rel=0.01)
+
+    result = run_report(buchfink_db, [whale2], report)
+
+    assert float(result['overview']['trade']['taxable']) == 500.0
+    # assert float(result['overview']['transaction event']['taxable']) == \
+    #       pytest.approx(-64.816, rel=0.01)

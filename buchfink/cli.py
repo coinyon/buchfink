@@ -20,13 +20,13 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 
-from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade
+from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade, HistoryEventSubType
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
     deserialize_ledger_action_type,
     deserialize_timestamp,
-    serialize_ledger_actions,
+    serialize_events,
     serialize_nfts,
     serialize_timestamp,
     serialize_trades
@@ -345,6 +345,31 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
                         logger.debug('Found action: %s', act)
                     actions.extend(additional_actions)
 
+                with buchfink_db.user_write() as cursor:
+                    for tx_tuple in txs_and_receipts:
+                        tx, receipt = tx_tuple
+                        if receipt is None:
+                            logger.warning('No receipt for %s', tx.tx_hash)
+                            continue
+                        # pylint: disable=protected-access
+                        buchfink_db._active_eth_address = account.address
+                        buchfink_db.evm_tx_decoder.base.tracked_accounts = \
+                                buchfink_db.get_blockchain_accounts()
+                        try:
+                            hbes = buchfink_db.\
+                                    evm_tx_decoder.decode_transaction(cursor, tx, receipt)
+                        except (ValueError, TypeError):
+                            logger.exception('TX')
+                            continue
+                        # print(len(hbes))
+
+                        for hbe in hbes:
+                            # Only handle gas for now
+                            if hbe.event_subtype == HistoryEventSubType.FEE \
+                                    and hbe.counterparty == 'gas':
+                                # print(hbe)
+                                actions.append(hbe)
+
             if fetch_trades_for_this_account:
                 logger.info('Fetching trades for %s', name)
 
@@ -413,7 +438,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
             if actions:
                 with open(buchfink_db.actions_directory / (name + ".yaml"), "w") as yaml_file:
                     yaml.dump({
-                        "actions": serialize_ledger_actions(actions)
+                        "actions": serialize_events(actions)
                     }, stream=yaml_file, sort_keys=True)
 
         if fetch_trades_for_this_account:

@@ -6,8 +6,7 @@ from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from rotkehlchen.accounting.types import NamedJson
-from rotkehlchen.db.reports import DBAccountingReports
+from rotkehlchen.db.reports import DBAccountingReports, ReportDataFilterQuery
 
 from buchfink.datatypes import Timestamp
 from buchfink.db import BuchfinkDB
@@ -24,7 +23,6 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     num_matched_accounts = 0
     all_trades = []
     all_actions = []
-    all_transactions = []
 
     root_logger = logging.getLogger('')
     formatter = logging.Formatter('%(levelname)s: %(message)s')
@@ -54,9 +52,6 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
         num_matched_accounts += 1
         all_trades.extend(buchfink_db.get_local_trades_for_account(account))
         all_actions.extend(buchfink_db.get_local_ledger_actions_for_account(account))
-        if account.account_type == "ethereum":
-            tx_tuples = buchfink_db.get_eth_transactions(account)
-            all_transactions.extend([tx_tuple[0] for tx_tuple in tx_tuples])
 
     logger.info('Collected %d trades / %d actions from %d exchange account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
@@ -64,7 +59,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     def timestamp(act):
         return act.get_timestamp()
 
-    all_events = sorted(all_trades + all_transactions + all_actions, key=timestamp)
+    all_events = sorted(all_trades + all_actions, key=timestamp)
     accountant = buchfink_db.get_accountant()
     report_id = accountant.process_history(start_ts, end_ts, all_events)
 
@@ -77,8 +72,13 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     results, _ = dbpnl.get_reports(report_id=report_id, with_limit=False)
     overview_data = results[0]
 
-    overview_data.pop('identifier')
-    overview_data.pop('size_on_disk')
+    # events = dbpnl.get_report_data(
+    #     filter_=ReportDataFilterQuery.make(report_id=report_id),
+    #     with_limit=False,
+    # )[0]
+    # overview_data.pop('identifier')
+    # overview_data.pop('size_on_disk')
+    # print(results)
 
     with (folder / 'report.yaml').open('w') as report_file:
         yaml.dump(overview_data, stream=report_file)
@@ -101,7 +101,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     # This is a little hacky and breaks our philosophy as we explicitely deal
     # with DB identifier here
     with (folder / 'report.yaml').open('r') as report_file:
-        overview_data = yaml.load(report_file, Loader=yaml.SafeLoader)['overview']
+        overview_data = yaml.load(report_file, Loader=yaml.SafeLoader)
         report_id = overview_data['identifier']
 
     @lru_cache
@@ -120,17 +120,12 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     env.globals['asset_symbol'] = asset_symbol
     template = env.get_template(report_config.template)
 
-    # This is a little hacky but works for now
-    cursor = buchfink_db.conn_transient.cursor()
-    cursor.execute(
-            'SELECT event_type, data FROM pnl_events '
-            'WHERE report_id = ? and event_type = ?',
-            (report_id, 'A')
-        )
-
-    def deserialize(row):
-        return NamedJson.deserialize_from_db(row).data
-    events = [deserialize(row) for row in cursor.fetchall()]
+    accountant = buchfink_db.get_accountant()
+    dbpnl = DBAccountingReports(accountant.csvexporter.database)
+    events = dbpnl.get_report_data(
+        filter_=ReportDataFilterQuery.make(report_id=report_id),
+        with_limit=False,
+    )[0]
 
     rendered_report = template.render({
         "name": report_config.name,

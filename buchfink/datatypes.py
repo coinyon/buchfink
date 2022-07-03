@@ -1,7 +1,8 @@
 # pylint: disable=unused-import
 from rotkehlchen.accounting.ledger_actions import LedgerAction, LedgerActionType
 from rotkehlchen.accounting.structures.balance import Balance, BalanceSheet, BalanceType
-from rotkehlchen.accounting.structures.base import ActionType
+from rotkehlchen.accounting.structures.base import ActionType, HistoryBaseEntry
+from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType
 from rotkehlchen.assets.asset import Asset, EthereumToken
 from rotkehlchen.chain.ethereum.modules.nfts import NFT
 from rotkehlchen.chain.ethereum.structures import EthereumTxReceipt

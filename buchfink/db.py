@@ -69,6 +69,7 @@ from buchfink.datatypes import (
     BalanceSheet,
     EthereumTransaction,
     EthereumTxReceipt,
+    HistoryBaseEntry,
     LedgerAction,
     Trade
 )
@@ -86,6 +87,7 @@ from buchfink.serialization import (
     deserialize_asset,
     deserialize_balance,
     deserialize_ethereum_token,
+    deserialize_event,
     deserialize_ledger_action,
     deserialize_trade,
     serialize_balances
@@ -342,7 +344,7 @@ class BuchfinkDB(DBHandler):
 
         return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
 
-    def get_blockchain_accounts(self, cursor) -> BlockchainAccounts:
+    def get_blockchain_accounts(self, cursor=None) -> BlockchainAccounts:
         accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
         if self._active_eth_address:
             accs['eth'].append(self._active_eth_address)
@@ -390,10 +392,15 @@ class BuchfinkDB(DBHandler):
 
         return []
 
-    def get_actions_from_file(self, actions_file) -> List[LedgerAction]:
+    def get_actions_from_file(self, actions_file, include_trades=True) \
+            -> List[Union[LedgerAction, HistoryBaseEntry]]:
         def safe_deserialize_ledger_action(action):
-            if 'buy' in action or 'sell' in action:
-                return None
+            if 'buy' in action or 'sell' in action:  # it is a Trade or AMMSwap
+                if not include_trades:
+                    return None
+                return deserialize_trade(action)
+            if 'spend_fee' in action:  # it is a HistoryBaseEntry
+                return deserialize_event(action)
             try:
                 return deserialize_ledger_action(action)
             except UnknownAsset:
@@ -411,7 +418,7 @@ class BuchfinkDB(DBHandler):
                 if ser_action is not None]
 
     def get_local_ledger_actions_for_account(self, account_name: Union[str, Account]) \
-            -> List[LedgerAction]:
+            -> List[Union[LedgerAction, HistoryBaseEntry]]:
         if isinstance(account_name, str):
             account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
         else:
@@ -424,7 +431,7 @@ class BuchfinkDB(DBHandler):
 
             actions_file = self.data_directory / account.config.file
             if actions_file.exists():
-                return self.get_actions_from_file(actions_file)
+                return self.get_actions_from_file(actions_file, include_trades=False)
 
         else:
             actions_file = self.data_directory / f'actions/{account.name}.yaml'
