@@ -495,6 +495,8 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
 @with_buchfink_db
 def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     "Run a full fetch + report cycle"
+
+    buchfink_db.perform_assets_updates()
     buchfink_db.sync_manual_prices()
 
     if external:
@@ -644,6 +646,7 @@ def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_onl
     "Generate reports for all report definition and output overview table"
 
     if not render_only:
+        buchfink_db.perform_assets_updates()
         buchfink_db.sync_manual_prices()
 
     results = {}
@@ -692,6 +695,7 @@ def allowances(buchfink_db):
     # pylint: disable = W
     "Show the amount of each asset that you could sell tax-free"
 
+    buchfink_db.perform_assets_updates()
     buchfink_db.sync_manual_prices()
 
     num_matched_accounts = 0
