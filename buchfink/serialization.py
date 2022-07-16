@@ -412,7 +412,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
     if 'spend_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['spend_fee'])
         return HistoryBaseEntry(
-            event_identifier=event_dict['link'],
+            event_identifier=event_dict.get('link', '').encode(),
             sequence_index=event_dict['sequence_index'],
             timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
             location=Location.BLOCKCHAIN,
