@@ -213,6 +213,11 @@ class BuchfinkDB(DBHandler):
             # down (sys.meta_path is None)
             if sys.meta_path is not None:
                 raise
+        except AttributeError:
+            # We swallow AttributeError here, because it occurs when self doesn't
+            # have a `conn` attribute, i.e. we did not properly initialize. We want
+            # to see the original error, and not the AttributeError in this case.
+            pass
 
     def get_asset_by_symbol(self, symbol: str) -> Asset:
         # TODO: this indirection function could incorporate a custom mapping from yaml config
