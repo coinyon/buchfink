@@ -70,13 +70,18 @@ class ExternalServicesConfig(BaseModel):
     opensea: Optional[str]
 
 
+class Web3Node(BaseModel):
+    name: str
+    endpoint: str
+
+
 class Settings(BaseModel):
     main_currency: Optional[str]
     taxfree_after_period: Optional[int]
     include_gas_costs: Optional[bool]
     include_crypto2crypto: Optional[bool]
     external_services: Optional[ExternalServicesConfig]
-    eth_rpc_endpoint: Optional[str]
+    web3_nodes: Optional[List[Web3Node]]
 
 
 class AssetConfig(BaseModel):

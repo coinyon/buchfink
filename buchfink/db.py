@@ -19,6 +19,7 @@ from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
+from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
 from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
@@ -167,21 +168,21 @@ class BuchfinkDB(DBHandler):
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
-        eth_rpc_endpoint = self.get_eth_rpc_endpoint()
         self.ethereum_manager = EthereumManager(
-            ethrpc_endpoint=eth_rpc_endpoint,
             etherscan=self.etherscan,
             msg_aggregator=self.msg_aggregator,
             greenlet_manager=self.greenlet_manager,
-            connect_at_start=[]
+            connect_at_start=[],
+            database=self
         )
 
-        if eth_rpc_endpoint:
-            # If we have an RPC endpoint configured, set it again (we do this
-            # because this will attempt to connect to the node)
-            self.ethereum_manager.set_rpc_endpoint(eth_rpc_endpoint)
-
+        # After calling the parent constructor, we will have a db connection.
         super().__init__(self.user_data_dir, 'password', self.msg_aggregator, None)
+
+        self.sync_web3_nodes()
+        web3_nodes = self.get_web3_nodes(only_active=True)
+        if web3_nodes:
+            self.ethereum_manager.connect_to_multiple_nodes(web3_nodes)
 
         self.eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
         self.evm_tx_decoder = EVMTransactionDecoder(
@@ -226,9 +227,6 @@ class BuchfinkDB(DBHandler):
     def get_main_currency(self):
         return self.get_settings().main_currency
 
-    def get_eth_rpc_endpoint(self) -> str:
-        return self.config.settings.eth_rpc_endpoint or ''
-
     def get_all_accounts(self) -> List[Account]:
         return self.accounts
 
@@ -243,9 +241,13 @@ class BuchfinkDB(DBHandler):
             )
 
     def get_settings(self, cursor=None, have_premium: bool = False) -> DBSettings:
-        clean_settings = self.config.settings.dict()
+        clean_settings = self.config.settings.dict().copy()
+
         if 'external_services' in clean_settings:
             del clean_settings['external_services']
+
+        if 'web3_nodes' in clean_settings:
+            del clean_settings['web3_nodes']
 
         # Remove None values
         for k in list(clean_settings):
@@ -700,6 +702,35 @@ class BuchfinkDB(DBHandler):
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, None)
         self.sync_config_assets()
+
+    def sync_web3_nodes(self):
+        'Ensures that the database matches the config file'
+
+        settings_web3_nodes = list(self.config.settings.web3_nodes or [])
+        db_web3_nodes = list(self.get_web3_nodes())
+
+        for db_web3_node in db_web3_nodes:
+            if db_web3_node.node_info.name in [n.name for n in settings_web3_nodes]:
+                # TODO: should update web3 node in db if necessary
+                settings_web3_nodes = [
+                    n for n in settings_web3_nodes if n.name != db_web3_node.node_info.name
+                ]
+            else:
+                self.delete_web3_node(db_web3_node.identifier)
+
+        for web3_node in settings_web3_nodes:
+            self.add_web3_node(
+                WeightedNode(
+                    identifier=web3_node.name,
+                    node_info=NodeName(
+                        name=web3_node.name,
+                        endpoint=web3_node.endpoint,
+                        owned=True,
+                    ),
+                    weight=FVal(1.0),
+                    active=True,
+                )
+            )
 
     def sync_config_assets(self):
         'Sync assets defined in config with database'
