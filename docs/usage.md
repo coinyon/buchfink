@@ -6,7 +6,7 @@ Create a new directory where you want to store your data and initialize Buchfink
 
 This will create a `buchfink.yaml` that you can edit to fit your needs. A good
 first start would be to add your accounts and set some general accounting
-settings like the main currency. See [Configuration](./configuration) for more
+settings like the main currency. See [Configuration](./configuration.md) for more
 information.
 
 ## Retrieve data

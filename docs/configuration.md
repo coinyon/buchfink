@@ -4,8 +4,7 @@
 
 ### Blockchain accounts
 
-To add your Ethereum and Bitcoin blockchain accounts, add them to your
-`buchfink.yaml` as well:
+To add your blockchain accounts, simply add them to your `buchfink.yaml`:
 
 ```yaml
 accounts:
@@ -25,16 +24,16 @@ The following blockchains are supported:
   * Bitcoin Cash (`bitcoincash: ADDRESS`)
 
 Buchfink is able to fetch the account balances for blockchain accounts and
-supports a variety of Ethereum protocols (see Rotki for more information).
+also supports a variety of Ethereum protocols (see Rotki for more information).
 On-chain trades are also supported for some protocols (e.g. Uniswap).
 
 ### Exchange accounts
 
-Just add the account to your `buchfink.yaml` like this:
+Accounts for crypto exchanges can be added to your `buchfink.yaml` like this:
 
 ```yaml
 accounts:
-  - name: kraken1
+  - name: my-kraken-account
     exchange: kraken
     api_key: ...
     secret: ...
