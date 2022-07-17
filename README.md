@@ -21,7 +21,7 @@ But feel free to report bugs and missing features.
 
 * [Installation](docs/installation.md)
 * [Usage](docs/usage.md)
-* [configuration](docs/configuration.md)
+* [Configuration](docs/configuration.md)
 
 ## Donation
 
