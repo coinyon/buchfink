@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.0.14
+
+* Can print QR code for blockchain accounts (buchfink list -o qrcode)
 * Can use own web3 nodes for blockchain queries
 * Support Bitcoin Cash
 
