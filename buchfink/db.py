@@ -433,16 +433,18 @@ class BuchfinkDB(DBHandler):
         return []
 
     def get_chain_manager(self, account: Account) -> ChainManager:
+        accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
+
         if account.account_type == "ethereum":
-            accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
             accs['eth'] = [account.address]
-            accounts = BlockchainAccounts(**accs)
         elif account.account_type == "bitcoin":
-            accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
             accs['btc'] = [account.address]
-            accounts = BlockchainAccounts(**accs)
+        elif account.account_type == "bitcoincash":
+            accs['bch'] = [account.address]
         else:
             raise ValueError('Unable to create chain manager for account')
+
+        self.sync_accounts([account])
 
         # Eventually we should allow premium credentials in config file
         premium = False
@@ -453,11 +455,9 @@ class BuchfinkDB(DBHandler):
 
         logger.debug('Creating ChainManager with modules: %s', eth_modules)
 
-        self.sync_accounts([account])
-
         manager = ChainManager(
             database=self,
-            blockchain_accounts=accounts,
+            blockchain_accounts=BlockchainAccounts(**accs),
             beaconchain=self.beaconchain,
             data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
@@ -566,8 +566,22 @@ class BuchfinkDB(DBHandler):
                 btc: reduce(operator.add, manager.balances.btc.values())
             }, liabilities={})
 
+        if account.account_type == "bitcoincash":
+            manager = self.get_chain_manager(account)
+            manager.query_balances()
+            bch = Asset('BCH')
+
+            return BalanceSheet(assets={
+                bch: reduce(operator.add, manager.balances.bch.values())
+            }, liabilities={})
+
         if account.account_type == "file":
             return self.get_balances_from_file(account.config.file)
+
+        logger.warning(
+            'Returning empty BalanceSheet because account type "%s" is not supported yet.',
+            account.account_type
+        )
 
         return BalanceSheet(assets={}, liabilities={})
 

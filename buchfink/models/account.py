@@ -4,11 +4,23 @@ from pydantic import BaseModel
 from rotkehlchen.types import ChecksumEthAddress
 from typing_extensions import Literal
 
-from .config import (AccountConfig, BitcoinAccountConfig, Config,
-                     EthereumAccountConfig, ExchangeAccountConfig,
-                     ManualAccountConfig)
+from .config import (
+    AccountConfig,
+    BitcoinAccountConfig,
+    BitcoinCashAccountConfig,
+    Config,
+    EthereumAccountConfig,
+    ExchangeAccountConfig,
+    ManualAccountConfig
+)
 
-AccountType = Union[Literal["ethereum"], Literal["bitcoin"], Literal["exchange"], Literal["file"]]
+AccountType = Union[
+    Literal["ethereum"],
+    Literal["bitcoin"],
+    Literal["bitcoincash"],
+    Literal["exchange"],
+    Literal["file"]
+]
 
 
 class Account(BaseModel):
@@ -28,6 +40,9 @@ def account_from_config(account_config: AccountConfig):
     elif isinstance(account_config, BitcoinAccountConfig):
         account_type = "bitcoin"
         address = account_config.bitcoin
+    elif isinstance(account_config, BitcoinCashAccountConfig):
+        account_type = "bitcoincash"
+        address = account_config.bitcoincash
     elif isinstance(account_config, ExchangeAccountConfig):
         account_type = "exchange"
     elif isinstance(account_config, ManualAccountConfig):
