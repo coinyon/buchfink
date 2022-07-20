@@ -21,6 +21,7 @@ from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
 from rotkehlchen.chain.manager import ChainManager
+from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
 from rotkehlchen.db.utils import BlockchainAccounts
@@ -720,7 +721,6 @@ class BuchfinkDB(DBHandler):
     def sync_web3_nodes(self):
         'Ensures that the database matches the config file'
 
-        from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
         with self.user_write() as cursor:
             read_and_write_nodes_in_database(cursor)
 
