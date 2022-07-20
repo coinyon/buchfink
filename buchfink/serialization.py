@@ -253,7 +253,7 @@ def serialize_trade(trade: Union[Trade, AMMTrade]):
     }
 
     if isinstance(trade, AMMTrade):
-        ser_trade['link'] = trade.tx_hash
+        ser_trade['link'] = trade.tx_hash.hex()
     else:
         ser_trade['link'] = trade.link
 
