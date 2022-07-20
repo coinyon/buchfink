@@ -720,17 +720,22 @@ class BuchfinkDB(DBHandler):
     def sync_web3_nodes(self):
         'Ensures that the database matches the config file'
 
+        from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
+        with self.user_write() as cursor:
+            read_and_write_nodes_in_database(cursor)
+
         settings_web3_nodes = list(self.config.settings.web3_nodes or [])
         db_web3_nodes = list(self.get_web3_nodes())
 
         for db_web3_node in db_web3_nodes:
-            if db_web3_node.node_info.name in [n.name for n in settings_web3_nodes]:
-                # TODO: should update web3 node in db if necessary
-                settings_web3_nodes = [
-                    n for n in settings_web3_nodes if n.name != db_web3_node.node_info.name
-                ]
-            else:
-                self.delete_web3_node(db_web3_node.identifier)
+            if db_web3_node.node_info.owned:  # do not delete preconfigured nodes
+                if db_web3_node.node_info.name in [n.name for n in settings_web3_nodes]:
+                    # TODO: should update web3 node in db if necessary
+                    settings_web3_nodes = [
+                        n for n in settings_web3_nodes if n.name != db_web3_node.node_info.name
+                    ]
+                else:
+                    self.delete_web3_node(db_web3_node.identifier)
 
         for web3_node in settings_web3_nodes:
             self.add_web3_node(
