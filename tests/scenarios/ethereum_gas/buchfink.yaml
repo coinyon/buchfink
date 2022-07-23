@@ -8,6 +8,7 @@ reports:
   - name: all
     from: "2021-01-01"
     to: "2021-12-30"
+    template: templates/report.md
 
 settings:
   main_currency: USD

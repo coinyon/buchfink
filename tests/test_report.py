@@ -4,7 +4,7 @@ import shutil
 import pytest
 
 from buchfink.db import BuchfinkDB
-from buchfink.report import run_report
+from buchfink.report import run_report, render_report
 
 
 def test_bullrun_config(tmp_path):
@@ -103,6 +103,18 @@ def test_ethereum_gas_report(tmp_path):
     assert float(result['overview']['trade']['taxable']) == 500.0
     assert float(result['overview']['transaction event']['taxable']) == \
             pytest.approx(-64.816, rel=0.01)
+
+    render_report(buchfink_db, report)
+
+    report_file = os.path.join(tmp_path, "buchfink", "reports", report.name, "report.md")
+
+    assert os.path.exists(report_file)
+
+    with open(report_file, 'r') as report_handle:
+        report_contents = report_handle.read()
+        assert '## Events' in report_contents
+        assert '0.0203' in report_contents
+        assert '-64.81' in report_contents
 
     result = run_report(buchfink_db, [whale2], report)
 

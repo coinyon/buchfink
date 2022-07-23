@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os.path
 from functools import lru_cache
 from pathlib import Path
 from typing import List
@@ -134,8 +135,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
         "events": events
     })
 
-    # we should get ext from template path. could also be json, csv, ...
-    ext = '.html'
+    _, ext = os.path.splitext(report_config.template)
 
     # to save the results
     with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as reportf:
