@@ -115,7 +115,10 @@ def test_ethereum_gas_report_cli():
         assert not os.path.exists(os.path.join(d, 'reports/all'))
 
         result = runner.invoke(buchfink, ['report'])
-        logger.debug('output of %s: %s', 'init', result.output)
+        logger.debug('output of %s: %s', 'report', result.output)
+        assert 'all' in result.output
+        assert 'Free P/L' in result.output
+        assert 'Taxable P/L' in result.output
         assert result.exception is None
         assert result.exit_code == 0
 
