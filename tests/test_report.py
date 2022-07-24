@@ -121,3 +121,11 @@ def test_ethereum_gas_report(tmp_path):
     assert float(result['overview']['trade']['taxable']) == 500.0
     # assert float(result['overview']['transaction event']['taxable']) == \
     #       pytest.approx(-64.816, rel=0.01)
+
+    render_report(buchfink_db, report)
+
+    with open(report_file, 'r') as report_handle:
+        report_contents = report_handle.read()
+        assert '## Events' in report_contents
+        assert '0.0203' in report_contents
+        # assert '-64.81' in report_contents

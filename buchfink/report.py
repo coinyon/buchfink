@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 from rotkehlchen.db.reports import DBAccountingReports, ReportDataFilterQuery
 
 from buchfink.datatypes import Timestamp
+from buchfink.serialization import deserialize_fval, serialize_fval
 from buchfink.db import BuchfinkDB
 
 from .models import Account, ReportConfig
@@ -71,24 +72,28 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
     results, _ = dbpnl.get_reports(report_id=report_id, with_limit=False)
-    overview_data = results[0]
+    report_data = results[0]
 
-    # events = dbpnl.get_report_data(
-    #     filter_=ReportDataFilterQuery.make(report_id=report_id),
-    #     with_limit=False,
-    # )[0]
-    # overview_data.pop('identifier')
-    # overview_data.pop('size_on_disk')
-    # print(results)
+    def get_total_pnl_from_overview(pnl_overview):
+        return {
+            'free': serialize_fval(
+                sum(deserialize_fval(entry['free']) for entry in pnl_overview.values())
+            ),
+            'taxable': serialize_fval(
+                sum(deserialize_fval(entry['taxable']) for entry in pnl_overview.values())
+            )
+        }
+
+    report_data['pnl_totals'] = get_total_pnl_from_overview(report_data['overview'])
 
     with (folder / 'report.yaml').open('w') as report_file:
-        yaml.dump(overview_data, stream=report_file)
+        yaml.dump(report_data, stream=report_file)
 
     logger.info('Report information has been written to: %s',
             buchfink_db.reports_directory / Path(name)
     )
 
-    return overview_data
+    return report_data
 
 
 def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
@@ -123,10 +128,11 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
 
     accountant = buchfink_db.get_accountant()
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
-    events = dbpnl.get_report_data(
+    report_data = dbpnl.get_report_data(
         filter_=ReportDataFilterQuery.make(report_id=report_id),
         with_limit=False,
-    )[0]
+    )
+    events = report_data[0]
 
     rendered_report = template.render({
         "name": report_config.name,

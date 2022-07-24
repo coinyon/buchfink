@@ -708,10 +708,10 @@ def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_onl
         for report_name, result in results.items():
             table.append([
                 report_name,
-                result['overview']['total_profit_loss'],
-                result['overview']['total_taxable_profit_loss']
+                result['pnl_totals']['free'],
+                result['pnl_totals']['taxable']
             ])
-        print(tabulate(table, headers=['Report', 'Profit/Loss', 'Taxable P/L']))
+        print(tabulate(table, headers=['Report', 'Free P/L', 'Taxable P/L']))
 
 
 @buchfink.command()

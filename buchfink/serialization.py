@@ -444,6 +444,10 @@ def deserialize_fval(val: str) -> FVal:
     return FVal(val)
 
 
+def serialize_fval(val: FVal) -> str:
+    return str(val)
+
+
 ASSET_RE = re.compile(r'([^\[]+)(\[(.*)\])?')
 
 

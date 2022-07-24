@@ -96,3 +96,29 @@ def test_ethereum_qrcode():
         logger.debug('output of %s: %s', 'init', result.output)
         assert result.exception is None
         assert result.exit_code == 0
+
+
+def test_ethereum_gas_report_cli():
+    runner = CliRunner()
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
+        shutil.copytree(
+                os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum_gas'),
+                d,
+                dirs_exist_ok=True
+        )
+        result = runner.invoke(buchfink, ['list'])
+        logger.debug('output of %s: %s', 'list', result.output)
+        assert result.exception is None
+        assert result.exit_code == 0
+
+        assert not os.path.exists(os.path.join(d, 'reports/all'))
+
+        result = runner.invoke(buchfink, ['report'])
+        logger.debug('output of %s: %s', 'init', result.output)
+        assert result.exception is None
+        assert result.exit_code == 0
+
+        assert os.path.exists(os.path.join(d, 'reports/all/report.yaml'))
+        assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
+        assert os.path.exists(os.path.join(d, 'reports/all/report.md'))
