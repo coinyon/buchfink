@@ -21,6 +21,7 @@ from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
 from rotkehlchen.chain.manager import ChainManager
+from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
@@ -167,7 +168,10 @@ class BuchfinkDB(DBHandler):
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
-        self.globaldb = GlobalDBHandler(self.cache_directory)
+        self.globaldb = GlobalDBHandler(
+            self.cache_directory,
+            sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
+        )
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
@@ -180,7 +184,13 @@ class BuchfinkDB(DBHandler):
         )
 
         # After calling the parent constructor, we will have a db connection.
-        super().__init__(self.user_data_dir, 'password', self.msg_aggregator, None)
+        super().__init__(
+                self.user_data_dir,
+                'password',
+                self.msg_aggregator,
+                None,
+                sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
+        )
 
         self.sync_web3_nodes()
         web3_nodes = self.get_web3_nodes(only_active=True)
@@ -258,9 +268,6 @@ class BuchfinkDB(DBHandler):
                 del clean_settings[k]
 
         return db_settings_from_dict(clean_settings, self.msg_aggregator)
-
-    def get_ignored_assets(self, write_cursor):
-        return []
 
     def sync_accounts(self, accounts: List[Account]) -> None:
         for account in accounts:
@@ -523,8 +530,8 @@ class BuchfinkDB(DBHandler):
 
         return exchange
 
-    def get_tokens_for_address_if_time(self, cursor, address, current_time):
-        return None
+    # def get_tokens_for_address_if_time(self, cursor, address, current_time):
+    #     return None
 
     def save_tokens_for_address(self, write_cursor, address, tokens):
         pass
@@ -558,8 +565,7 @@ class BuchfinkDB(DBHandler):
             # example from makerdao module).
             self._active_eth_address = account.address
             manager.query_balances(
-                blockchain=SupportedBlockchain.ETHEREUM,
-                force_token_detection=True
+                blockchain=SupportedBlockchain.ETHEREUM
             )
             self._active_eth_address = None
 
