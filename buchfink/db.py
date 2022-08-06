@@ -735,6 +735,8 @@ class BuchfinkDB(DBHandler):
         'Ensures that the database matches the config file'
 
         with self.user_write() as cursor:
+            # Not the best solution but the easiest to implement :blush:
+            cursor.execute('DELETE FROM web3_nodes;')
             read_and_write_nodes_in_database(cursor)
 
         settings_web3_nodes = list(self.config.settings.web3_nodes or [])
@@ -759,7 +761,7 @@ class BuchfinkDB(DBHandler):
                         endpoint=web3_node.endpoint,
                         owned=True,
                     ),
-                    weight=FVal(1.0),
+                    weight=FVal(0.4),
                     active=True,
                 )
             )
