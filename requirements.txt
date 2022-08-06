@@ -5,7 +5,7 @@ pickledb
 pyqrcode
 python-dateutil
 PyYAML>=5.0
-rotkehlchen @ git+https://github.com/rotki/rotki.git@d227dc8d812889c35b60f7eac87cf20549a2009c#egg=rotkehlchen
+rotkehlchen @ git+https://github.com/rotki/rotki.git@73032b33ab338a7ba7f7bf923015df6ba186a5a7#egg=rotkehlchen
 tabulate
 typing_extensions
 pydantic
