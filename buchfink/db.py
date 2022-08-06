@@ -530,12 +530,6 @@ class BuchfinkDB(DBHandler):
 
         return exchange
 
-    # def get_tokens_for_address_if_time(self, cursor, address, current_time):
-    #     return None
-
-    def save_tokens_for_address(self, write_cursor, address, tokens):
-        pass
-
     def query_balances(self, account) -> BalanceSheet:
         if account.account_type == "exchange":
             exchange = self.get_exchange(account.name)
@@ -559,6 +553,14 @@ class BuchfinkDB(DBHandler):
 
         if account.account_type == "ethereum":
             manager = self.get_chain_manager(account)
+
+            from rotkehlchen.chain.ethereum.tokens import EthTokens
+
+            ethtokens = EthTokens(database=self, ethereum=self.ethereum_manager)
+            account_tokens_info = ethtokens.detect_tokens(
+                only_cache=False,
+                accounts=[account.address],
+            )
 
             # This is a little hack because query_balances sometimes hooks back
             # into out get_blockchain_accounts() without providing context (for
