@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.15
+
+* Ethereum gas spent will be decoded and store in YAML as actions
+
 ## 0.0.14
 
 * Can print QR code for blockchain accounts (buchfink list -o qrcode)
