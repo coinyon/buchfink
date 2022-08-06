@@ -303,6 +303,10 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
         else:
             accounts = [acc for acc in accounts if keyword in acc.name]
 
+    # TODO: This should move to BuchfinkDB.get_accounts()
+    if account_type is not None:
+        accounts = [acc for acc in accounts if account_type in acc.account_type]
+
     logger.info(
             'Collected %d account(s): %s',
             len(accounts),
@@ -310,9 +314,6 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
         )
 
     for account in accounts:
-        if account_type is not None and account_type not in account.account_type:
-            continue
-
         name = account.name
         trades = []  # type: List[Union[AMMTrade, Trade]]
         actions = []  # type: List[LedgerAction]
