@@ -17,6 +17,7 @@ from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
+from rotkehlchen.chain.ethereum.tokens import EthTokens
 from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
@@ -554,10 +555,8 @@ class BuchfinkDB(DBHandler):
         if account.account_type == "ethereum":
             manager = self.get_chain_manager(account)
 
-            from rotkehlchen.chain.ethereum.tokens import EthTokens
-
             ethtokens = EthTokens(database=self, ethereum=self.ethereum_manager)
-            account_tokens_info = ethtokens.detect_tokens(
+            ethtokens.detect_tokens(
                 only_cache=False,
                 accounts=[account.address],
             )
