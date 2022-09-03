@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
 from pydantic import BaseModel
-from rotkehlchen.types import ChecksumEthAddress
+from rotkehlchen.types import ChecksumEvmAddress
 from typing_extensions import Literal
 
 from .config import (
@@ -26,7 +26,7 @@ AccountType = Union[
 class Account(BaseModel):
     name: str
     account_type: AccountType
-    address: Optional[Union[ChecksumEthAddress, str]]
+    address: Optional[Union[ChecksumEvmAddress, str]]
     tags: List[str]
     config: AccountConfig
 

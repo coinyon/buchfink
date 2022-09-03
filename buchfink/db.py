@@ -18,7 +18,7 @@ from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.tokens import EthTokens
-from rotkehlchen.chain.ethereum.trades import AMMSwap
+# from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
 from rotkehlchen.chain.manager import ChainManager
@@ -51,7 +51,7 @@ from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.logging import TRACE, add_logging_level
 from rotkehlchen.types import (
     BlockchainAccountData,
-    ChecksumEthAddress,
+    ChecksumEvmAddress,
     ExternalService,
     ExternalServiceApiCredentials,
     FVal,
@@ -122,7 +122,7 @@ class BuchfinkDB(DBHandler):
         self.data_directory = self.config_file.parent
         self.config = Config(**yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
-        self._active_eth_address = None  # type: Optional[ChecksumEthAddress]
+        self._active_eth_address = None  # type: Optional[ChecksumEvmAddress]
 
         # Buchfink directories, these include the YAML storage and the reports
         # etc. Basically these are the ones you want version-controlled.
@@ -151,7 +151,7 @@ class BuchfinkDB(DBHandler):
 
         self.last_write_ts: Optional[Timestamp] = None
 
-        self._amm_swaps = []  # type: List[AMMSwap]
+        # self._amm_swaps = []  # type: List[AMMSwap]
         self.msg_aggregator = MessagesAggregator()
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko()
@@ -296,7 +296,7 @@ class BuchfinkDB(DBHandler):
             -> List[Tuple[EthereumTransaction, Optional[EthereumTxReceipt]]]:
 
         assert account.account_type == "ethereum"
-        address = cast(ChecksumEthAddress, account.address)
+        address = cast(ChecksumEvmAddress, account.address)
 
         now = ts_now()
 
@@ -558,7 +558,7 @@ class BuchfinkDB(DBHandler):
             ethtokens = EthTokens(database=self, ethereum=self.ethereum_manager)
             ethtokens.detect_tokens(
                 only_cache=False,
-                accounts=[account.address],
+                addresses=[account.address],
             )
 
             # This is a little hack because query_balances sometimes hooks back
@@ -680,19 +680,19 @@ class BuchfinkDB(DBHandler):
 
             yaml.dump(contents, stream=balances_file, sort_keys=True)
 
-    def get_amm_swaps(
-            self,
-            cursor,
-            from_ts: Optional[Timestamp] = None,
-            to_ts: Optional[Timestamp] = None,
-            location: Optional[Location] = None,
-            address: Optional[ChecksumEthAddress] = None,
-    ) -> List[AMMSwap]:
-        return self._amm_swaps
-
-    def add_amm_swaps(self, write_cursor, swaps: List[AMMSwap]) -> None:
-        self._amm_swaps = []
-        self._amm_swaps.extend(swaps)
+    # def get_amm_swaps(
+    #         self,
+    #         cursor,
+    #         from_ts: Optional[Timestamp] = None,
+    #         to_ts: Optional[Timestamp] = None,
+    #         location: Optional[Location] = None,
+    #         address: Optional[ChecksumEvmAddress] = None,
+    # ) -> List[AMMSwap]:
+    #     return self._amm_swaps
+    #
+    # def add_amm_swaps(self, write_cursor, swaps: List[AMMSwap]) -> None:
+    #     self._amm_swaps = []
+    #     self._amm_swaps.extend(swaps)
 
     def update_used_query_range(
             self,
@@ -772,7 +772,7 @@ class BuchfinkDB(DBHandler):
 
         for token in self.config.tokens:
             eth_token = deserialize_ethereum_token(token.dict())
-            identifier = '_ceth_' + eth_token.ethereum_address
+            identifier = '_ceth_' + eth_token.evm_address
 
             try:
                 asset = self.get_asset_by_symbol(identifier)
@@ -782,14 +782,14 @@ class BuchfinkDB(DBHandler):
                 asset_dict = asset.to_dict()
                 if eth_token.coingecko and not eth_token.coingecko == asset_dict['coingecko']:
                     logger.info('Updating asset db for token: %s', eth_token)
-                    self.globaldb.edit_ethereum_token(eth_token)
+                    self.globaldb.edit_evm_token(eth_token)
 
                 if eth_token.decimals and not eth_token.decimals == asset_dict['decimals']:
                     logger.info('Updating asset db for token: %s', eth_token)
-                    self.globaldb.edit_ethereum_token(eth_token)
+                    self.globaldb.edit_evm_token(eth_token)
 
             except UnknownAsset:
-                self.globaldb.add_asset(identifier, AssetType.ETHEREUM_TOKEN, eth_token)
+                self.globaldb.add_asset(identifier, AssetType.EVM_TOKEN, eth_token)
                 try:
                     self.get_asset_by_symbol(identifier)
                 except UnknownAsset as exc:

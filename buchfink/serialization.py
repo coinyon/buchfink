@@ -7,15 +7,16 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
-from rotkehlchen.types import Location
+from rotkehlchen.constants.resolver import ChainID
+from rotkehlchen.types import Location, EvmTokenKind
 
 from buchfink.datatypes import (
     NFT,
-    AMMTrade,
+#    AMMTrade,
     Asset,
     Balance,
     BalanceSheet,
-    EthereumToken,
+    EvmToken,
     FVal,
     HistoryBaseEntry,
     HistoryEventSubType,
@@ -257,17 +258,17 @@ def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
     return amount, asset
 
 
-def serialize_trade(trade: Union[Trade, AMMTrade]):
+def serialize_trade(trade: Union[Trade]):
     ser_trade = trade.serialize()
     ser_trade = {
         'timestamp': serialize_timestamp(trade.timestamp),
         'for': serialize_amount(trade.rate * trade.amount, trade.quote_asset),
     }
 
-    if isinstance(trade, AMMTrade):
-        ser_trade['link'] = trade.tx_hash.hex()
-    else:
-        ser_trade['link'] = trade.link
+    # if isinstance(trade, AMMTrade):
+    #     ser_trade['link'] = trade.tx_hash.hex()
+    # else:
+    ser_trade['link'] = trade.link
 
     if trade.fee and trade.fee > 0:
         ser_trade['fee'] = serialize_amount(trade.fee, trade.fee_currency)
@@ -349,11 +350,11 @@ def serialize_ledger_action(action: LedgerAction):
     return ser_action
 
 
-def serialize_trades(trades: List[Union[Trade, AMMTrade]]) -> List[dict]:
+def serialize_trades(trades: List[Union[Trade]]) -> List[dict]:
 
     def trade_sort_key(trade):
-        if isinstance(trade, AMMTrade):
-            return (trade.timestamp, trade.tx_hash)
+        # if isinstance(trade, AMMTrade):
+        #     return (trade.timestamp, trade.tx_hash)
         return (trade.timestamp, trade.link)
 
     return [
@@ -468,13 +469,15 @@ def deserialize_asset(val: str) -> Asset:
     return asset
 
 
-def deserialize_ethereum_token(token_data: dict) -> EthereumToken:
-    token = EthereumToken.initialize(
+def deserialize_ethereum_token(token_data: dict) -> EvmToken:
+    token = EvmToken.initialize(
             address=deserialize_ethereum_address(token_data.get('address')),
             name=token_data.get('name'),
             symbol=token_data.get('symbol'),
             decimals=token_data.get('decimals'),
-            coingecko=token_data.get('coingecko')
+            coingecko=token_data.get('coingecko'),
+            chain=ChainID.ETHEREUM,
+            token_kind=EvmTokenKind.ERC20
     )
     return token
 

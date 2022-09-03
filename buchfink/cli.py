@@ -15,7 +15,7 @@ import click
 import coloredlogs
 import pyqrcode
 import yaml
-from rotkehlchen.chain.ethereum.trades import AMMTrade
+# from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.constants import ZERO
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
@@ -315,7 +315,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
 
     for account in accounts:
         name = account.name
-        trades = []  # type: List[Union[AMMTrade, Trade]]
+        trades = []  # type: List[Union[Trade]]
         actions = []  # type: List[LedgerAction]
         fetch_config = account.config.fetch or FetchConfig()
 
@@ -456,11 +456,11 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
             existing = set()
             unique_trades = []
             for trade in trades:
-                if isinstance(trade, AMMTrade):
-                    unique_trades.append(trade)
-                    for swap in trade.swaps:
-                        existing.add((swap.location, swap.tx_hash))
-                elif not (trade.location, trade.link) in existing:
+                # if isinstance(trade, AMMTrade):
+                #    unique_trades.append(trade)
+                #    for swap in trade.swaps:
+                #        existing.add((swap.location, swap.tx_hash))
+                if not (trade.location, trade.link) in existing:
                     existing.add((trade.location, trade.link))
                     unique_trades.append(trade)
                 else:
