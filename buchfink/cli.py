@@ -158,13 +158,12 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
     liabilities_sum = {}  # type: Dict[Asset, FVal]
     liabilities_usd_sum = {}  # type: Dict[Asset, FVal]
 
+    buchfink_db.perform_assets_updates()
+
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
         accounts = buchfink_db.get_all_accounts()
-
-    if fetch:
-        buchfink_db.perform_assets_updates()
 
     for account in accounts:
         if keyword is not None and keyword not in account.name:
