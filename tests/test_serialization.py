@@ -95,7 +95,7 @@ def test_assets(tmp_path):
     assert deserialize_asset(serialize_asset(Asset('ETH'))) == Asset('ETH')
 
     A_STAKEDAO = buchfink_db.get_asset_by_symbol(
-            '_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
+            'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
     )
     assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
 
@@ -119,7 +119,7 @@ def test_serialize_deserialize_balance_secondary(tmp_path):
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     A_STAKEDAO = buchfink_db.get_asset_by_symbol(
-            '_ceth_0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
+            'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
     )
     bal = serialize_balance(Balance(FVal('1.5')), A_STAKEDAO)
     balance, asset = deserialize_balance(bal, buchfink_db)

@@ -772,7 +772,7 @@ class BuchfinkDB(DBHandler):
 
         for token in self.config.tokens:
             eth_token = deserialize_ethereum_token(token.dict())
-            identifier = '_ceth_' + eth_token.evm_address
+            identifier = 'eip155:1/erc20:' + eth_token.evm_address
 
             try:
                 asset = self.get_asset_by_symbol(identifier)

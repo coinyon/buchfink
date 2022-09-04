@@ -124,7 +124,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'),
                 notes='',
                 link=txn.tx_hash.hex()
             )]
@@ -139,7 +139,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x09a3ecafa817268f77be1283176b946c4ff2e608'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'),
                 notes='',
                 link=txn.tx_hash.hex()
             )]
@@ -154,7 +154,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'),
                 notes='PoolTogether airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -169,7 +169,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x7b35ce522cb72e4077baeb96cb923a5529764a00'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x7b35ce522cb72e4077baeb96cb923a5529764a00'),
                 notes='IMX airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -181,7 +181,7 @@ def classify_tx(
             if hexstr_to_int(event.topics[2]) == hexstr_to_int(ADDR_BADGER):
                 amount = hexstr_to_int(event.data[2:66])
                 token = symbol_to_asset_or_token(
-                    '_ceth_0x3472a5a71965499acd81997a54bba8d852c6e53d'
+                    'eip155:1/erc20:0x3472a5a71965499acd81997a54bba8d852c6e53d'
                 )
                 actions += [LedgerAction(
                     identifier=None,
@@ -209,7 +209,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x7f3edcdd180dbe4819bd98fee8929b5cedb3adeb'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x7f3edcdd180dbe4819bd98fee8929b5cedb3adeb'),
                 notes='xToken airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -257,7 +257,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F'),
                 notes='Gitcoin retroactive airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -280,7 +280,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0xc770EEfAd204B5180dF6a14Ee197D99d808ee52d'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0xc770EEfAd204B5180dF6a14Ee197D99d808ee52d'),
                 notes='FOX token airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -361,7 +361,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x09a3ecafa817268f77be1283176b946c4ff2e608'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'),
                 notes='rewards for staking MIR LP',
                 link=txn.tx_hash.hex()
             )]
@@ -442,7 +442,7 @@ def classify_tx(
                 )]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_TORN):
-            asset = symbol_to_asset_or_token('_ceth_0x77777FeDdddFfC19Ff86DB637967013e6C6A116C')
+            asset = symbol_to_asset_or_token('eip155:1/erc20:0x77777FeDdddFfC19Ff86DB637967013e6C6A116C')
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
@@ -482,7 +482,7 @@ def classify_tx(
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_UMA):
             # UMA TVL Option Settlement
-            asset = symbol_to_asset_or_token('_ceth_' + ADDR_UMA)
+            asset = symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_UMA)
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_UMA_TVL_OPT) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
@@ -527,13 +527,13 @@ def classify_tx(
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('_ceth_' + ADDR_HEX),
+                    asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEX),
                     notes='HEX Payout for staking',
                     link=txn.tx_hash.hex()
                 )]
 
         if event.topics[0] == REWARDS_CLAIMED and same_addr(event.address, ADDR_DYDX_REWARDS):
-            asset = symbol_to_asset_or_token('_ceth_0x92D6C1e31e14520e676a687F0a93788B716BEff5')
+            asset = symbol_to_asset_or_token('eip155:1/erc20:0x92D6C1e31e14520e676a687F0a93788B716BEff5')
             if hexstr_to_int(event.data[2:][:64]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
                 actions += [LedgerAction(
@@ -550,7 +550,7 @@ def classify_tx(
                 )]
 
         if event.topics[0] == MINT and same_addr(event.address, ADDR_HEDRON):
-            asset = symbol_to_asset_or_token('_ceth_' + ADDR_HEDRON)
+            asset = symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEDRON)
 
             # Find another TRANSFER
             for ev2 in receipt.logs:
@@ -580,7 +580,7 @@ def classify_tx(
                     )]
 
         if event.topics[0] == HUNT and same_addr(event.address, ADDR_BLACKPOOL_AIRDROP):
-            asset = symbol_to_asset_or_token('_ceth_0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da')
+            asset = symbol_to_asset_or_token('eip155:1/erc20:0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da')
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
                 actions += [LedgerAction(
@@ -597,7 +597,7 @@ def classify_tx(
                 )]
 
         if event.topics[0] == VESTED and same_addr(event.address, ADDR_XTK_VESTING):
-            asset = symbol_to_asset_or_token('_ceth_0x7F3EDcdD180Dbe4819Bd98FeE8929b5cEdB3AdEB')
+            asset = symbol_to_asset_or_token('eip155:1/erc20:0x7F3EDcdD180Dbe4819Bd98FeE8929b5cEdB3AdEB')
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
                 actions += [LedgerAction(
@@ -614,7 +614,7 @@ def classify_tx(
                 )]
 
         if event.topics[0] == WITHDRAWN and same_addr(event.address, ADDR_XDAI_EASYSTAKING):
-            asset = symbol_to_asset_or_token('_ceth_0x0Ae055097C6d159879521C384F1D2123D1f195e6')
+            asset = symbol_to_asset_or_token('eip155:1/erc20:0x0Ae055097C6d159879521C384F1D2123D1f195e6')
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 # accruedEmission
                 amount = hexstr_to_int(event.data[2:][64 * 3:64 * 4])
@@ -652,7 +652,7 @@ def classify_tx(
                 )]
 
         if event.topics[0] == XFLOBBYEXIT and same_addr(event.address, ADDR_HEX):
-            asset = symbol_to_asset_or_token('_ceth_' + ADDR_HEX)
+            asset = symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEX)
 
             # Find another TRANSFER
             for ev2 in receipt.logs:
@@ -692,7 +692,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'),
                 notes='Thales retroactive airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -707,7 +707,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('_ceth_' + ADDR_ENS),
+                asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_ENS),
                 notes='ENS retroactive airdrop',
                 link=txn.tx_hash.hex()
             )]
