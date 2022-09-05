@@ -44,6 +44,42 @@ epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
 epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 
 
+def _get_accounts(buchfink_db: BuchfinkDB, external=None, exclude=None,
+        keyword=None, account_type=None) -> List[Account]:
+
+    if external:
+        accounts = [account_from_string(ext, buchfink_db) for ext in external]
+    else:
+        accounts = buchfink_db.get_all_accounts()
+
+    # TODO: This should move to BuchfinkDB.get_accounts()
+    if keyword is not None:
+        if keyword.startswith('/') and keyword.endswith('/'):
+            keyword_re = re.compile(keyword[1:-1])
+            accounts = [acc for acc in accounts if keyword_re.search(acc.name)]
+        else:
+            accounts = [acc for acc in accounts if keyword in acc.name]
+
+    if exclude is not None:
+        if exclude.startswith('/') and exclude.endswith('/'):
+            exclude_re = re.compile(exclude[1:-1])
+            accounts = [acc for acc in accounts if not exclude_re.search(acc.name)]
+        else:
+            accounts = [acc for acc in accounts if exclude not in acc.name]
+
+    # TODO: This should move to BuchfinkDB.get_accounts()
+    if account_type is not None:
+        accounts = [acc for acc in accounts if account_type in acc.account_type]
+
+    logger.info(
+            'Collected %d account(s): %s',
+            len(accounts),
+            ', '.join([acc.name for acc in accounts])
+        )
+
+    return accounts
+
+
 def with_buchfink_db(func):
     @click.pass_context
     def new_func(ctx, *args, **kwargs):
@@ -136,6 +172,7 @@ def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
 
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--exclude', '-x', type=str, default=None, help='Exclude by keyword in account name')
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
 @click.option('--total', is_flag=True, help='Only show totals')
@@ -150,7 +187,7 @@ def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
 )
 @with_buchfink_db
 def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
-        external, denominate_asset):
+        exclude, external, denominate_asset):
     "Show balances across all accounts"
 
     assets_sum = {}  # type: Dict[Asset, FVal]
@@ -160,10 +197,8 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
 
     buchfink_db.perform_assets_updates()
 
-    if external:
-        accounts = [account_from_string(ext, buchfink_db) for ext in external]
-    else:
-        accounts = buchfink_db.get_all_accounts()
+    accounts = _get_accounts(buchfink_db, external=external, keyword=keyword,
+            exclude=exclude)
 
     for account in accounts:
         if keyword is not None and keyword not in account.name:
@@ -274,6 +309,7 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
 @click.option('--external', '-e', type=str, multiple=True,
         help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--exclude', '-x', type=str, default=None, help='Exclude by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None,
         help='Filter by account type')
 @click.option('--actions', 'fetch_actions', is_flag=True, help='Fetch actions only')
@@ -289,28 +325,8 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
     fetch_limited = fetch_actions or fetch_balances or fetch_trades or fetch_nfts
     error_occured = False
 
-    if external:
-        accounts = [account_from_string(ext, buchfink_db) for ext in external]
-    else:
-        accounts = buchfink_db.get_all_accounts()
-
-    # TODO: This should move to BuchfinkDB.get_accounts()
-    if keyword is not None:
-        if keyword.startswith('/') and keyword.endswith('/'):
-            keyword_re = re.compile(keyword[1:-1])
-            accounts = [acc for acc in accounts if keyword_re.search(acc.name)]
-        else:
-            accounts = [acc for acc in accounts if keyword in acc.name]
-
-    # TODO: This should move to BuchfinkDB.get_accounts()
-    if account_type is not None:
-        accounts = [acc for acc in accounts if account_type in acc.account_type]
-
-    logger.info(
-            'Collected %d account(s): %s',
-            len(accounts),
-            ', '.join([acc.name for acc in accounts])
-        )
+    accounts = _get_accounts(buchfink_db, external=external, keyword=keyword,
+            exclude=exclude, account_type=account_type)
 
     for account in accounts:
         name = account.name
