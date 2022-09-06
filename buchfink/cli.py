@@ -317,7 +317,7 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
 @click.option('--nfts', 'fetch_nfts', is_flag=True, help='Fetch NFT balances only')
 @click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
 @with_buchfink_db
-def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions,
+def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclude,
         fetch_balances, fetch_trades, fetch_nfts, external):
     "Fetch trades for configured accounts"
 
