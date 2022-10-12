@@ -757,7 +757,10 @@ class BuchfinkDB(DBHandler):
                         n for n in settings_web3_nodes if n.name != db_web3_node.node_info.name
                     ]
                 else:
-                    self.delete_web3_node(db_web3_node.identifier)
+                    self.delete_web3_node(
+                            db_web3_node.identifier,
+                            blockchain=SupportedBlockchain.ETHEREUM
+                    )
 
         for web3_node in settings_web3_nodes:
             self.add_web3_node(

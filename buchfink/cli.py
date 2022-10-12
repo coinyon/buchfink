@@ -17,6 +17,7 @@ import pyqrcode
 import yaml
 # from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.constants import ZERO
+from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 
