@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
-from rotkehlchen.serialization.deserialize import deserialize_ethereum_address
+from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.types import Location, EvmTokenKind
 
@@ -209,8 +209,9 @@ def serialize_decimal(dec: Decimal) -> str:
 
 def serialize_asset(asset: Asset) -> str:
     try:
-        if asset == symbol_to_asset_or_token(asset.symbol):
-            return asset.symbol
+        # TODO can't we return symbol here in some cases?
+        if asset == symbol_to_asset_or_token(asset.identifier):
+            return asset.identifier
     except UnknownAsset:
         pass
     return f'{asset.symbol}[{asset.identifier}]'
@@ -461,7 +462,7 @@ def deserialize_asset(val: str) -> Asset:
     if identifier:
         asset = symbol_to_asset_or_token(identifier)
     else:
-        asset = symbol_to_asset_or_token(symbol)
+        asset = symbol_to_asset_or_token(symbol, evm_chain=ChainID.ETHEREUM)
 
     if asset is None:
         raise ValueError(f'Symbol not found or ambigous: {val}')
@@ -469,9 +470,9 @@ def deserialize_asset(val: str) -> Asset:
     return asset
 
 
-def deserialize_ethereum_token(token_data: dict) -> EvmToken:
+def deserialize_evm_token(token_data: dict) -> EvmToken:
     token = EvmToken.initialize(
-            address=deserialize_ethereum_address(token_data.get('address')),
+            address=deserialize_evm_address(token_data.get('address')),
             name=token_data.get('name'),
             symbol=token_data.get('symbol'),
             decimals=token_data.get('decimals'),

@@ -4,7 +4,7 @@ from typing import List
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_str, hexstr_to_int
 
-from .datatypes import EthereumTransaction, EthereumTxReceipt, FVal, LedgerAction, LedgerActionType
+from .datatypes import EvmTransaction, EthereumTxReceipt, FVal, LedgerAction, LedgerActionType
 from .models import Account
 from .serialization import serialize_timestamp
 
@@ -97,7 +97,7 @@ ADDR_HEDRON = '0x3819f64f282bf135d62168C1e513280dAF905e06'
 
 def classify_tx(
         account: Account,
-        txn: EthereumTransaction,
+        txn: EvmTransaction,
         receipt: EthereumTxReceipt
 ) -> List[LedgerAction]:
     actions = []  # type: List[LedgerAction]

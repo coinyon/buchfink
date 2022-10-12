@@ -62,8 +62,11 @@ def accounts_from_config(config: Config) -> List[Account]:
     return [account_from_config(acc) for acc in config.accounts]
 
 
-def account_from_string(acc_def: str, buchfink_db) -> Account:
+def account_from_string(acc_def: str, buchfink_db=None) -> Account:
     if acc_def.lower().endswith('.eth'):
+        if buchfink_db is None:
+            raise ValueError('DB is required to resolve ENS name')
+
         eth_address = buchfink_db.ethereum_manager.ens_lookup(acc_def)
         if not eth_address:
             raise ValueError(f'Could not resolve ENS: {acc_def}')

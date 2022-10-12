@@ -9,4 +9,4 @@ from rotkehlchen.chain.ethereum.structures import EthereumTxReceipt
 # from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.exchanges.data_structures import Trade
 from rotkehlchen.fval import FVal
-from rotkehlchen.types import ChecksumEvmAddress, EthereumTransaction, Timestamp, TradeType
+from rotkehlchen.types import ChecksumEvmAddress, EvmTransaction, EVMTxHash, Timestamp, TradeType

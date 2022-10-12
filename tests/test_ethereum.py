@@ -3,6 +3,7 @@ import shutil
 from datetime import datetime
 
 import pytest
+from rotkehlchen.types import SupportedBlockchain
 
 from buchfink.datatypes import FVal
 from buchfink.db import BuchfinkDB
@@ -44,4 +45,7 @@ def test_if_we_have_enough_web3_nodes(tmp_path):
         os.path.join(tmp_path, "buchfink"),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
-    assert len(buchfink_db.get_web3_nodes(only_active=True)) >= 5
+    assert len(buchfink_db.get_web3_nodes(
+        blockchain=SupportedBlockchain.ETHEREUM,
+        only_active=True
+    )) >= 5

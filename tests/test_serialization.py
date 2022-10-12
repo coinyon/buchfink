@@ -54,7 +54,13 @@ def test_trade_serialization_2(dummy_trade):
     assert serialize_decimal(Decimal('1234.23410')) == '1234.2341'
 
 
-def test_trade_deserialization_with_fee(dummy_trade):
+def test_trade_deserialization_with_fee(tmp_path, dummy_trade):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+
     ser_trade = serialize_trade(dummy_trade)
 
     del ser_trade['fee']

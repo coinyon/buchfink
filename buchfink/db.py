@@ -17,10 +17,10 @@ from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
-from rotkehlchen.chain.ethereum.tokens import EthTokens
 # from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
+from rotkehlchen.chain.evm.tokens import EvmTokens
 from rotkehlchen.chain.manager import ChainManager
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
@@ -43,6 +43,7 @@ from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.globaldb import GlobalDBHandler
+from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
 from rotkehlchen.globaldb.updates import AssetsUpdater
 from rotkehlchen.greenlets import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
@@ -69,8 +70,8 @@ from buchfink.datatypes import (
     Asset,
     Balance,
     BalanceSheet,
-    EthereumTransaction,
     EthereumTxReceipt,
+    EvmTransaction,
     HistoryBaseEntry,
     LedgerAction,
     Trade
@@ -88,8 +89,8 @@ from buchfink.models.account import accounts_from_config
 from buchfink.serialization import (
     deserialize_asset,
     deserialize_balance,
-    deserialize_ethereum_token,
     deserialize_event,
+    deserialize_evm_token,
     deserialize_ledger_action,
     deserialize_trade,
     serialize_balances
@@ -160,21 +161,26 @@ class BuchfinkDB(DBHandler):
                 self.cryptocompare,
                 self.coingecko
             )
-        self.inquirer = Inquirer(self.cache_directory / 'inquirer',
-                self.cryptocompare,
-                self.coingecko
-            )
+
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
         # Initialize blockchain querying modules
         self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
         self.globaldb = GlobalDBHandler(
-            self.cache_directory,
+            data_dir=self.cache_directory,
             sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
         )
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
+
+        self.inquirer = Inquirer(
+                data_dir=self.cache_directory / 'inquirer',
+                cryptocompare=self.cryptocompare,
+                coingecko=self.coingecko,
+                manualcurrent=ManualCurrentOracle(),
+                msg_aggregator=self.msg_aggregator,
+            )
 
         self.ethereum_manager = EthereumManager(
             etherscan=self.etherscan,
@@ -194,7 +200,7 @@ class BuchfinkDB(DBHandler):
         )
 
         self.sync_web3_nodes()
-        web3_nodes = self.get_web3_nodes(only_active=True)
+        web3_nodes = self.get_web3_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
         if web3_nodes:
             self.ethereum_manager.connect_to_multiple_nodes(web3_nodes)
 
@@ -202,7 +208,7 @@ class BuchfinkDB(DBHandler):
         self.evm_tx_decoder = EVMTransactionDecoder(
             database=self,
             ethereum_manager=self.ethereum_manager,
-            eth_transactions=self.eth_transactions,
+            transactions=self.eth_transactions,
             msg_aggregator=self.msg_aggregator,
         )
         self.inquirer.inject_ethereum(self.ethereum_manager)
@@ -293,7 +299,7 @@ class BuchfinkDB(DBHandler):
                 pass
 
     def get_eth_transactions(self, account: Account, with_receipts: bool = False) \
-            -> List[Tuple[EthereumTransaction, Optional[EthereumTxReceipt]]]:
+            -> List[Tuple[EvmTransaction, Optional[EthereumTxReceipt]]]:
 
         assert account.account_type == "ethereum"
         address = cast(ChecksumEvmAddress, account.address)
@@ -555,8 +561,8 @@ class BuchfinkDB(DBHandler):
         if account.account_type == "ethereum":
             manager = self.get_chain_manager(account)
 
-            ethtokens = EthTokens(database=self, ethereum=self.ethereum_manager)
-            ethtokens.detect_tokens(
+            evm_tokens = EvmTokens(database=self, manager=self.ethereum_manager)
+            evm_tokens.detect_tokens(
                 only_cache=False,
                 addresses=[account.address],
             )
@@ -741,7 +747,7 @@ class BuchfinkDB(DBHandler):
             read_and_write_nodes_in_database(cursor)
 
         settings_web3_nodes = list(self.config.settings.web3_nodes or [])
-        db_web3_nodes = list(self.get_web3_nodes())
+        db_web3_nodes = list(self.get_web3_nodes(SupportedBlockchain.ETHEREUM))
 
         for db_web3_node in db_web3_nodes:
             if db_web3_node.node_info.owned:  # do not delete preconfigured nodes
@@ -760,6 +766,7 @@ class BuchfinkDB(DBHandler):
                     node_info=NodeName(
                         name=web3_node.name,
                         endpoint=web3_node.endpoint,
+                        blockchain=SupportedBlockchain.ETHEREUM,
                         owned=True,
                     ),
                     weight=FVal(0.4),
@@ -771,7 +778,7 @@ class BuchfinkDB(DBHandler):
         'Sync assets defined in config with database'
 
         for token in self.config.tokens:
-            eth_token = deserialize_ethereum_token(token.dict())
+            eth_token = deserialize_evm_token(token.dict())
             identifier = 'eip155:1/erc20:' + eth_token.evm_address
 
             try:
