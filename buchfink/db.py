@@ -284,6 +284,7 @@ class BuchfinkDB(DBHandler):
             try:
                 assert account.address is not None
                 with self.user_write() as cursor:
+                    logger.debug('Adding account to DB: %s', account)
                     self.add_blockchain_accounts(
                         write_cursor=cursor,
                         blockchain=SupportedBlockchain.ETHEREUM,
