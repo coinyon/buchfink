@@ -15,13 +15,11 @@ import click
 import coloredlogs
 import pyqrcode
 import yaml
-# from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.constants import ZERO
-from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 
-from buchfink.datatypes import Asset, FVal, LedgerAction, Timestamp, Trade, HistoryEventSubType
+from buchfink.datatypes import Asset, FVal, HistoryEventSubType, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
