@@ -388,10 +388,9 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
             if fetch_trades_for_this_account:
                 logger.info('Fetching trades for %s', name)
 
-                manager = buchfink_db.get_chain_manager(account)
-
                 trades = []
 
+                # manager = buchfink_db.get_chain_manager(account)
                 # amm_module = manager.get_module('uniswap')
                 # if amm_module:
                 #     trades.extend(amm_module.get_trades(
