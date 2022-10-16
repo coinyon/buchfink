@@ -392,23 +392,23 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
 
                 trades = []
 
-                amm_module = manager.get_module('uniswap')
-                if amm_module:
-                    trades.extend(amm_module.get_trades(
-                            addresses=manager.accounts.eth,
-                            from_timestamp=epoch_start_ts,
-                            to_timestamp=epoch_end_ts,
-                            only_cache=False
-                        ))
-
-                amm_module = manager.get_module('sushiswap')
-                if amm_module:
-                    trades.extend(amm_module.get_trades(
-                            addresses=manager.accounts.eth,
-                            from_timestamp=epoch_start_ts,
-                            to_timestamp=epoch_end_ts,
-                            only_cache=False
-                        ))
+                # amm_module = manager.get_module('uniswap')
+                # if amm_module:
+                #     trades.extend(amm_module.get_trades(
+                #             addresses=manager.accounts.eth,
+                #             from_timestamp=epoch_start_ts,
+                #             to_timestamp=epoch_end_ts,
+                #             only_cache=False
+                #         ))
+                #
+                # amm_module = manager.get_module('sushiswap')
+                # if amm_module:
+                #     trades.extend(amm_module.get_trades(
+                #             addresses=manager.accounts.eth,
+                #             from_timestamp=epoch_start_ts,
+                #             to_timestamp=epoch_end_ts,
+                #             only_cache=False
+                #         ))
 
                 trades.extend(zerion_csv.get_trades(buchfink_db, account))
 
