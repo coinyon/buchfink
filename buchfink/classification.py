@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import List
 
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
+from rotkehlchen.types import ChainID
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_str, hexstr_to_int
 
 from .datatypes import EthereumTxReceipt, EvmTransaction, FVal, LedgerAction, LedgerActionType
@@ -239,7 +240,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('BAL'),
+                asset=symbol_to_asset_or_token('BAL', evm_chain=ChainID.ETHEREUM),
                 notes='Balancer rewards for providing liquidity',
                 link=txn.tx_hash.hex()
             )]
@@ -254,7 +255,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('ROOK'),
+                asset=symbol_to_asset_or_token('ROOK', evm_chain=ChainID.ETHEREUM),
                 notes='Rook rewards for providing liquidity',
                 link=txn.tx_hash.hex()
             )]
@@ -317,7 +318,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('SUSHI'),
+                asset=symbol_to_asset_or_token('SUSHI', evm_chain=ChainID.ETHEREUM),
                 notes='SUSHI rewards vesting',
                 link=txn.tx_hash.hex()
             )]
@@ -335,7 +336,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('INDEX'),
+                asset=symbol_to_asset_or_token('INDEX', evm_chain=ChainID.ETHEREUM),
                 notes='rewards for providing liquidity',
                 link=txn.tx_hash.hex()
             )]
@@ -365,7 +366,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('CREAM'),
+                asset=symbol_to_asset_or_token('CREAM', evm_chain=ChainID.ETHEREUM),
                 notes='rewards from cream incentives',
                 link=txn.tx_hash.hex()
             )]
@@ -401,7 +402,8 @@ def classify_tx(
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('SWRV'),
+                    asset=symbol_to_asset_or_token('SWRV',
+                                                   evm_chain=ChainID.ETHEREUM),
                     notes='Swerve rewards for pooling liquidity',
                     link=txn.tx_hash.hex()
                 )]
@@ -440,7 +442,8 @@ def classify_tx(
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('DODO'),
+                    asset=symbol_to_asset_or_token('DODO',
+                                                   evm_chain=ChainID.ETHEREUM),
                     notes='Claim DODO rewards',
                     link=txn.tx_hash.hex()
                 )]
@@ -457,7 +460,8 @@ def classify_tx(
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('SUSHI'),
+                    asset=symbol_to_asset_or_token('SUSHI',
+                                                   evm_chain=ChainID.ETHEREUM),
                     notes='Claim SUSHI rewards for staking LP',
                     link=txn.tx_hash.hex()
                 )]
@@ -486,7 +490,7 @@ def classify_tx(
             # MakerDAO Mint
             # Until we clarify generalized lending support in Buchfink,
             # treat borrowed DAI as a gift you have to pay back
-            asset = symbol_to_asset_or_token('DAI')
+            asset = symbol_to_asset_or_token('DAI', evm_chain=ChainID.ETHEREUM)
             if hexstr_to_int(event.topics[1]) == 0 and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
@@ -665,7 +669,7 @@ def classify_tx(
         # Until we clarify generalized lending support in Buchfink,
         # treat borrowed DAI as a gift you have to pay back
         if event.topics[0] == BORROW and same_addr(event.address, ADDR_COMPOUND_DAI):
-            asset = symbol_to_asset_or_token('DAI')
+            asset = symbol_to_asset_or_token('DAI', evm_chain=ChainID.ETHEREUM)
             borrower = hexstr_to_int(event.data[2:][:64])
             amount = hexstr_to_int(event.data[2:][64:128])
             if borrower == hexstr_to_int(account.address):
