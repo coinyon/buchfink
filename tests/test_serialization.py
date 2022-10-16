@@ -88,22 +88,42 @@ def test_datetime_deserialization():
     assert dt.day == 5
 
 
-def test_assets(tmp_path):
+def test_assets_serialization(tmp_path):
     shutil.copytree(
             os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
             os.path.join(tmp_path, 'buchfink')
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
-    assert buchfink_db.get_asset_by_symbol('ETH') == Asset('ETH')
-    assert buchfink_db.get_asset_by_symbol('DAI') is not None
+    A_BCH = buchfink_db.get_asset_by_symbol('BCH')
+    assert A_BCH == Asset('BCH')
+    assert 'BCH' in serialize_asset(A_BCH)
+
+    A_ETH = buchfink_db.get_asset_by_symbol('ETH')
+    assert A_ETH == Asset('ETH')
+    assert 'ETH' in serialize_asset(A_ETH)
+
+    A_DAI = buchfink_db.get_asset_by_symbol('DAI')
+    assert A_DAI is not None
+    assert 'DAI' in serialize_asset(A_DAI)
 
     assert deserialize_asset(serialize_asset(Asset('ETH'))) == Asset('ETH')
+
+    A_HEX = buchfink_db.get_asset_by_symbol('HEX')
+    assert A_HEX is not None
+    assert 'HEX' in serialize_asset(A_HEX)
 
     A_STAKEDAO = buchfink_db.get_asset_by_symbol(
             'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
     )
     assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
+    assert 'SDT' in serialize_asset(A_STAKEDAO)
+
+    A_STAKEDAO = buchfink_db.get_asset_by_symbol(
+            'SDT[eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F]'
+    )
+    assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
+    assert 'SDT' in serialize_asset(A_STAKEDAO)
 
 
 def test_serialize_deserialize_balance(tmp_path):

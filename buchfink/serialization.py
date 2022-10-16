@@ -209,12 +209,18 @@ def serialize_decimal(dec: Decimal) -> str:
 
 def serialize_asset(asset: Asset) -> str:
     try:
-        # TODO can't we return symbol here in some cases?
-        if asset == symbol_to_asset_or_token(asset.identifier):
-            return asset.identifier
+        if asset == symbol_to_asset_or_token(asset.symbol_or_name()):
+            return asset.symbol_or_name()
     except UnknownAsset:
         pass
-    return f'{asset.symbol}[{asset.identifier}]'
+
+    try:
+        if asset == symbol_to_asset_or_token(asset.symbol_or_name(), evm_chain=ChainID.ETHEREUM):
+            return asset.symbol_or_name()
+    except UnknownAsset:
+        pass
+
+    return f'{asset.symbol_or_name()}[{asset.identifier}]'
 
 
 def serialize_amount(amount: FVal, asset: Asset) -> str:
@@ -462,7 +468,10 @@ def deserialize_asset(val: str) -> Asset:
     if identifier:
         asset = symbol_to_asset_or_token(identifier)
     else:
-        asset = symbol_to_asset_or_token(symbol, evm_chain=ChainID.ETHEREUM)
+        try:
+            asset = symbol_to_asset_or_token(symbol)
+        except UnknownAsset:
+            asset = symbol_to_asset_or_token(symbol, evm_chain=ChainID.ETHEREUM)
 
     if asset is None:
         raise ValueError(f'Symbol not found or ambigous: {val}')
