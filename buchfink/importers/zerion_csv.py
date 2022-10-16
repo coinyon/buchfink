@@ -38,11 +38,15 @@ def get_trades(db: BuchfinkDB, account: Account) -> List[Trade]:
         row = row2  # type: Any
         try:
             if row['Buy Currency Address']:
-                base_asset = db.get_asset_by_symbol('eip155:1/erc20:' + row['Buy Currency Address'])
+                base_asset = db.get_asset_by_symbol(
+                    'eip155:1/erc20:' + row['Buy Currency Address']
+                )
             else:
                 base_asset = db.get_asset_by_symbol(row['Buy Currency'])
             if row['Sell Currency Address']:
-                quote_asset = db.get_asset_by_symbol('eip155:1/erc20:' + row['Sell Currency Address'])
+                quote_asset = db.get_asset_by_symbol(
+                    'eip155:1/erc20:' + row['Sell Currency Address']
+                )
             else:
                 quote_asset = db.get_asset_by_symbol(row['Sell Currency'])
             fee_asset = db.get_asset_by_symbol(row['Fee Currency'])

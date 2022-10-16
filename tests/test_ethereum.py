@@ -30,8 +30,9 @@ def test_custom_ethereum_token(tmp_path):
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
     buchfink_db.perform_assets_updates()
     assert (
-        buchfink_db.get_asset_by_symbol("eip155:1/erc20:0x7b35Ce522CB72e4077BaeB96Cb923A5529764a00")
-        is not None
+        buchfink_db.get_asset_by_symbol(
+            "eip155:1/erc20:0x7b35Ce522CB72e4077BaeB96Cb923A5529764a00"
+        ) is not None
     )
     assert buchfink_db.get_asset_by_symbol("FANTASY") is not None
 
