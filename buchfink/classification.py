@@ -1,10 +1,11 @@
 import logging
+from copy import deepcopy
 from typing import List
 
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_str, hexstr_to_int
 
-from .datatypes import EvmTransaction, EthereumTxReceipt, FVal, LedgerAction, LedgerActionType
+from .datatypes import EthereumTxReceipt, EvmTransaction, FVal, LedgerAction, LedgerActionType
 from .models import Account
 from .serialization import serialize_timestamp
 
@@ -106,6 +107,10 @@ def classify_tx(
 
     if txn.from_address != account.address:
         return actions
+
+    # Copy receipt because we will modify it in place. This is ugly and has to
+    # be removed in the future.
+    receipt = deepcopy(receipt)
 
     for event in receipt.logs:
         # Quick hack to make the classication work. Will refactor later.
