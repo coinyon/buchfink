@@ -41,6 +41,7 @@ from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
+from rotkehlchen.externalapis.defillama import Defillama
 from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
@@ -156,10 +157,12 @@ class BuchfinkDB(DBHandler):
         self.msg_aggregator = MessagesAggregator()
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko()
+        self.defillama = Defillama()
         self.historian = PriceHistorian(
                 self.cache_directory / 'history',
                 self.cryptocompare,
-                self.coingecko
+                self.coingecko,
+                self.defillama
             )
 
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
@@ -180,6 +183,7 @@ class BuchfinkDB(DBHandler):
                 coingecko=self.coingecko,
                 manualcurrent=ManualCurrentOracle(),
                 msg_aggregator=self.msg_aggregator,
+                defillama=self.defillama
             )
 
         self.ethereum_manager = EthereumManager(

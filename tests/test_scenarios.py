@@ -1,6 +1,8 @@
 import os.path
 import shutil
 
+import pytest
+
 from buchfink.db import BuchfinkDB
 from buchfink.report import run_report
 
@@ -57,7 +59,7 @@ def test_ledger_actions_income(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['trade']['taxable'] == '2092.35'
+    assert float(result['overview']['trade']['taxable']) == pytest.approx(2092.35, rel=0.1)
 
 
 def test_ledger_actions_airdrop(tmp_path):
@@ -74,7 +76,7 @@ def test_ledger_actions_airdrop(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['trade']['taxable'] == '2092.35'
+    assert float(result['overview']['trade']['taxable']) == pytest.approx(2092.35, rel=0.1)
 
 
 def test_ledger_actions_gift(tmp_path):
@@ -92,4 +94,4 @@ def test_ledger_actions_gift(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert result['overview']['trade']['taxable'] == '2092.35'
+    assert float(result['overview']['trade']['taxable']) == pytest.approx(2092.35, rel=0.1)
