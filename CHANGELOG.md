@@ -1,5 +1,9 @@
 # Changelog
 
+## master
+
+* Support specification of ignored assets via setting
+
 ## 0.0.15
 
 * Ethereum gas spent will be decoded and store in YAML as actions
