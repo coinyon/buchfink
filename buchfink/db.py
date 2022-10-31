@@ -11,7 +11,9 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
+from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.types import AssetType
+from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.ethereum.accounting.aggregator import EVMAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.manager import EthereumManager
@@ -52,7 +54,9 @@ from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.logging import TRACE, add_logging_level
 from rotkehlchen.types import (
+    SPAM_PROTOCOL,
     BlockchainAccountData,
+    ChainID,
     ChecksumEvmAddress,
     ExternalService,
     ExternalServiceApiCredentials,
@@ -92,6 +96,7 @@ from buchfink.serialization import (
     deserialize_balance,
     deserialize_event,
     deserialize_evm_token,
+    deserialize_identifier,
     deserialize_ledger_action,
     deserialize_trade,
     serialize_balances
@@ -267,11 +272,9 @@ class BuchfinkDB(DBHandler):
     def get_settings(self, cursor=None, have_premium: bool = False) -> DBSettings:
         clean_settings = self.config.settings.dict().copy()
 
-        if 'external_services' in clean_settings:
-            del clean_settings['external_services']
-
-        if 'web3_nodes' in clean_settings:
-            del clean_settings['web3_nodes']
+        clean_settings.pop('external_services', None)
+        clean_settings.pop('web3_nodes', None)
+        clean_settings.pop('ignored_assets', None)
 
         # Remove None values
         for k in list(clean_settings):
@@ -741,6 +744,14 @@ class BuchfinkDB(DBHandler):
 
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, None)
+
+        with self.user_write() as cursor:
+            assets_updated = update_spam_assets(
+                    write_cursor=cursor,
+                    db=self,
+                    make_remote_query=True
+            )
+
         self.sync_config_assets()
 
     def sync_web3_nodes(self):
@@ -811,6 +822,36 @@ class BuchfinkDB(DBHandler):
                     raise ValueError('Unable to add asset: ' + str(eth_token)) from exc
 
             self.asset_resolver.clean_memory_cache()
+
+        with self.conn.read_ctx() as cursor:
+            ignored_assets = {asset.identifier for asset in self.get_ignored_assets(cursor)}
+
+        with self.user_write() as cursor:
+            for ignored_asset in self.config.settings.ignored_assets:
+
+                token_identifier = deserialize_identifier(ignored_asset)
+
+                if token_identifier in ignored_assets:
+                    continue
+
+                if ':' in token_identifier:
+                    token_address = token_identifier.split(':')[-1]
+                else:
+                    token_address = token_identifier
+
+                token = get_or_create_evm_token(
+                    userdb=self,
+                    evm_address=token_address,
+                    chain=ChainID.ETHEREUM,
+                    protocol=SPAM_PROTOCOL,
+                    form_with_incomplete_data=True,
+                    decimals=18,
+                    name='Ignored from config',
+                    symbol='SPAM',
+                )
+
+                logger.debug('Adding to ignored assets: %s', token)
+                self.add_to_ignored_assets(write_cursor=cursor, asset=token)
 
     def sync_manual_prices(self):
         def to_historical_price(historical_price: HistoricalPriceConfig) -> HistoricalPrice:

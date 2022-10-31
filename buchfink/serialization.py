@@ -459,6 +459,18 @@ def serialize_fval(val: FVal) -> str:
 ASSET_RE = re.compile(r'([^\[]+)(\[(.*)\])?')
 
 
+def deserialize_identifier(val: str) -> str:
+    match = ASSET_RE.match(val)
+    if match is None:
+        raise ValueError(f'Could not parse asset: {val}')
+
+    symbol, _identifier_outer, identifier = match.groups()
+    if identifier:
+        return identifier
+    else:
+        return symbol
+
+
 def deserialize_asset(val: str) -> Asset:
     match = ASSET_RE.match(val)
     if match is None:

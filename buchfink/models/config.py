@@ -90,6 +90,7 @@ class Settings(BaseModel):
     include_crypto2crypto: Optional[bool]
     external_services: Optional[ExternalServicesConfig]
     web3_nodes: Optional[List[Web3Node]]
+    ignored_assets: List[str] = []
 
 
 class AssetConfig(BaseModel):

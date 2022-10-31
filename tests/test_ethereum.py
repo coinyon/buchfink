@@ -50,3 +50,18 @@ def test_if_we_have_enough_web3_nodes(tmp_path):
         blockchain=SupportedBlockchain.ETHEREUM,
         only_active=True
     )) >= 5
+
+
+def test_if_ignored_assets_are_added(tmp_path):
+    shutil.copytree(
+        os.path.join(os.path.dirname(__file__), "scenarios", "ignored_assets"),
+        os.path.join(tmp_path, "buchfink"),
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
+    buchfink_db.sync_config_assets()
+    with buchfink_db.conn.read_ctx() as cursor:
+        ignored_assets = buchfink_db.get_ignored_assets(cursor)
+        ignored_identifiers = {asset.identifier for asset in ignored_assets}
+
+    assert len(ignored_assets) >= 3
+    assert 'eip155:1/erc20:0x426CA1eA2406c07d75Db9585F22781c096e3d0E0' in ignored_identifiers

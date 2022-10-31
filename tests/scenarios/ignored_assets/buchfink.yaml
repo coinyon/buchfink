@@ -1,0 +1,9 @@
+accounts:
+  - name: whale
+    ethereum: '0xD57479B8287666B44978255F1677E412d454d4f0'
+
+settings:
+  ignored_assets:
+    - MNE[eip155:1/erc20:0x426CA1eA2406c07d75Db9585F22781c096e3d0E0]
+    - MNE[eip155:1/erc20:0xc92e74b131D7b1D46E60e07F3FaE5d8877Dd03F0]
+    - UNIRewardsV2.com[eip155:1/erc20:0x9d42Ee269acF39b50fA01370c8f11c32C1e293eC]
