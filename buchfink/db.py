@@ -746,11 +746,7 @@ class BuchfinkDB(DBHandler):
         self.assets_updater.perform_update(None, None)
 
         with self.user_write() as cursor:
-            assets_updated = update_spam_assets(
-                    write_cursor=cursor,
-                    db=self,
-                    make_remote_query=True
-            )
+            update_spam_assets(write_cursor=cursor, db=self, make_remote_query=True)
 
         self.sync_config_assets()
 

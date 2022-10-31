@@ -467,8 +467,7 @@ def deserialize_identifier(val: str) -> str:
     symbol, _identifier_outer, identifier = match.groups()
     if identifier:
         return identifier
-    else:
-        return symbol
+    return symbol
 
 
 def deserialize_asset(val: str) -> Asset:
