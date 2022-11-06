@@ -23,7 +23,7 @@ from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV
 from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
 from rotkehlchen.chain.evm.tokens import EvmTokens
-from rotkehlchen.chain.manager import ChainManager
+from rotkehlchen.chain.aggregator import ChainsAggregator
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
 from rotkehlchen.db.dbhandler import DBHandler
@@ -462,7 +462,7 @@ class BuchfinkDB(DBHandler):
 
         return []
 
-    def get_chain_manager(self, account: Account) -> ChainManager:
+    def get_chains_aggregator(self, account: Account) -> ChainsAggregator:
         accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
 
         if account.account_type == "ethereum":
@@ -483,9 +483,9 @@ class BuchfinkDB(DBHandler):
         if not premium:
             eth_modules = [mod for mod in eth_modules if mod not in PREMIUM_ONLY_ETH_MODULES]
 
-        logger.debug('Creating ChainManager with modules: %s', eth_modules)
+        logger.debug('Creating ChainsAggregator with modules: %s', eth_modules)
 
-        manager = ChainManager(
+        manager = ChainsAggregator(
             database=self,
             blockchain_accounts=BlockchainAccounts(**accs),
             beaconchain=self.beaconchain,
@@ -567,7 +567,7 @@ class BuchfinkDB(DBHandler):
             raise RuntimeError(error)
 
         if account.account_type == "ethereum":
-            manager = self.get_chain_manager(account)
+            manager = self.get_chains_aggregator(account)
 
             evm_tokens = EvmTokens(database=self, manager=self.ethereum_manager)
             evm_tokens.detect_tokens(
@@ -587,7 +587,7 @@ class BuchfinkDB(DBHandler):
             return reduce(operator.add, manager.balances.eth.values())
 
         if account.account_type == "bitcoin":
-            manager = self.get_chain_manager(account)
+            manager = self.get_chains_aggregator(account)
             manager.query_balances()
             btc = Asset('BTC')
 
@@ -596,7 +596,7 @@ class BuchfinkDB(DBHandler):
             }, liabilities={})
 
         if account.account_type == "bitcoincash":
-            manager = self.get_chain_manager(account)
+            manager = self.get_chains_aggregator(account)
             manager.query_balances()
             bch = Asset('BCH')
 
@@ -616,7 +616,7 @@ class BuchfinkDB(DBHandler):
 
     def query_nfts(self, account) -> List[NFT]:
         if account.account_type == "ethereum":
-            manager = self.get_chain_manager(account)
+            manager = self.get_chains_aggregator(account)
             nfts = manager.get_module('nfts')
             nft_result = nfts.get_all_info(addresses=[account.address], ignore_cache=True)
             if account.address in nft_result.addresses:
