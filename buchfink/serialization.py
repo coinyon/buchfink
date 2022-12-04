@@ -215,7 +215,7 @@ def serialize_asset(asset: Asset) -> str:
         pass
 
     try:
-        if asset == symbol_to_asset_or_token(asset.symbol_or_name(), evm_chain=ChainID.ETHEREUM):
+        if asset == symbol_to_asset_or_token(asset.symbol_or_name(), chain_id=ChainID.ETHEREUM):
             return asset.symbol_or_name()
     except UnknownAsset:
         pass
@@ -482,7 +482,7 @@ def deserialize_asset(val: str) -> Asset:
         try:
             asset = symbol_to_asset_or_token(symbol)
         except UnknownAsset:
-            asset = symbol_to_asset_or_token(symbol, evm_chain=ChainID.ETHEREUM)
+            asset = symbol_to_asset_or_token(symbol, chain_id=ChainID.ETHEREUM)
 
     if asset is None:
         raise ValueError(f'Symbol not found or ambigous: {val}')
@@ -497,7 +497,7 @@ def deserialize_evm_token(token_data: dict) -> EvmToken:
             symbol=token_data.get('symbol'),
             decimals=token_data.get('decimals'),
             coingecko=token_data.get('coingecko'),
-            chain=ChainID.ETHEREUM,
+            chain_id=ChainID.ETHEREUM,
             token_kind=EvmTokenKind.ERC20
     )
     return token

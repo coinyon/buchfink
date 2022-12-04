@@ -20,7 +20,7 @@ from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 # from rotkehlchen.chain.ethereum.trades import AMMSwap
-from rotkehlchen.chain.ethereum.transactions import EthTransactions, ETHTransactionsFilterQuery
+from rotkehlchen.chain.ethereum.transactions import EvmTransactions, EvmTransactionsFilterQuery
 from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
 from rotkehlchen.chain.evm.tokens import EvmTokens
 from rotkehlchen.chain.aggregator import ChainsAggregator
@@ -213,7 +213,7 @@ class BuchfinkDB(DBHandler):
         if web3_nodes:
             self.ethereum_manager.connect_to_multiple_nodes(web3_nodes)
 
-        self.eth_transactions = EthTransactions(ethereum=self.ethereum_manager, database=self)
+        self.eth_transactions = EvmTransactions(ethereum=self.ethereum_manager, database=self)
         self.evm_tx_decoder = EVMTransactionDecoder(
             database=self,
             ethereum_manager=self.ethereum_manager,
@@ -323,7 +323,7 @@ class BuchfinkDB(DBHandler):
         )
 
         txs, txs_total_count = self.eth_transactions.query(
-                ETHTransactionsFilterQuery.make(addresses=[address]),
+                EvmTransactionsFilterQuery.make(addresses=[address]),
                 only_cache=True
         )
 
@@ -838,7 +838,7 @@ class BuchfinkDB(DBHandler):
                 token = get_or_create_evm_token(
                     userdb=self,
                     evm_address=token_address,
-                    chain=ChainID.ETHEREUM,
+                    chain_id=ChainID.ETHEREUM,
                     protocol=SPAM_PROTOCOL,
                     form_with_incomplete_data=True,
                     decimals=18,
