@@ -18,6 +18,7 @@ import yaml
 from rotkehlchen.constants import ZERO
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
+from web3.exceptions import CannotHandleRequest
 
 from buchfink.datatypes import FVal, HistoryEventSubType, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
@@ -38,7 +39,8 @@ from .models.account import account_from_string
 from .report import render_report, run_report
 
 if TYPE_CHECKING:
-    from typing import Union, Dict  # noqa: F401
+    from typing import Dict, Union  # noqa: F401
+
     from buchfink.datatypes import Asset  # noqa: F401
 
 logger = logging.getLogger(__name__)
@@ -497,7 +499,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
 
             try:
                 buchfink_db.fetch_balances(account)
-            except IOError:
+            except (IOError, CannotHandleRequest):
                 logger.exception('Exception during fetch_balances')
                 error_occured = True
                 continue
