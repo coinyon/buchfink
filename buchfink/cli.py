@@ -9,7 +9,7 @@ from datetime import datetime
 from functools import update_wrapper
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import click
 import coloredlogs
@@ -19,7 +19,7 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 
-from buchfink.datatypes import Asset, FVal, HistoryEventSubType, LedgerAction, Timestamp, Trade
+from buchfink.datatypes import FVal, HistoryEventSubType, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
@@ -36,6 +36,10 @@ from .importers import zerion_csv
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
 from .report import render_report, run_report
+
+if TYPE_CHECKING:
+    from typing import Union, Dict  # noqa: F401
+    from buchfink.datatypes import Asset  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -473,7 +477,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                 #    unique_trades.append(trade)
                 #    for swap in trade.swaps:
                 #        existing.add((swap.location, swap.tx_hash))
-                if not (trade.location, trade.link) in existing:
+                if (trade.location, trade.link) not in existing:
                     existing.add((trade.location, trade.link))
                     unique_trades.append(trade)
                 else:
@@ -748,12 +752,12 @@ def allowances(buchfink_db):
             len(all_trades), num_matched_accounts)
 
     accountant = buchfink_db.get_accountant()
-    currency = buchfink_db.get_main_currency()
-    currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
+    # currency = buchfink_db.get_main_currency()
+    # currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
 
     accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [], [])
-    total_usd = FVal(0)
-    table = []
+    # total_usd = FVal(0)
+    # table = []
 
     raise NotImplementedError()
     """

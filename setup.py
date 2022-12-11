@@ -41,7 +41,8 @@ setup(
             "pylint",
             "pytest",
             "mypy==0.790",
-            "pycodestyle"
+            "pycodestyle",
+            "ruff"
         ]
     },
     use_scm_version=True,

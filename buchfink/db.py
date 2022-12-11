@@ -16,7 +16,6 @@ from rotkehlchen.assets.types import AssetType
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.aggregator import ChainsAggregator
 from rotkehlchen.chain.ethereum.accounting.aggregator import EVMAccountingAggregator
-from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
@@ -24,9 +23,8 @@ from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
-from rotkehlchen.chain.evm.tokens import EvmTokens
 # from rotkehlchen.chain.ethereum.trades import AMMSwap
-from rotkehlchen.chain.evm.transactions import EvmTransactions, EvmTransactionsFilterQuery
+from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.manager import DataMigrationManager
@@ -49,7 +47,6 @@ from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.defillama import Defillama
-from rotkehlchen.externalapis.etherscan import Etherscan
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
 from rotkehlchen.globaldb.updates import AssetsUpdater
@@ -77,7 +74,6 @@ from rotkehlchen.utils.misc import ts_now
 from buchfink.datatypes import (
     ActionType,
     Asset,
-    Balance,
     BalanceSheet,
     EvmTransaction,
     EvmTxReceipt,
@@ -587,8 +583,8 @@ class BuchfinkDB(DBHandler):
         if account.account_type == "ethereum":
             manager = self.get_chains_aggregator(account)
 
-            evm_tokens = EvmTokens(database=self, manager=self.ethereum_manager)
-            evm_tokens.detect_tokens(
+            ethereum_tokens = self.ethereum_manager.tokens
+            ethereum_tokens.detect_tokens(
                 only_cache=False,
                 addresses=[account.address],
             )

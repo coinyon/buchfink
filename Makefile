@@ -1,6 +1,7 @@
 all: lint typecheck test
 
 lint:
+	ruff buchfink tests
 	pylint buchfink
 	pycodestyle buchfink tests/*.py
 

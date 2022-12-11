@@ -2,7 +2,10 @@
 "Load Zerion export CSV and output trades"
 import logging
 import os.path
-from typing import Any, List
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any  # noqa: F401
 
 import pandas as pd
 

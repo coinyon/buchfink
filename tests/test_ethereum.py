@@ -1,6 +1,5 @@
 import os.path
 import shutil
-from datetime import datetime
 
 import pytest
 from rotkehlchen.types import SupportedBlockchain
@@ -11,9 +10,6 @@ from buchfink.db import BuchfinkDB
 
 @pytest.mark.blockchain_data
 def test_ethereum_balances():
-    start_ts = datetime.fromisoformat("2015-01-01").timestamp()
-    end_ts = datetime.fromisoformat("2019-01-01").timestamp()
-
     buchfink_db = BuchfinkDB(
         os.path.join(os.path.dirname(__file__), "scenarios", "ethereum", "buchfink.yaml")
     )

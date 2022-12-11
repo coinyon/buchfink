@@ -7,7 +7,7 @@ import shutil
 import pytest
 from click.testing import CliRunner
 
-from buchfink.cli import buchfink, init
+from buchfink.cli import buchfink
 
 logger = logging.getLogger(__name__)
 

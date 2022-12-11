@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
-from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
 from buchfink.datatypes import Asset, Balance, FVal, Trade, TradeType
@@ -58,7 +57,8 @@ def test_trade_deserialization_with_fee(tmp_path, dummy_trade):
             os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
             os.path.join(tmp_path, 'buchfink')
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+
+    BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     ser_trade = serialize_trade(dummy_trade)
 
