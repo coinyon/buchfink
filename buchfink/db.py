@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from functools import reduce
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import Dict, Iterable, List, Optional, Tuple, Union, cast, TYPE_CHECKING
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
@@ -102,6 +102,9 @@ from buchfink.serialization import (
     deserialize_trade,
     serialize_balances
 )
+
+if TYPE_CHECKING:
+    from .datatypes import Balance  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
