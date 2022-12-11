@@ -78,7 +78,7 @@ class ExternalServicesConfig(BaseModel):
     opensea: Optional[str]
 
 
-class Web3Node(BaseModel):
+class RpcNode(BaseModel):
     name: str
     endpoint: str
 
@@ -89,7 +89,7 @@ class Settings(BaseModel):
     include_gas_costs: Optional[bool]
     include_crypto2crypto: Optional[bool]
     external_services: Optional[ExternalServicesConfig]
-    web3_nodes: Optional[List[Web3Node]]
+    rpc_nodes: Optional[List[RpcNode]]
     ignored_assets: List[str] = []
 
 

@@ -7,11 +7,12 @@ from typing import List
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from rotkehlchen.db.reports import DBAccountingReports, ReportDataFilterQuery
+from rotkehlchen.db.reports import DBAccountingReports
+from rotkehlchen.db.filtering import ReportDataFilterQuery
 
 from buchfink.datatypes import Timestamp
-from buchfink.serialization import deserialize_fval, serialize_fval
 from buchfink.db import BuchfinkDB
+from buchfink.serialization import deserialize_fval, serialize_fval
 
 from .models import Account, ReportConfig
 

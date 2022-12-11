@@ -37,7 +37,7 @@ def test_custom_ethereum_token(tmp_path):
     assert buchfink_db.get_asset_by_symbol("FANTASY") is not None
 
 
-def test_if_we_have_enough_web3_nodes(tmp_path):
+def test_if_we_have_enough_rpc_nodes(tmp_path):
     # This test asserts that after initialization we have some web3 nodes so
     # that our queries will succeed. This test exists because the way that web3 nodes
     # get registred is a little hacky ("migration_4")
@@ -46,7 +46,7 @@ def test_if_we_have_enough_web3_nodes(tmp_path):
         os.path.join(tmp_path, "buchfink"),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
-    assert len(buchfink_db.get_web3_nodes(
+    assert len(buchfink_db.get_rpc_nodes(
         blockchain=SupportedBlockchain.ETHEREUM,
         only_active=True
     )) >= 5

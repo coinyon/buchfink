@@ -5,7 +5,6 @@ from decimal import Decimal
 
 import pytest
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
-from rotkehlchen.globaldb import GlobalDBHandler
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
 from buchfink.datatypes import Asset, Balance, FVal, Trade, TradeType

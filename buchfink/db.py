@@ -14,17 +14,22 @@ from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.types import AssetType
 from rotkehlchen.assets.utils import get_or_create_evm_token
+from rotkehlchen.chain.aggregator import ChainsAggregator
 from rotkehlchen.chain.ethereum.accounting.aggregator import EVMAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding import EVMTransactionDecoder
+from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
+from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
+from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
-# from rotkehlchen.chain.ethereum.trades import AMMSwap
-from rotkehlchen.chain.ethereum.transactions import EvmTransactions, EvmTransactionsFilterQuery
-from rotkehlchen.chain.ethereum.types import NodeName, WeightedNode
+from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
 from rotkehlchen.chain.evm.tokens import EvmTokens
-from rotkehlchen.chain.aggregator import ChainsAggregator
+# from rotkehlchen.chain.ethereum.trades import AMMSwap
+from rotkehlchen.chain.evm.transactions import EvmTransactions, EvmTransactionsFilterQuery
+from rotkehlchen.chain.evm.types import NodeName, WeightedNode
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
+from rotkehlchen.data_migrations.manager import DataMigrationManager
 from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
@@ -45,7 +50,7 @@ from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.defillama import Defillama
 from rotkehlchen.externalapis.etherscan import Etherscan
-from rotkehlchen.globaldb import GlobalDBHandler
+from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
 from rotkehlchen.globaldb.updates import AssetsUpdater
 from rotkehlchen.greenlets import GreenletManager
@@ -70,15 +75,15 @@ from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
 
 from buchfink.datatypes import (
-    NFT,
     ActionType,
     Asset,
     Balance,
     BalanceSheet,
-    EthereumTxReceipt,
     EvmTransaction,
+    EvmTxReceipt,
     HistoryBaseEntry,
     LedgerAction,
+    Nfts,
     Trade
 )
 from buchfink.exceptions import InputError, UnknownAsset
@@ -173,7 +178,7 @@ class BuchfinkDB(DBHandler):
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
         # Initialize blockchain querying modules
-        self.etherscan = Etherscan(database=self, msg_aggregator=self.msg_aggregator)
+        self.etherscan = EthereumEtherscan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
         self.globaldb = GlobalDBHandler(
             data_dir=self.cache_directory,
@@ -191,14 +196,6 @@ class BuchfinkDB(DBHandler):
                 defillama=self.defillama
             )
 
-        self.ethereum_manager = EthereumManager(
-            etherscan=self.etherscan,
-            msg_aggregator=self.msg_aggregator,
-            greenlet_manager=self.greenlet_manager,
-            connect_at_start=[],
-            database=self
-        )
-
         # After calling the parent constructor, we will have a db connection.
         super().__init__(
                 self.user_data_dir,
@@ -208,22 +205,43 @@ class BuchfinkDB(DBHandler):
                 sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
         )
 
-        self.sync_web3_nodes()
-        web3_nodes = self.get_web3_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
-        if web3_nodes:
-            self.ethereum_manager.connect_to_multiple_nodes(web3_nodes)
+        class FakeRotki():
+            class FakeData():
+                db = self
+            data = FakeData()
+            msg_aggregator = self.msg_aggregator
 
-        self.eth_transactions = EvmTransactions(ethereum=self.ethereum_manager, database=self)
-        self.evm_tx_decoder = EVMTransactionDecoder(
-            database=self,
-            ethereum_manager=self.ethereum_manager,
-            transactions=self.eth_transactions,
-            msg_aggregator=self.msg_aggregator,
+        self.migration_manager = DataMigrationManager(FakeRotki())  # type: ignore
+        self.migration_manager.maybe_migrate_data()
+
+        self.sync_rpc_nodes()
+        ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
+
+        ethereum_inquirer = EthereumInquirer(
+            greenlet_manager=self.greenlet_manager,
+            connect_at_start=ethereum_nodes,
+            etherscan=self.etherscan,
+            database=self
         )
-        self.inquirer.inject_ethereum(self.ethereum_manager)
-        uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_manager)
-        uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_manager)
-        saddle_oracle = SaddleOracle(self.ethereum_manager)
+
+        self.ethereum_manager = EthereumManager(ethereum_inquirer)
+        self.eth_transactions = EthereumTransactions(
+                ethereum_inquirer=ethereum_inquirer, database=self
+        )
+        self.evm_tx_decoder = EthereumTransactionDecoder(
+            database=self,
+            ethereum_inquirer=ethereum_inquirer,
+            transactions=self.eth_transactions,
+            # msg_aggregator=self.msg_aggregator,
+        )
+
+        # if rpc_nodes:
+        #     self.ethereum_manager.connect_to_multiple_nodes(rpc_nodes)
+
+        self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
+        uniswap_v2_oracle = UniswapV2Oracle(ethereum_inquirer)
+        uniswap_v3_oracle = UniswapV3Oracle(ethereum_inquirer)
+        saddle_oracle = SaddleOracle(ethereum_inquirer)
         Inquirer().add_defi_oracles(
             uniswap_v2=uniswap_v2_oracle,
             uniswap_v3=uniswap_v3_oracle,
@@ -273,7 +291,7 @@ class BuchfinkDB(DBHandler):
         clean_settings = self.config.settings.dict().copy()
 
         clean_settings.pop('external_services', None)
-        clean_settings.pop('web3_nodes', None)
+        clean_settings.pop('rpc_nodes', None)
         clean_settings.pop('ignored_assets', None)
 
         # Remove None values
@@ -307,7 +325,7 @@ class BuchfinkDB(DBHandler):
                 pass
 
     def get_eth_transactions(self, account: Account, with_receipts: bool = False) \
-            -> List[Tuple[EvmTransaction, Optional[EthereumTxReceipt]]]:
+            -> List[Tuple[EvmTransaction, Optional[EvmTxReceipt]]]:
 
         assert account.account_type == "ethereum"
         address = cast(ChecksumEvmAddress, account.address)
@@ -614,7 +632,7 @@ class BuchfinkDB(DBHandler):
 
         return BalanceSheet(assets={}, liabilities={})
 
-    def query_nfts(self, account) -> List[NFT]:
+    def query_nfts(self, account) -> List[Nfts]:
         if account.account_type == "ethereum":
             manager = self.get_chains_aggregator(account)
             nfts = manager.get_module('nfts')
@@ -750,37 +768,37 @@ class BuchfinkDB(DBHandler):
 
         self.sync_config_assets()
 
-    def sync_web3_nodes(self):
+    def sync_rpc_nodes(self):
         'Ensures that the database matches the config file'
 
         with self.user_write() as cursor:
             # Not the best solution but the easiest to implement :blush:
-            cursor.execute('DELETE FROM web3_nodes;')
+            cursor.execute('DELETE FROM rpc_nodes;')
             read_and_write_nodes_in_database(cursor)
 
-        settings_web3_nodes = list(self.config.settings.web3_nodes or [])
-        db_web3_nodes = list(self.get_web3_nodes(SupportedBlockchain.ETHEREUM))
+        settings_rpc_nodes = list(self.config.settings.rpc_nodes or [])
+        db_rpc_nodes = list(self.get_rpc_nodes(SupportedBlockchain.ETHEREUM))
 
-        for db_web3_node in db_web3_nodes:
-            if db_web3_node.node_info.owned:  # do not delete preconfigured nodes
-                if db_web3_node.node_info.name in [n.name for n in settings_web3_nodes]:
+        for db_rpc_node in db_rpc_nodes:
+            if db_rpc_node.node_info.owned:  # do not delete preconfigured nodes
+                if db_rpc_node.node_info.name in [n.name for n in settings_rpc_nodes]:
                     # TODO: should update web3 node in db if necessary
-                    settings_web3_nodes = [
-                        n for n in settings_web3_nodes if n.name != db_web3_node.node_info.name
+                    settings_rpc_nodes = [
+                        n for n in settings_rpc_nodes if n.name != db_rpc_node.node_info.name
                     ]
                 else:
-                    self.delete_web3_node(
-                            db_web3_node.identifier,
+                    self.delete_rpc_node(
+                            db_rpc_node.identifier,
                             blockchain=SupportedBlockchain.ETHEREUM
                     )
 
-        for web3_node in settings_web3_nodes:
-            self.add_web3_node(
+        for rpc_node in settings_rpc_nodes:
+            self.add_rpc_node(
                 WeightedNode(
-                    identifier=web3_node.name,
+                    identifier=rpc_node.name,
                     node_info=NodeName(
-                        name=web3_node.name,
-                        endpoint=web3_node.endpoint,
+                        name=rpc_node.name,
+                        endpoint=rpc_node.endpoint,
                         blockchain=SupportedBlockchain.ETHEREUM,
                         owned=True,
                     ),

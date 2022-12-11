@@ -6,13 +6,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
-from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.constants.resolver import ChainID
-from rotkehlchen.types import Location, EvmTokenKind
+from rotkehlchen.serialization.deserialize import deserialize_evm_address
+from rotkehlchen.types import EvmTokenKind, Location
 
-from buchfink.datatypes import (
-    NFT,
-#    AMMTrade,
+from buchfink.datatypes import (  # AMMTrade,
     Asset,
     Balance,
     BalanceSheet,
@@ -23,6 +21,7 @@ from buchfink.datatypes import (
     HistoryEventType,
     LedgerAction,
     LedgerActionType,
+    Nfts,
     Timestamp,
     Trade,
     TradeType
@@ -503,7 +502,7 @@ def deserialize_evm_token(token_data: dict) -> EvmToken:
     return token
 
 
-def serialize_nft(nft: NFT) -> Dict[str, Any]:
+def serialize_nft(nft: Nfts) -> Dict[str, Any]:
     obj = nft.serialize()
     return {
         'id': obj['token_identifier'],
@@ -512,7 +511,7 @@ def serialize_nft(nft: NFT) -> Dict[str, Any]:
     }
 
 
-def serialize_nfts(nfts: List[NFT]) -> List[Dict[str, Any]]:
+def serialize_nfts(nfts: List[Nfts]) -> List[Dict[str, Any]]:
     return [
         serialize_nft(nft) for nft in
         sorted(nfts, key=lambda nft: nft.token_identifier)
