@@ -107,6 +107,7 @@ logger = logging.getLogger(__name__)
 
 PREMIUM_ONLY_ETH_MODULES = ['adex']
 BLOCKCHAIN_INIT_ACCOUNTS = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
+ENABLE_DATA_MIGRATION = False
 
 if __debug__:
     add_logging_level('TRACE', TRACE)
@@ -201,14 +202,15 @@ class BuchfinkDB(DBHandler):
                 sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
         )
 
-        class FakeRotki():
-            class FakeData():
-                db = self
-            data = FakeData()
-            msg_aggregator = self.msg_aggregator
-
-        self.migration_manager = DataMigrationManager(FakeRotki())  # type: ignore
-        self.migration_manager.maybe_migrate_data()
+        if ENABLE_DATA_MIGRATION:
+            class FakeRotki():
+                class FakeData():
+                    db = self
+                data = FakeData()
+                msg_aggregator = self.msg_aggregator
+                greenlet_manager = self.greenlet_manager
+            self.migration_manager = DataMigrationManager(FakeRotki())  # type: ignore
+            self.migration_manager.maybe_migrate_data()
 
         self.sync_rpc_nodes()
         ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
