@@ -659,18 +659,13 @@ class BuchfinkDB(DBHandler):
         assets = {}  # type: Dict[Asset, Balance]
         liabilities = {}  # type: Dict[Asset, Balance]
 
-        if 'balances' in account:
-            logger.warning('Found deprecated key "balances", please use "assets" instead.')
-            for balance in account['balances']:
-                balance, asset = deserialize_balance(balance, self)
-                if asset in assets:
-                    assets[asset] += balance
-                else:
-                    assets[asset] = balance
-
         if 'assets' in account:
             for balance in account['assets']:
-                balance, asset = deserialize_balance(balance, self)
+                try:
+                    balance, asset = deserialize_balance(balance, self)
+                except UnknownAsset as e:
+                    logger.warning(str(e))
+                    continue
                 if asset in assets:
                     assets[asset] += balance
                 else:
@@ -678,7 +673,11 @@ class BuchfinkDB(DBHandler):
 
         if 'liabilities' in account:
             for balance in account['liabilities']:
-                balance, asset = deserialize_balance(balance, self)
+                try:
+                    balance, asset = deserialize_balance(balance, self)
+                except UnknownAsset as e:
+                    logger.warning(str(e))
+                    continue
                 if asset in liabilities:
                     liabilities[asset] += balance
                 else:
