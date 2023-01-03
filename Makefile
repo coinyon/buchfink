@@ -16,3 +16,7 @@ test-local:
 
 test-remote:
 	py.test -m 'blockchain_data'
+
+fast-lint-test:
+	ruff buchfink tests
+	py.test -m 'not blockchain_data' -x
