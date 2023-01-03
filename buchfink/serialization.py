@@ -193,6 +193,7 @@ def deserialize_trade(trade_dict) -> Trade:
 
 
 QUANT_DECIMAL = Decimal('0.00000000000001')
+RE_IRREGULAR_CHAR = re.compile(r'[^a-zA-Z0-9\-\+]+')
 
 
 def serialize_decimal(dec: Decimal) -> str:
@@ -207,19 +208,28 @@ def serialize_decimal(dec: Decimal) -> str:
 
 
 def serialize_asset(asset: Asset) -> str:
+    asset_name = asset.symbol_or_name()
+
+    if RE_IRREGULAR_CHAR.search(asset_name):
+        # Got irregular characters in the name
+        clean_name = RE_IRREGULAR_CHAR.sub('', asset_name)
+        return f'{clean_name}[{asset.identifier}]'
+
     try:
-        if asset == symbol_to_asset_or_token(asset.symbol_or_name()):
-            return asset.symbol_or_name()
+        if asset == symbol_to_asset_or_token(asset_name):
+            # If we resolve the asset symbol_or_name and receive the same
+            # asset, we can simply return the symbol_or_name.
+            return asset_name
     except UnknownAsset:
         pass
 
     try:
-        if asset == symbol_to_asset_or_token(asset.symbol_or_name(), chain_id=ChainID.ETHEREUM):
-            return asset.symbol_or_name()
+        if asset == symbol_to_asset_or_token(asset_name, chain_id=ChainID.ETHEREUM):
+            return asset_name
     except UnknownAsset:
         pass
 
-    return f'{asset.symbol_or_name()}[{asset.identifier}]'
+    return f'{asset_name}[{asset.identifier}]'
 
 
 def serialize_amount(amount: FVal, asset: Asset) -> str:
