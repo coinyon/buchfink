@@ -396,6 +396,9 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if 'location_label' in ser_event:
         del ser_event['location_label']
 
+    if 'extra_data' in ser_event and not ser_event['extra_data']:
+        del ser_event['extra_data']
+
     if 'event_identifier' in ser_event:
         ser_event['link'] = ser_event['event_identifier']
         del ser_event['event_identifier']

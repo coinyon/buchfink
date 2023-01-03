@@ -6,7 +6,7 @@ import sys
 from datetime import datetime
 from functools import reduce
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Tuple, Union, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, cast
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
@@ -23,15 +23,14 @@ from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
-# from rotkehlchen.chain.ethereum.trades import AMMSwap
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.manager import DataMigrationManager
 from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
 from rotkehlchen.db.dbhandler import DBHandler
+from rotkehlchen.db.evmtx import DBEvmTx
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
-from rotkehlchen.db.utils import BlockchainAccounts
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
@@ -57,7 +56,6 @@ from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.logging import TRACE, add_logging_level
 from rotkehlchen.types import (
     SPAM_PROTOCOL,
-    BlockchainAccountData,
     ChainID,
     ChecksumEvmAddress,
     ExternalService,
@@ -75,6 +73,8 @@ from buchfink.datatypes import (
     ActionType,
     Asset,
     BalanceSheet,
+    BlockchainAccountData,
+    BlockchainAccounts,
     EvmTransaction,
     EvmTxReceipt,
     HistoryBaseEntry,
@@ -221,7 +221,6 @@ class BuchfinkDB(DBHandler):
         ethereum_inquirer = EthereumInquirer(
             greenlet_manager=self.greenlet_manager,
             connect_at_start=ethereum_nodes,
-            etherscan=self.etherscan,
             database=self
         )
 
@@ -313,11 +312,11 @@ class BuchfinkDB(DBHandler):
                     logger.debug('Adding account to DB: %s', account)
                     self.add_blockchain_accounts(
                         write_cursor=cursor,
-                        blockchain=SupportedBlockchain.ETHEREUM,
                         account_data=[
                             BlockchainAccountData(
                                 address=account.address,
                                 label=account.name,
+                                chain=SupportedBlockchain.ETHEREUM,
                                 tags=[]
                             )
                         ]
@@ -341,12 +340,14 @@ class BuchfinkDB(DBHandler):
                 end_ts=now
         )
 
-        txs, txs_total_count = self.eth_transactions.query(
-                EvmTransactionsFilterQuery.make(addresses=[address]),
-                only_cache=True
-        )
-
-        assert len(txs) == txs_total_count
+        dbevmtx = DBEvmTx(self)
+        with self.conn.read_ctx() as cursor:
+            txs, txs_total_count = dbevmtx.get_evm_transactions_and_limit_info(
+                cursor=cursor,
+                filter_=EvmTransactionsFilterQuery.make(addresses=[address]),
+                has_premium=False
+            )
+            assert len(txs) == txs_total_count
 
         with self.user_write() as cursor:
             result = []
@@ -513,6 +514,7 @@ class BuchfinkDB(DBHandler):
             polkadot_manager=None,
             avalanche_manager=None,
             kusama_manager=None,
+            optimism_manager=None,
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
@@ -858,7 +860,6 @@ class BuchfinkDB(DBHandler):
                     evm_address=token_address,
                     chain_id=ChainID.ETHEREUM,
                     protocol=SPAM_PROTOCOL,
-                    form_with_incomplete_data=True,
                     decimals=18,
                     name='Ignored from config',
                     symbol='SPAM',
