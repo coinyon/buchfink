@@ -244,18 +244,21 @@ def serialize_balance(balance: Balance, asset: Asset) -> dict:
 
 
 def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
+    def _is_nft(asset):
+        return isinstance(asset, EvmToken) or asset.token_kind != EvmTokenKind.ERC721
+
     ser_balances = {}
     if balances.assets:
         ser_balances['assets'] = sorted([
             serialize_balance(bal, asset)
             for asset, bal in balances.assets.items()
-            if bal.amount > 0 and (skip_nfts is False or not isinstance(asset, EvmToken) or asset.token_kind != EvmTokenKind.ERC721)
+            if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
         ], key=itemgetter('asset'))
     if balances.liabilities:
         ser_balances['liabilities'] = sorted([
             serialize_balance(bal, asset)
             for asset, bal in balances.liabilities.items()
-            if bal.amount > 0 and (skip_nfts is False or not isinstance(asset, EvmToken) or asset.token_kind != EvmTokenKind.ERC721)
+            if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
         ], key=itemgetter('asset'))
     return ser_balances
 
