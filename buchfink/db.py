@@ -15,10 +15,10 @@ from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.types import AssetType
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.aggregator import ChainsAggregator
-from rotkehlchen.chain.ethereum.accounting.aggregator import EVMAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
+from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
@@ -49,7 +49,7 @@ from rotkehlchen.externalapis.defillama import Defillama
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
 from rotkehlchen.globaldb.updates import AssetsUpdater
-from rotkehlchen.greenlets import GreenletManager
+from rotkehlchen.greenlets.manager import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
@@ -218,19 +218,19 @@ class BuchfinkDB(DBHandler):
         self.sync_rpc_nodes()
         ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
 
-        ethereum_inquirer = EthereumInquirer(
+        self.ethereum_inquirer = EthereumInquirer(
             greenlet_manager=self.greenlet_manager,
             connect_at_start=ethereum_nodes,
             database=self
         )
 
-        self.ethereum_manager = EthereumManager(ethereum_inquirer)
+        self.ethereum_manager = EthereumManager(self.ethereum_inquirer)
         self.eth_transactions = EthereumTransactions(
-                ethereum_inquirer=ethereum_inquirer, database=self
+                ethereum_inquirer=self.ethereum_inquirer, database=self
         )
         self.evm_tx_decoder = EthereumTransactionDecoder(
             database=self,
-            ethereum_inquirer=ethereum_inquirer,
+            ethereum_inquirer=self.ethereum_inquirer,
             transactions=self.eth_transactions,
             # msg_aggregator=self.msg_aggregator,
         )
@@ -239,9 +239,9 @@ class BuchfinkDB(DBHandler):
         #     self.ethereum_manager.connect_to_multiple_nodes(rpc_nodes)
 
         self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
-        uniswap_v2_oracle = UniswapV2Oracle(ethereum_inquirer)
-        uniswap_v3_oracle = UniswapV3Oracle(ethereum_inquirer)
-        saddle_oracle = SaddleOracle(ethereum_inquirer)
+        uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_inquirer)
+        uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_inquirer)
+        saddle_oracle = SaddleOracle(self.ethereum_inquirer)
         Inquirer().add_defi_oracles(
             uniswap_v2=uniswap_v2_oracle,
             uniswap_v3=uniswap_v3_oracle,
@@ -379,8 +379,8 @@ class BuchfinkDB(DBHandler):
 
     def get_accountant(self) -> Accountant:
 
-        evm_accounting_aggregator = EVMAccountingAggregator(
-            ethereum_manager=self.ethereum_manager,
+        evm_accounting_aggregator = EthereumAccountingAggregator(
+            node_inquirer=self.ethereum_inquirer,
             msg_aggregator=self.msg_aggregator,
         )
 
@@ -765,8 +765,7 @@ class BuchfinkDB(DBHandler):
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, None)
 
-        with self.user_write() as cursor:
-            update_spam_assets(write_cursor=cursor, db=self, make_remote_query=True)
+        update_spam_assets(db=self)
 
         self.sync_config_assets()
 
@@ -842,30 +841,30 @@ class BuchfinkDB(DBHandler):
         with self.conn.read_ctx() as cursor:
             ignored_assets = {asset.identifier for asset in self.get_ignored_assets(cursor)}
 
-        with self.user_write() as cursor:
-            for ignored_asset in self.config.settings.ignored_assets:
+        for ignored_asset in self.config.settings.ignored_assets:
 
-                token_identifier = deserialize_identifier(ignored_asset)
+            token_identifier = deserialize_identifier(ignored_asset)
 
-                if token_identifier in ignored_assets:
-                    continue
+            if token_identifier in ignored_assets:
+                continue
 
-                if ':' in token_identifier:
-                    token_address = token_identifier.split(':')[-1]
-                else:
-                    token_address = token_identifier
+            if ':' in token_identifier:
+                token_address = token_identifier.split(':')[-1]
+            else:
+                token_address = token_identifier
 
-                token = get_or_create_evm_token(
-                    userdb=self,
-                    evm_address=token_address,
-                    chain_id=ChainID.ETHEREUM,
-                    protocol=SPAM_PROTOCOL,
-                    decimals=18,
-                    name='Ignored from config',
-                    symbol='SPAM',
-                )
+            token = get_or_create_evm_token(
+                userdb=self,
+                evm_address=token_address,
+                chain_id=ChainID.ETHEREUM,
+                protocol=SPAM_PROTOCOL,
+                decimals=18,
+                name='Ignored from config',
+                symbol='SPAM',
+            )
 
-                logger.debug('Adding to ignored assets: %s', token)
+            logger.debug('Adding to ignored assets: %s', token)
+            with self.user_write() as cursor:
                 self.add_to_ignored_assets(write_cursor=cursor, asset=token)
 
     def sync_manual_prices(self):
