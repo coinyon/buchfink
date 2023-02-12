@@ -626,7 +626,9 @@ class BuchfinkDB(DBHandler):
             }, liabilities={})
 
         if account.account_type == "file":
-            return self.get_balances_from_file(os.path.join(self.data_directory, account.config.file))
+            return self.get_balances_from_file(
+                os.path.join(self.data_directory, account.config.file)
+            )
 
         logger.warning(
             'Returning empty BalanceSheet because account type "%s" is not supported yet.',
