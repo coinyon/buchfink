@@ -1,7 +1,7 @@
 import os.path
 import shutil
 
-import pytest
+# import pytest
 
 from buchfink.db import BuchfinkDB
 from buchfink.report import run_report, render_report
