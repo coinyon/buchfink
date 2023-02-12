@@ -766,7 +766,10 @@ class BuchfinkDB(DBHandler):
     def perform_assets_updates(self):
         self.assets_updater.perform_update(None, None)
 
-        update_spam_assets(db=self)
+        try:
+            update_spam_assets(db=self)
+        except UnknownAsset as e:
+            logger.warning(str(e))
 
         self.sync_config_assets()
 
@@ -817,7 +820,7 @@ class BuchfinkDB(DBHandler):
             identifier = 'eip155:1/erc20:' + eth_token.evm_address
 
             try:
-                asset = self.get_asset_by_symbol(identifier)
+                asset = self.globaldb.get_evm_token(eth_token.evm_address, eth_token.chain_id)
                 logger.debug('Asset already exists: %s %s', eth_token, asset.to_dict())
 
                 # This could be more involved
@@ -854,15 +857,17 @@ class BuchfinkDB(DBHandler):
             else:
                 token_address = token_identifier
 
-            token = get_or_create_evm_token(
-                userdb=self,
-                evm_address=token_address,
-                chain_id=ChainID.ETHEREUM,
-                protocol=SPAM_PROTOCOL,
-                decimals=18,
-                name='Ignored from config',
-                symbol='SPAM',
-            )
+            try:
+                token = get_or_create_evm_token(
+                    userdb=self,
+                    evm_address=token_address,
+                    chain_id=ChainID.ETHEREUM,
+                    protocol=SPAM_PROTOCOL,
+                    decimals=18,
+                )
+            except InputError as exc:
+                logger.warning('Unable to add ignored asset: %s', str(exc))
+                continue
 
             logger.debug('Adding to ignored assets: %s', token)
             with self.user_write() as cursor:

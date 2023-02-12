@@ -438,7 +438,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             event_identifier=event_dict.get('link', '').encode(),
             sequence_index=event_dict['sequence_index'],
             timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
-            location=Location.BLOCKCHAIN,
+            location=Location.ETHEREUM,
             event_type=HistoryEventType.SPEND,
             event_subtype=HistoryEventSubType.FEE,
             asset=asset,
