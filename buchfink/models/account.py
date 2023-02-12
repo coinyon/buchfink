@@ -67,7 +67,7 @@ def account_from_string(acc_def: str, buchfink_db=None) -> Account:
         if buchfink_db is None:
             raise ValueError('DB is required to resolve ENS name')
 
-        eth_address = buchfink_db.ethereum_manager.ens_lookup(acc_def)
+        eth_address = buchfink_db.ethereum_inquirer.ens_lookup(acc_def)
         if not eth_address:
             raise ValueError(f'Could not resolve ENS: {acc_def}')
 
