@@ -820,16 +820,17 @@ class BuchfinkDB(DBHandler):
             identifier = 'eip155:1/erc20:' + eth_token.evm_address
 
             try:
-                asset = self.globaldb.get_evm_token(eth_token.evm_address, eth_token.chain_id)
-                logger.debug('Asset already exists: %s %s', eth_token, asset.to_dict())
+                evm_token = self.globaldb.get_evm_token(eth_token.evm_address, eth_token.chain_id)
+                if evm_token is None:
+                    raise UnknownAsset(eth_token.evm_address)
+                logger.debug('Asset already exists: %s', evm_token)
 
                 # This could be more involved
-                asset_dict = asset.to_dict()
-                if eth_token.coingecko and not eth_token.coingecko == asset_dict['coingecko']:
+                if eth_token.coingecko and not eth_token.coingecko == evm_token.coingecko:
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_evm_token(eth_token)
 
-                if eth_token.decimals and not eth_token.decimals == asset_dict['decimals']:
+                if eth_token.decimals and not eth_token.decimals == evm_token.decimals:
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_evm_token(eth_token)
 
