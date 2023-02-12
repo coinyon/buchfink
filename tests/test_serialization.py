@@ -6,7 +6,7 @@ from decimal import Decimal
 import pytest
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
-from buchfink.datatypes import Asset, Balance, FVal, Trade, TradeType
+from buchfink.datatypes import Asset, Balance, BalanceSheet, FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (
     deserialize_asset,
@@ -14,6 +14,7 @@ from buchfink.serialization import (
     deserialize_trade,
     serialize_asset,
     serialize_balance,
+    serialize_balances,
     serialize_decimal,
     serialize_trade
 )
@@ -33,6 +34,17 @@ def dummy_trade():
         Asset('EUR'),
         'LINK-123'
     )
+
+
+@pytest.fixture
+def buchfink_db(tmp_path):
+    # An empty buchfink DB, created at tmp_path
+    # For now we use bullrun scenario, but we should create an empty scenario
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    yield BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
 
 def test_trade_serialization(dummy_trade):
@@ -150,3 +162,14 @@ def test_serialize_deserialize_balance_secondary(tmp_path):
     balance, asset = deserialize_balance(bal, buchfink_db)
     assert str(balance.amount) == '1.5'
     assert asset == A_STAKEDAO
+
+
+def test_serialize_balance_sheet(buchfink_db):
+    A_HEX = buchfink_db.get_asset_by_symbol('HEX')
+    bs = BalanceSheet(assets={
+        A_HEX: Balance(FVal('1500')),
+    })
+
+    serialized = str(serialize_balances(bs))
+    assert 'HEX' in serialized
+    assert '1500' in serialized

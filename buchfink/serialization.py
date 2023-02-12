@@ -245,7 +245,7 @@ def serialize_balance(balance: Balance, asset: Asset) -> dict:
 
 def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
     def _is_nft(asset):
-        return isinstance(asset, EvmToken) and asset.token_kind != EvmTokenKind.ERC721
+        return isinstance(asset, EvmToken) and asset.token_kind == EvmTokenKind.ERC721
 
     ser_balances = {}
     if balances.assets:
