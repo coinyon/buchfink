@@ -13,3 +13,5 @@ reports:
 settings:
   main_currency: USD
   taxfree_after_period: 7776000  # ~3 months
+  ignored_assets:
+    - UNKNOWN[eip155:1/erc20:0x4AF9ab04615cB91e2EE8cbEDb43fb52eD205041B]

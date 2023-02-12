@@ -6,7 +6,7 @@ lint:
 	pycodestyle buchfink tests/*.py
 
 typecheck:
-	mypy --install-types --non-interactive buchfink tests/*.py
+	mypy buchfink tests/*.py
 
 test:
 	py.test

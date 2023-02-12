@@ -19,4 +19,6 @@ tokens:
     decimals: 18
     cryptocompare: ~
 
-settings: {}
+settings:
+  ignored_assets:
+    - UNKNOWN[eip155:1/erc20:0x4AF9ab04615cB91e2EE8cbEDb43fb52eD205041B]
