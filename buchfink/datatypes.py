@@ -6,6 +6,7 @@ from rotkehlchen.accounting.structures.types import HistoryEventSubType, History
 from rotkehlchen.assets.asset import Asset, EvmToken  # noqa: F401
 from rotkehlchen.chain.ethereum.modules.nft.nfts import Nfts  # noqa: F401
 from rotkehlchen.chain.evm.structures import EvmTxReceipt  # noqa: F401
+from rotkehlchen.chain.evm.types import EvmAccount  # noqa: F401
 # from rotkehlchen.chain.ethereum.trades import AMMTrade
 from rotkehlchen.exchanges.data_structures import Trade  # noqa: F401
 from rotkehlchen.fval import FVal  # noqa: F401

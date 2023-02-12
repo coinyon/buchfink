@@ -77,6 +77,7 @@ from buchfink.datatypes import (
     BlockchainAccounts,
     EvmTransaction,
     EvmTxReceipt,
+    EvmAccount,
     HistoryBaseEntry,
     LedgerAction,
     Nfts,
@@ -344,7 +345,9 @@ class BuchfinkDB(DBHandler):
         with self.conn.read_ctx() as cursor:
             txs, txs_total_count = dbevmtx.get_evm_transactions_and_limit_info(
                 cursor=cursor,
-                filter_=EvmTransactionsFilterQuery.make(addresses=[address]),
+                filter_=EvmTransactionsFilterQuery.make(accounts=[
+                    EvmAccount(address, ChainID.ETHEREUM)
+                ]),
                 has_premium=False
             )
             assert len(txs) == txs_total_count
