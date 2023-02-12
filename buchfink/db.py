@@ -110,14 +110,6 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 PREMIUM_ONLY_ETH_MODULES = ['adex']
-BLOCKCHAIN_INIT_ACCOUNTS = {
-        'eth': [],
-        'btc': [],
-        'ksm': [],
-        'dot': [],
-        'avax': [],
-        'bch': []
-}
 ENABLE_DATA_MIGRATION = False
 
 if __debug__:
@@ -133,7 +125,7 @@ class BuchfinkDB(DBHandler):
     3) load and parse Buchfink config
     """
 
-    def __init__(self, config_file='./buchfink.yaml'):
+    def __init__(self, config_file: str = './buchfink.yaml'):
         self.config_file = Path(config_file)
 
         with open(self.config_file, 'r') as cfg:
@@ -396,10 +388,9 @@ class BuchfinkDB(DBHandler):
         return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
 
     def get_blockchain_accounts(self, cursor=None) -> BlockchainAccounts:
-        accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
         if self._active_eth_address:
-            accs['eth'].append(self._active_eth_address)
-        return BlockchainAccounts(**accs)
+            return BlockchainAccounts(eth=self._active_eth_address)
+        return BlockchainAccounts()
 
     def get_trades_from_file(self, trades_file) -> List[Trade]:
         def safe_deserialize_trade(trade):
@@ -492,7 +483,7 @@ class BuchfinkDB(DBHandler):
         return []
 
     def get_chains_aggregator(self, account: Account) -> ChainsAggregator:
-        accs = BLOCKCHAIN_INIT_ACCOUNTS.copy()
+        accs = {}  # type: ignore
 
         if account.account_type == "ethereum":
             accs['eth'] = [account.address]
