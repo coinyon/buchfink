@@ -38,8 +38,8 @@ setup(
     install_requires=install_requirements,
     extras_require={
         "test": [
-            "pylint",
-            "pytest",
+            "pylint==2.16.1",
+            "pytest==7.2.1",
             "mypy==1.0.0",
             "pycodestyle",
             "ruff==0.0.245"
