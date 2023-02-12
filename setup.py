@@ -40,9 +40,9 @@ setup(
         "test": [
             "pylint",
             "pytest",
-            "mypy==0.790",
+            "mypy==1.0.0",
             "pycodestyle",
-            "ruff"
+            "ruff==0.0.245"
         ]
     },
     use_scm_version=True,
