@@ -116,12 +116,12 @@ def test_ethereum_gas_report_cli():
 
         result = runner.invoke(buchfink, ['report'])
         logger.debug('output of %s: %s', 'report', result.output)
-        # assert 'all' in result.output
-        # assert 'Free P/L' in result.output
-        # assert 'Taxable P/L' in result.output
-        # assert result.exception is None
-        # assert result.exit_code == 0
-        #
-        # assert os.path.exists(os.path.join(d, 'reports/all/report.yaml'))
-        # assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
-        # assert os.path.exists(os.path.join(d, 'reports/all/report.md'))
+        assert 'all' in result.output
+        assert 'Free P/L' in result.output
+        assert 'Taxable P/L' in result.output
+        assert result.exception is None
+        assert result.exit_code == 0
+
+        assert os.path.exists(os.path.join(d, 'reports/all/report.yaml'))
+        assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
+        assert os.path.exists(os.path.join(d, 'reports/all/report.md'))

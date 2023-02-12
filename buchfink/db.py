@@ -23,6 +23,7 @@ from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
+from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
@@ -380,12 +381,21 @@ class BuchfinkDB(DBHandler):
 
     def get_accountant(self) -> Accountant:
 
-        evm_accounting_aggregator = EthereumAccountingAggregator(
+        ethereum_accounting_aggregator = EthereumAccountingAggregator(
             node_inquirer=self.ethereum_inquirer,
             msg_aggregator=self.msg_aggregator,
         )
 
-        return Accountant(self, self.msg_aggregator, evm_accounting_aggregator, premium=None)
+        evm_accounting_aggregators = EVMAccountingAggregators(
+            aggregators=[ethereum_accounting_aggregator],  #, optimism_accounting_aggregator],
+        )
+
+        return Accountant(
+                db=self,
+                msg_aggregator=self.msg_aggregator,
+                evm_accounting_aggregators=evm_accounting_aggregators,
+                premium=None
+            )
 
     def get_blockchain_accounts(self, cursor=None) -> BlockchainAccounts:
         if self._active_eth_address:
