@@ -15,10 +15,10 @@ from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.types import AssetType
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.aggregator import ChainsAggregator
+from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
-from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
@@ -75,9 +75,9 @@ from buchfink.datatypes import (
     BalanceSheet,
     BlockchainAccountData,
     BlockchainAccounts,
+    EvmAccount,
     EvmTransaction,
     EvmTxReceipt,
-    EvmAccount,
     HistoryBaseEntry,
     LedgerAction,
     Nfts,
@@ -110,7 +110,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 PREMIUM_ONLY_ETH_MODULES = ['adex']
-BLOCKCHAIN_INIT_ACCOUNTS = dict(eth=[], btc=[], ksm=[], dot=[], avax=[], bch=[])  # type: dict
+BLOCKCHAIN_INIT_ACCOUNTS = {
+        'eth': [],
+        'btc': [],
+        'ksm': [],
+        'dot': [],
+        'avax': [],
+        'bch': []
+}
 ENABLE_DATA_MIGRATION = False
 
 if __debug__:
@@ -535,13 +542,13 @@ class BuchfinkDB(DBHandler):
         if not isinstance(account_config, ExchangeAccountConfig):
             raise ValueError("Not an exchange account: " + account)
 
-        exchange_opts = dict(
-            name=account_config.name,
-            api_key=str(account_config.api_key),
-            secret=str(account_config.secret).encode(),
-            database=self,
-            msg_aggregator=self.msg_aggregator
-        )
+        exchange_opts = {
+            'name': account_config.name,
+            'api_key': str(account_config.api_key),
+            'secret': str(account_config.secret).encode(),
+            'database': self,
+            'msg_aggregator': self.msg_aggregator
+        }
 
         if account_config.exchange == 'kraken':
             exchange = Kraken(**exchange_opts)
