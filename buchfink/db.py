@@ -651,13 +651,10 @@ class BuchfinkDB(DBHandler):
 
     def fetch_balances(self, account: Account):
         query_sheet = self.query_balances(account)
-        print(query_sheet)
         logger.debug('Balances for %s before annotations: %s', account.name, query_sheet)
         path = self.annotations_directory / (account.name + '.yaml')
         if path.exists():
             query_sheet += self.get_balances_from_file(path)
-        print(query_sheet)
-        print(account.name)
         self.write_balances(account, query_sheet)
 
     def get_balances(self, account: Account) -> BalanceSheet:
@@ -667,8 +664,6 @@ class BuchfinkDB(DBHandler):
         return BalanceSheet(assets={}, liabilities={})
 
     def get_balances_from_file(self, path) -> BalanceSheet:
-        print(path)
-
         with open(path, 'r') as account_f:
             account = yaml.load(account_f, Loader=yaml.SafeLoader)
 
@@ -699,13 +694,11 @@ class BuchfinkDB(DBHandler):
                 else:
                     liabilities[asset] = balance
 
-        print(assets)
         return BalanceSheet(assets=assets, liabilities=liabilities)
 
     def write_balances(self, account: Account, balances: BalanceSheet):
         path = self.balances_directory / (account.name + '.yaml')
 
-        print("Path: ", path)
         try:
             with path.open('r') as balances_file:
                 contents = yaml.load(balances_file, Loader=yaml.SafeLoader)
@@ -714,9 +707,7 @@ class BuchfinkDB(DBHandler):
         except FileNotFoundError:
             contents = {}
 
-        print("Contents: ", contents)
         with path.open('w') as balances_file:
-            print("Serialize: ", serialize_balances(balances), balances)
             contents.update(serialize_balances(balances))
 
             if not balances.liabilities and 'liabilities' in contents:
