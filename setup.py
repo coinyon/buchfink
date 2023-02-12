@@ -48,7 +48,7 @@ setup(
             "types-PyYAML",
             "types-requests",
             "types-setuptools",
-            "types-tabulate"
+            "types-tabulate",
             "types-urllib3"
         ]
     },
