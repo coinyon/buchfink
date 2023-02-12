@@ -826,11 +826,11 @@ class BuchfinkDB(DBHandler):
                 logger.debug('Asset already exists: %s', evm_token)
 
                 # This could be more involved
-                if eth_token.coingecko and not eth_token.coingecko == evm_token.coingecko:
+                if eth_token.coingecko and eth_token.coingecko != evm_token.coingecko:
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_evm_token(eth_token)
 
-                if eth_token.decimals and not eth_token.decimals == evm_token.decimals:
+                if eth_token.decimals and eth_token.decimals != evm_token.decimals:
                     logger.info('Updating asset db for token: %s', eth_token)
                     self.globaldb.edit_evm_token(eth_token)
 
