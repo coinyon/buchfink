@@ -387,7 +387,8 @@ class BuchfinkDB(DBHandler):
         )
 
         evm_accounting_aggregators = EVMAccountingAggregators(
-            aggregators=[ethereum_accounting_aggregator],  #, optimism_accounting_aggregator],
+            aggregators=[ethereum_accounting_aggregator]
+            # TODO: add, optimism_accounting_aggregator],
         )
 
         return Accountant(
