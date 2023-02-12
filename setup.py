@@ -38,11 +38,18 @@ setup(
     install_requires=install_requirements,
     extras_require={
         "test": [
-            "pylint==2.16.1",
-            "pytest==7.2.1",
             "mypy==1.0.0",
             "pycodestyle",
+            "pylint==2.16.1",
+            "pytest==7.2.1",
             "ruff==0.0.245"
+            "types-docutils",
+            "types-python-dateutil",
+            "types-PyYAML",
+            "types-requests",
+            "types-setuptools",
+            "types-tabulate"
+            "types-urllib3"
         ]
     },
     use_scm_version=True,
