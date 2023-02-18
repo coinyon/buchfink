@@ -778,7 +778,7 @@ class BuchfinkDB(DBHandler):
         self.assets_updater.perform_update(None, None)
 
         try:
-            update_spam_assets(db=self)
+            update_spam_assets(db=self, assets_info=[])
         except UnknownAsset as e:
             logger.warning(str(e))
 
