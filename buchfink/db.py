@@ -352,15 +352,14 @@ class BuchfinkDB(DBHandler):
             )
             assert len(txs) == txs_total_count
 
-        with self.user_write() as cursor:
-            result = []
-            for txn in txs:
-                receipt = None
-                if with_receipts:
-                    receipt = self.eth_transactions.get_or_query_transaction_receipt(
-                            txn.tx_hash
-                    )
-                result.append((txn, receipt))
+        result = []
+        for txn in txs:
+            receipt = None
+            if with_receipts:
+                receipt = self.eth_transactions.get_or_query_transaction_receipt(
+                        txn.tx_hash
+                )
+            result.append((txn, receipt))
 
         return result
 
