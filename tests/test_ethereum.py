@@ -56,8 +56,7 @@ def test_if_ignored_assets_are_added(tmp_path):
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
     buchfink_db.sync_config_assets()
     with buchfink_db.conn.read_ctx() as cursor:
-        ignored_assets = buchfink_db.get_ignored_assets(cursor)
-        ignored_identifiers = {asset.identifier for asset in ignored_assets}
+        ignored_identifiers = buchfink_db.get_ignored_asset_ids(cursor)
 
-    assert len(ignored_assets) >= 3
+    assert len(ignored_identifiers) >= 3
     assert 'eip155:1/erc20:0x426CA1eA2406c07d75Db9585F22781c096e3d0E0' in ignored_identifiers

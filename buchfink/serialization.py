@@ -5,6 +5,7 @@ from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
+from rotkehlchen.accounting.structures.evm_event import EvmEvent
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
@@ -434,7 +435,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
 
     if 'spend_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['spend_fee'])
-        return HistoryBaseEntry(
+        return EvmEvent(
             event_identifier=event_dict.get('link', '').encode(),
             sequence_index=event_dict['sequence_index'],
             timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
@@ -450,6 +451,21 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             extra_data=None
         )
 
+    # return HistoryEvent(
+    #     event_identifier=event_dict.get('link', '').encode(),
+    #     sequence_index=event_dict['sequence_index'],
+    #     timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
+    #     location=Location.ETHEREUM,
+    #     event_type=HistoryEventType.SPEND,
+    #     event_subtype=HistoryEventSubType.FEE,
+    #     asset=asset,
+    #     balance=Balance(amount, 0),
+    #     location_label=None,
+    #     notes=event_dict.get('notes'),
+    #     counterparty=event_dict.get('counterparty'),
+    #     identifier=None,
+    #     extra_data=None
+    # )
     raise NotImplementedError()
 
 

@@ -854,7 +854,7 @@ class BuchfinkDB(DBHandler):
             self.asset_resolver.clean_memory_cache()
 
         with self.conn.read_ctx() as cursor:
-            ignored_assets = {asset.identifier for asset in self.get_ignored_assets(cursor)}
+            ignored_assets = self.get_ignored_asset_ids(cursor)
 
         for ignored_asset in self.config.settings.ignored_assets:
 

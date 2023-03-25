@@ -1,7 +1,7 @@
 # pylint: disable=unused-import,line-too-long
 from rotkehlchen.accounting.ledger_actions import LedgerAction, LedgerActionType  # noqa: F401
 from rotkehlchen.accounting.structures.balance import Balance, BalanceSheet, BalanceType  # noqa: F401
-from rotkehlchen.accounting.structures.base import ActionType, HistoryBaseEntry  # noqa: F401
+from rotkehlchen.accounting.structures.base import ActionType, HistoryEvent, HistoryBaseEntry  # noqa: F401
 from rotkehlchen.accounting.structures.types import HistoryEventSubType, HistoryEventType  # noqa: F401
 from rotkehlchen.assets.asset import Asset, EvmToken  # noqa: F401
 from rotkehlchen.chain.ethereum.modules.nft.nfts import Nfts  # noqa: F401
