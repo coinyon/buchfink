@@ -11,7 +11,7 @@ from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.types import EvmTokenKind, Location
 
-from buchfink.datatypes import (  # AMMTrade,
+from buchfink.datatypes import (
     Asset,
     Balance,
     BalanceSheet,
@@ -278,16 +278,13 @@ def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
     return amount, asset
 
 
-def serialize_trade(trade: Union[Trade]):
+def serialize_trade(trade: Trade) -> dict:
     ser_trade = trade.serialize()
     ser_trade = {
         'timestamp': serialize_timestamp(trade.timestamp),
         'for': serialize_amount(trade.rate * trade.amount, trade.quote_asset),
     }
 
-    # if isinstance(trade, AMMTrade):
-    #     ser_trade['link'] = trade.tx_hash.hex()
-    # else:
     ser_trade['link'] = trade.link
 
     if trade.fee and trade.fee > 0:
@@ -370,11 +367,9 @@ def serialize_ledger_action(action: LedgerAction):
     return ser_action
 
 
-def serialize_trades(trades: List[Union[Trade]]) -> List[dict]:
+def serialize_trades(trades: List[Trade]) -> List[dict]:
 
     def trade_sort_key(trade):
-        # if isinstance(trade, AMMTrade):
-        #     return (trade.timestamp, trade.tx_hash)
         return (trade.timestamp, trade.link)
 
     return [
@@ -396,6 +391,22 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if event.event_type == HistoryEventType.SPEND and \
             event.event_subtype == HistoryEventSubType.FEE:
         ser_event['spend_fee'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif event.event_type == HistoryEventType.TRADE and \
+            event.event_subtype == HistoryEventSubType.SPEND:
+        ser_event['trade_spend'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif event.event_type == HistoryEventType.TRADE and \
+            event.event_subtype == HistoryEventSubType.RECEIVE:
+        ser_event['trade_receive'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
         del ser_event['event_type']
@@ -439,8 +450,19 @@ def serialize_events(actions: List[Union[LedgerAction, HistoryBaseEntry]]) -> Li
 
 def deserialize_event(event_dict) -> HistoryBaseEntry:
 
+    is_evm_event = False
+
     if 'spend_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['spend_fee'])
+        is_evm_event = True
+    elif 'trade_spend' in event_dict:
+        amount, asset = deserialize_amount(event_dict['trade_spend'])
+        is_evm_event = True
+    elif 'trade_receive' in event_dict:
+        amount, asset = deserialize_amount(event_dict['trade_receive'])
+        is_evm_event = True
+
+    if is_evm_event:
         return EvmEvent(
             event_identifier=event_dict.get('link', '').encode(),
             sequence_index=event_dict['sequence_index'],
@@ -453,6 +475,8 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             location_label=None,
             notes=event_dict.get('notes'),
             counterparty=event_dict.get('counterparty'),
+            product=event_dict.get('product'),
+            address=event_dict.get('address'),
             identifier=None,
             extra_data=None
         )

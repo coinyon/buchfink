@@ -164,7 +164,6 @@ class BuchfinkDB(DBHandler):
 
         self.last_write_ts: Optional[Timestamp] = None
 
-        # self._amm_swaps = []  # type: List[AMMSwap]
         self.msg_aggregator = MessagesAggregator()
         self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
         self.coingecko = Coingecko()
@@ -447,11 +446,13 @@ class BuchfinkDB(DBHandler):
     def get_actions_from_file(self, actions_file, include_trades=True) \
             -> List[Union[LedgerAction, HistoryBaseEntry]]:
         def safe_deserialize_ledger_action(action):
-            if 'buy' in action or 'sell' in action:  # it is a Trade or AMMSwap
+            if 'buy' in action or 'sell' in action:
+                # it is a Trade
                 if not include_trades:
                     return None
                 return deserialize_trade(action)
-            if 'spend_fee' in action:  # it is a HistoryBaseEntry
+            if 'spend_fee' in action or 'trade_spend' in action or 'trade_receive' in action:
+                # it is a EvmEvent/HistoryBaseEntry
                 return deserialize_event(action)
             try:
                 return deserialize_ledger_action(action)
@@ -724,20 +725,6 @@ class BuchfinkDB(DBHandler):
                 del contents['assets']
 
             yaml.dump(contents, stream=balances_file, sort_keys=True)
-
-    # def get_amm_swaps(
-    #         self,
-    #         cursor,
-    #         from_ts: Optional[Timestamp] = None,
-    #         to_ts: Optional[Timestamp] = None,
-    #         location: Optional[Location] = None,
-    #         address: Optional[ChecksumEvmAddress] = None,
-    # ) -> List[AMMSwap]:
-    #     return self._amm_swaps
-    #
-    # def add_amm_swaps(self, write_cursor, swaps: List[AMMSwap]) -> None:
-    #     self._amm_swaps = []
-    #     self._amm_swaps.extend(swaps)
 
     def update_used_query_range(
             self,

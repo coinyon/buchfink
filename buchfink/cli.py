@@ -20,7 +20,7 @@ from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
-from buchfink.datatypes import FVal, HistoryEventSubType, LedgerAction, Timestamp, Trade
+from buchfink.datatypes import FVal, HistoryEventSubType, HistoryEventType, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
@@ -384,12 +384,20 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                         continue
 
                     for event in events:
-                        # Only handle gas for now
                         if event.event_subtype == HistoryEventSubType.FEE \
                                 and event.counterparty == 'gas':
                             actions.append(event)
+                        elif event.event_subtype == HistoryEventSubType.APPROVE:
+                            pass
+                        elif event.event_type == HistoryEventType.TRADE:
+                            actions.append(event)
                         else:
-                            logger.warning('Ignoring event: %s', event)
+                            logger.warning('Ignoring event %s (summary=%s, event_identifier=0x%s, sequence_index=%s)',
+                                           event.event_type,
+                                           event,
+                                           event.event_identifier.hex(),
+                                           event.sequence_index)
+
                     buchfink_db._active_eth_address = None
 
             if fetch_trades_for_this_account:
@@ -476,10 +484,6 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
             existing = set()
             unique_trades = []
             for trade in trades:
-                # if isinstance(trade, AMMTrade):
-                #    unique_trades.append(trade)
-                #    for swap in trade.swaps:
-                #        existing.add((swap.location, swap.tx_hash))
                 if (trade.location, trade.link) not in existing:
                     existing.add((trade.location, trade.link))
                     unique_trades.append(trade)
