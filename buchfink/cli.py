@@ -389,6 +389,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                                 and hbe.counterparty == 'gas':
                             # print(hbe)
                             actions.append(hbe)
+                    buchfink_db._active_eth_address = None
 
             if fetch_trades_for_this_account:
                 logger.info('Fetching trades for %s', name)
