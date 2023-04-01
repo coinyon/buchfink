@@ -376,19 +376,20 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                     buchfink_db.evm_tx_decoder.base.tracked_accounts = \
                             buchfink_db.get_blockchain_accounts()
                     try:
-                        hbes = buchfink_db.\
-                                evm_tx_decoder.decode_transaction(tx, receipt)
+                        events = buchfink_db.\
+                                evm_tx_decoder.get_or_decode_transaction_events(tx, receipt,
+                                                                                ignore_cache=False)
                     except (ValueError, TypeError):
                         logger.exception('TX')
                         continue
-                    # print(len(hbes))
 
-                    for hbe in hbes:
+                    for event in events:
                         # Only handle gas for now
-                        if hbe.event_subtype == HistoryEventSubType.FEE \
-                                and hbe.counterparty == 'gas':
-                            # print(hbe)
-                            actions.append(hbe)
+                        if event.event_subtype == HistoryEventSubType.FEE \
+                                and event.counterparty == 'gas':
+                            actions.append(event)
+                        else:
+                            logger.warning('Ignoring event: %s', event)
                     buchfink_db._active_eth_address = None
 
             if fetch_trades_for_this_account:
