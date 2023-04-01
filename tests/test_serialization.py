@@ -4,18 +4,21 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytest
+import yaml
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 
-from buchfink.datatypes import Asset, Balance, BalanceSheet, FVal, Trade, TradeType
+from buchfink.datatypes import Asset, Balance, BalanceSheet, EvmEvent, FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (
     deserialize_asset,
     deserialize_balance,
+    deserialize_event,
     deserialize_trade,
     serialize_asset,
     serialize_balance,
     serialize_balances,
     serialize_decimal,
+    serialize_event,
     serialize_trade
 )
 
@@ -173,3 +176,30 @@ def test_serialize_balance_sheet(buchfink_db):
     serialized = str(serialize_balances(bs))
     assert 'HEX' in serialized
     assert '1500' in serialized
+
+
+def test_load_yaml_parse_action_and_deserialize(buchfink_db):
+    yaml_content = """
+- spend_fee: 0.0203523 ETH
+  counterparty: gas
+  link: '0x123'
+  notes: Burned 0.0203523 ETH in gas
+  sequence_index: 0
+  timestamp: '2021-08-19T10:15:50+00:00'"""
+    action = deserialize_event(yaml.safe_load(yaml_content)[0])
+    assert isinstance(action, EvmEvent)
+    dict_action = serialize_event(action)
+    assert dict_action['spend_fee'] == '0.0203523 ETH'
+    assert dict_action['counterparty'] == 'gas'
+    # assert dict_action['link'] == '0x123'
+    assert dict_action['notes'] == 'Burned 0.0203523 ETH in gas'
+    assert dict_action['sequence_index'] == 0
+    assert dict_action['timestamp'] == '2021-08-19T10:15:50+00:00'
+    assert set(dict_action.keys()) == {
+        'spend_fee',
+        'counterparty',
+        'link',
+        'notes',
+        'sequence_index',
+        'timestamp',
+    }
