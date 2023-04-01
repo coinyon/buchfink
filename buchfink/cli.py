@@ -20,7 +20,14 @@ from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
-from buchfink.datatypes import FVal, HistoryEventSubType, HistoryEventType, LedgerAction, Timestamp, Trade
+from buchfink.datatypes import (
+    FVal,
+    HistoryEventSubType,
+    HistoryEventType,
+    LedgerAction,
+    Timestamp,
+    Trade
+)
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
@@ -392,7 +399,8 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                         elif event.event_type == HistoryEventType.TRADE:
                             actions.append(event)
                         else:
-                            logger.warning('Ignoring event %s (summary=%s, event_identifier=0x%s, sequence_index=%s)',
+                            logger.warning('Ignoring event %s (summary=%s, event_identifier=0x%s, '
+                                           'sequence_index=%s)',
                                            event.event_type,
                                            event,
                                            event.event_identifier.hex(),
