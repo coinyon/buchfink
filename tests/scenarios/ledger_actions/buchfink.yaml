@@ -14,6 +14,9 @@ accounts:
   - name: acc_event_swap
     file: acc_event_swap.yaml
 
+  - name: acc_mixed_swap_trade
+    file: acc_mixed_swap_trade.yaml
+
 reports:
   - name: all
     from: "2015-01-01"

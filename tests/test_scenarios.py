@@ -113,3 +113,22 @@ def test_ledger_actions_event_swap(tmp_path):
     result = run_report(buchfink_db, accounts, report_config)
 
     assert float(result['overview']['transaction event']['taxable']) == pytest.approx(100, rel=0.1)
+
+
+def test_ledger_actions_mixed_swap_trade(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+    accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_mixed_swap_trade']
+    trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
+    ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)
+    assert len(ledger_actions) == 2
+    assert len(trades) == 1
+
+    report_config = list(buchfink_db.get_all_reports())[1]
+    result = run_report(buchfink_db, accounts, report_config)
+
+    assert float(result['overview']['trade']['taxable']) == pytest.approx(100, rel=0.1)
+    assert float(result['overview']['transaction event']['taxable']) == pytest.approx(0, rel=0.1)
