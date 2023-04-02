@@ -134,3 +134,22 @@ def test_ledger_actions_mixed_swap_trade(tmp_path):
 
     assert float(result['overview']['trade']['taxable']) == pytest.approx(100, rel=0.1)
     assert float(result['overview']['transaction event']['taxable']) == pytest.approx(0, rel=0.1)
+
+
+def test_ledger_actions_mixed_same_link(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+    account = [acc
+               for acc in buchfink_db.get_all_accounts()
+               if acc.name == 'acc_mixed_same_link'][0]
+    trades = buchfink_db.get_local_trades_for_account(account.name)
+    ledger_actions = buchfink_db.get_local_ledger_actions_for_account(account.name)
+    assert len(ledger_actions) == 2
+    assert len(trades) == 2
+
+    report_config = list(buchfink_db.get_all_reports())[1]
+    with pytest.raises(ValueError, match=r'.*0x5.*'):
+        run_report(buchfink_db, [account], report_config)

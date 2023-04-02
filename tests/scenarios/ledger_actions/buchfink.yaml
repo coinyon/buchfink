@@ -17,6 +17,9 @@ accounts:
   - name: acc_mixed_swap_trade
     file: acc_mixed_swap_trade.yaml
 
+  - name: acc_mixed_same_link
+    file: acc_mixed_same_link.yaml
+
 reports:
   - name: all
     from: "2015-01-01"

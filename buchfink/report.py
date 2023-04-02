@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 from rotkehlchen.db.reports import DBAccountingReports
 from rotkehlchen.db.filtering import ReportDataFilterQuery
 
-from buchfink.datatypes import Timestamp
+from buchfink.datatypes import Timestamp, Trade, HistoryBaseEntry
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_fval, serialize_fval
 
@@ -24,8 +24,8 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     start_ts = Timestamp(int(report_config.from_dt.timestamp()))
     end_ts = Timestamp(int(report_config.to_dt.timestamp()))
     num_matched_accounts = 0
-    all_trades = []
-    all_actions = []
+    all_trades: List[Trade] = []
+    all_actions: List[HistoryBaseEntry] = []
 
     root_logger = logging.getLogger('')
     formatter = logging.Formatter('%(levelname)s: %(message)s')
@@ -58,6 +58,21 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
     logger.info('Collected %d trades / %d actions from %d exchange account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
+
+    # Check if we have any trades or actions that share an event identifier
+    # with another trade or action. If so then we it might an unidentified
+    # duplicate and we should warn the user
+    action_ids = set()
+    for action in all_actions:
+        action_ids.add(action.event_identifier.decode())
+
+    for trade in all_trades:
+        if trade.link in action_ids:
+            raise ValueError((
+                'Trade with identifier {} is also present as an event '
+                'This might be an unidentified duplicate. Please check your '
+                'events and trades for duplicates.'
+            ).format(trade.link))
 
     def timestamp(act):
         return act.get_timestamp()
