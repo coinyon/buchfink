@@ -11,6 +11,9 @@ accounts:
   - name: acc_manual_price
     file: acc_manual_price.yaml
 
+  - name: acc_event_swap
+    file: acc_event_swap.yaml
+
 reports:
   - name: all
     from: "2015-01-01"

@@ -451,16 +451,26 @@ def serialize_events(actions: List[Union[LedgerAction, HistoryBaseEntry]]) -> Li
 def deserialize_event(event_dict) -> HistoryBaseEntry:
 
     is_evm_event = False
+    event_type = None
+    event_subtype = None
+    amount = None
+    asset = None
 
     if 'spend_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['spend_fee'])
         is_evm_event = True
+        event_type = HistoryEventType.SPEND
+        event_subtype = HistoryEventSubType.FEE
     elif 'trade_spend' in event_dict:
         amount, asset = deserialize_amount(event_dict['trade_spend'])
         is_evm_event = True
+        event_type = HistoryEventType.TRADE
+        event_subtype = HistoryEventSubType.SPEND
     elif 'trade_receive' in event_dict:
         amount, asset = deserialize_amount(event_dict['trade_receive'])
         is_evm_event = True
+        event_type = HistoryEventType.TRADE
+        event_subtype = HistoryEventSubType.RECEIVE
 
     if is_evm_event:
         return EvmEvent(
@@ -468,8 +478,8 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             sequence_index=event_dict['sequence_index'],
             timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
             location=Location.ETHEREUM,
-            event_type=HistoryEventType.SPEND,
-            event_subtype=HistoryEventSubType.FEE,
+            event_type=event_type,
+            event_subtype=event_subtype,
             asset=asset,
             balance=Balance(amount, 0),
             location_label=None,
