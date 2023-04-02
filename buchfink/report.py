@@ -163,4 +163,4 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as reportf:
         reportf.write(rendered_report)
 
-    logger.info("Rendered temmplate to 'report%s'.", ext)
+    logger.info("Rendered template to 'report%s'.", ext)
