@@ -100,6 +100,8 @@ def test_ethereum_gas_report_tax(tmp_path):
 
     result = run_report(buchfink_db, [whale1], report)
 
+    assert float(result['pnl_totals']['free']) > 0.
+    assert float(result['pnl_totals']['taxable']) > 0.
     assert float(result['overview']['trade']['taxable']) == 500.0
     assert float(result['overview']['transaction event']['taxable']) == \
             pytest.approx(-64.816, rel=0.1)
