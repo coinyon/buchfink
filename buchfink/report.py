@@ -3,14 +3,14 @@ import logging
 import os.path
 from functools import lru_cache
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
-from rotkehlchen.db.reports import DBAccountingReports
 from rotkehlchen.db.filtering import ReportDataFilterQuery
+from rotkehlchen.db.reports import DBAccountingReports
 
-from buchfink.datatypes import Timestamp, Trade, HistoryBaseEntry
+from buchfink.datatypes import HistoryBaseEntry, LedgerAction, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_fval, serialize_fval
 
@@ -25,7 +25,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     end_ts = Timestamp(int(report_config.to_dt.timestamp()))
     num_matched_accounts = 0
     all_trades: List[Trade] = []
-    all_actions: List[HistoryBaseEntry] = []
+    all_actions: List[Union[LedgerAction, HistoryBaseEntry]] = []
 
     root_logger = logging.getLogger('')
     formatter = logging.Formatter('%(levelname)s: %(message)s')
@@ -64,7 +64,19 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     # duplicate and we should warn the user
     action_ids = set()
     for action in all_actions:
-        action_ids.add(action.event_identifier.decode())
+        if isinstance(action, HistoryBaseEntry):
+            action_ids.add(action.event_identifier.decode())
+
+    for action in all_actions:
+        if not isinstance(action, HistoryBaseEntry):
+            # Must be LedgerAction then
+            if action.link in action_ids:
+                raise ValueError((
+                    'Action with identifier {} is also present as an event '
+                    'This might be an unidentified duplicate. Please check your '
+                    'events and trades for duplicates.'
+                ).format(action.link))
+            action_ids.add(action.link)
 
     for trade in all_trades:
         if trade.link in action_ids:

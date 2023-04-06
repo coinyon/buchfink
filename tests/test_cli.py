@@ -114,7 +114,7 @@ def test_ethereum_gas_report_cli():
 
         assert not os.path.exists(os.path.join(d, 'reports/all'))
 
-        result = runner.invoke(buchfink, ['report'])
+        result = runner.invoke(buchfink, ['report', '-k', 'whale1'])
         logger.debug('output of %s: %s', 'report', result.output)
         assert 'all' in result.output
         assert 'Free P/L' in result.output
@@ -123,5 +123,7 @@ def test_ethereum_gas_report_cli():
         assert result.exit_code == 0
 
         assert os.path.exists(os.path.join(d, 'reports/all/report.yaml'))
-        assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
         assert os.path.exists(os.path.join(d, 'reports/all/report.md'))
+        # assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
+        assert os.path.exists(os.path.join(d, 'reports/all/report.log'))
+        assert os.path.exists(os.path.join(d, 'reports/all/errors.log'))

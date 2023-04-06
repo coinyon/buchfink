@@ -80,7 +80,7 @@ def test_manual_price(tmp_path):
     assert float(result['overview']['trade']['taxable']) == 20.0
 
 
-def test_ethereum_gas_report(tmp_path):
+def test_ethereum_gas_report_tax(tmp_path):
     shutil.copytree(
         os.path.join(os.path.dirname(__file__), "scenarios", "ethereum_gas"),
         os.path.join(tmp_path, "buchfink"),

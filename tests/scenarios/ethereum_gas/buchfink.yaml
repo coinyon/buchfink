@@ -1,5 +1,5 @@
 accounts:
-  - name: whale
+  - name: whale1
     ethereum: '0xD57479B8287666B44978255F1677E412d454d4f0'
   - name: whale2
     ethereum: '0xD57479B821111111111111111111111111111111'
