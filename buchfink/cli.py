@@ -386,8 +386,8 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                         events = buchfink_db.\
                                 evm_tx_decoder.get_or_decode_transaction_events(tx, receipt,
                                                                                 ignore_cache=False)
-                    except (ValueError, TypeError):
-                        logger.exception('TX')
+                    except (IOError, CannotHandleRequest) as e:
+                        logger.warning('Exception while decoding events for tx %s: %s', tx.tx_hash.hex(), e)
                         continue
 
                     for event in events:
