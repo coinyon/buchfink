@@ -48,7 +48,7 @@ from .models.account import account_from_string
 from .report import render_report, run_report
 
 if TYPE_CHECKING:
-    from typing import Dict, Union  # noqa: F401
+    from typing import Dict  # noqa: F401
 
     from buchfink.datatypes import Asset  # noqa: F401
 
@@ -344,7 +344,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
 
     for account in accounts:
         name = account.name
-        trades = []  # type: List[Union[Trade]]
+        trades = []  # type: List[Trade]
         actions = []  # type: List[LedgerAction]
         fetch_config = account.config.fetch or FetchConfig()
 
