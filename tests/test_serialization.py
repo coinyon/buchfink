@@ -10,6 +10,7 @@ from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_dat
 from buchfink.datatypes import Asset, Balance, BalanceSheet, EvmEvent, FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (
+    deserialize_amount,
     deserialize_asset,
     deserialize_balance,
     deserialize_event,
@@ -203,3 +204,21 @@ def test_load_yaml_parse_action_and_deserialize(buchfink_db):
         'sequence_index',
         'timestamp',
     }
+
+
+def test_deserialize_asset_without_name(tmp_path):
+    shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+            os.path.join(tmp_path, 'buchfink')
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+
+    with pytest.raises(ValueError):
+        # Missing ] at the end
+        deserialize_amount("1 [eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599")
+
+    amount, asset = deserialize_amount(
+            "1 [eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599]")
+    assert str(amount) == '1'
+    assert asset == A_WBTC

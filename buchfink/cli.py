@@ -840,7 +840,7 @@ def quote(buchfink_db: BuchfinkDB, asset: Tuple[str], amount: float,
             continue
         except ValueError:
             pass
-        if '/' in symbol:
+        if '/' in symbol and '[' not in symbol:  # TODO support "A[eip155:1/id]/B" syntax
             symbol, base_symbol = symbol.split('/')
             base_asset = buchfink_db.get_asset_by_symbol(base_symbol)
             base_in_usd = FVal(buchfink_db.inquirer.find_usd_price(base_asset))
