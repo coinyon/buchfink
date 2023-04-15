@@ -15,6 +15,7 @@ import click
 import coloredlogs
 import pyqrcode
 import yaml
+from rich.progress import track
 from rotkehlchen.constants import ZERO
 from rotkehlchen.errors.asset import WrongAssetType
 from rotkehlchen.history.price import PriceHistorian
@@ -213,7 +214,7 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
     accounts = _get_accounts(buchfink_db, external=external, keyword=keyword,
             exclude=exclude)
 
-    for account in accounts:
+    for account in track(accounts, "Fetching balances"):
         if keyword is not None and keyword not in account.name:
             continue
 
