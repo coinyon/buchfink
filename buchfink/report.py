@@ -10,7 +10,13 @@ from jinja2 import Environment, FileSystemLoader
 from rotkehlchen.db.filtering import ReportDataFilterQuery
 from rotkehlchen.db.reports import DBAccountingReports
 
-from buchfink.datatypes import HistoryBaseEntry, LedgerAction, Timestamp, Trade
+from buchfink.datatypes import (
+    HistoryBaseEntry,
+    HistoryEventSubType,
+    LedgerAction,
+    Timestamp,
+    Trade
+)
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_fval, serialize_fval
 
@@ -65,6 +71,9 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     action_ids = set()
     for action in all_actions:
         if isinstance(action, HistoryBaseEntry):
+            if action.event_subtype == HistoryEventSubType.FEE \
+                    and action.counterparty == 'gas':
+                continue
             action_ids.add(action.event_identifier.decode())
 
     for action in all_actions:
