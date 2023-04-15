@@ -23,6 +23,7 @@ from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
 from buchfink.datatypes import (
+    EvmEvent,
     FVal,
     HistoryEventSubType,
     HistoryEventType,
@@ -385,7 +386,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                     buchfink_db.evm_tx_decoder.base.tracked_accounts = \
                             buchfink_db.get_blockchain_accounts()
                     try:
-                        events = buchfink_db.\
+                        events: List[EvmEvent] = buchfink_db.\
                                 evm_tx_decoder.get_or_decode_transaction_events(tx, receipt,
                                                                                 ignore_cache=False)
                     except (IOError, CannotHandleRequest) as e:
@@ -403,6 +404,9 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                         elif event.event_subtype == HistoryEventSubType.APPROVE:
                             pass
                         elif event.event_type == HistoryEventType.TRADE:
+                            if event.asset.is_nft() or 'eip155:1/erc721:' in event.asset.identifier:
+                                # For now we will ignore NFT events
+                                continue
                             actions.append(event)
                         else:
                             logger.warning('Ignoring event %s (summary=%s, event_identifier=0x%s, '
