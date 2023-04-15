@@ -342,7 +342,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
     accounts = _get_accounts(buchfink_db, external=external, keyword=keyword,
             exclude=exclude, account_type=account_type)
 
-    for account in accounts:
+    for account in track(accounts, description='Fetching data'):
         name = account.name
         trades = []  # type: List[Trade]
         actions = []  # type: List[LedgerAction]
