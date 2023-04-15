@@ -398,7 +398,7 @@ class BuchfinkDB(DBHandler):
 
     def get_blockchain_accounts(self, cursor=None) -> BlockchainAccounts:
         if self._active_eth_address:
-            return BlockchainAccounts(eth=self._active_eth_address)
+            return BlockchainAccounts(eth=[self._active_eth_address])
         return BlockchainAccounts()
 
     def get_trades_from_file(self, trades_file) -> List[Trade]:

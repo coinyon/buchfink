@@ -16,6 +16,7 @@ import coloredlogs
 import pyqrcode
 import yaml
 from rotkehlchen.constants import ZERO
+from rotkehlchen.errors.asset import WrongAssetType
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
@@ -516,8 +517,8 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
 
             try:
                 buchfink_db.fetch_balances(account)
-            except (IOError, CannotHandleRequest):
-                logger.exception('Exception during fetch_balances')
+            except (IOError, CannotHandleRequest, WrongAssetType):
+                logger.exception('Exception during fetch_balances for %s', name)
                 error_occured = True
                 continue
             logger.info('Fetched balances from %s', name)
