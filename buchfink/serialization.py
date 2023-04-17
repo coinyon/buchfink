@@ -69,75 +69,75 @@ def deserialize_ledger_action(action_dict) -> LedgerAction:
         amount, asset = deserialize_amount(action_dict['income'])
         return LedgerAction(
             identifier=None,
-            location='',
+            location=Location.EXTERNAL,
             action_type=LedgerActionType.INCOME,
             amount=amount,
             rate=None,
             rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
-            notes=action_dict.get('notes', ''),
-            link=action_dict.get('link', '')
+            notes=str(action_dict.get('notes', '')),
+            link=str(action_dict.get('link', ''))
         )
 
     if 'airdrop' in action_dict:
         amount, asset = deserialize_amount(action_dict['airdrop'])
         return LedgerAction(
             identifier=None,
-            location='',
+            location=Location.EXTERNAL,
             action_type=LedgerActionType.AIRDROP,
             amount=amount,
             rate=None,
             rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
-            notes=action_dict.get('notes', ''),
-            link=action_dict.get('link', '')
+            notes=str(action_dict.get('notes', '')),
+            link=str(action_dict.get('link', ''))
         )
 
     if 'loss' in action_dict:
         amount, asset = deserialize_amount(action_dict['loss'])
         return LedgerAction(
             identifier=None,
-            location='',
+            location=Location.EXTERNAL,
             action_type=LedgerActionType.LOSS,
             amount=amount,
             rate=None,
             rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
-            notes=action_dict.get('notes', ''),
-            link=action_dict.get('link', '')
+            notes=str(action_dict.get('notes', '')),
+            link=str(action_dict.get('link', ''))
         )
 
     if 'gift' in action_dict:
         amount, asset = deserialize_amount(action_dict['gift'])
         return LedgerAction(
             identifier=None,
-            location='',
+            location=Location.EXTERNAL,
             action_type=LedgerActionType.GIFT,
             amount=amount,
             rate=None,
             rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
-            notes=action_dict.get('notes', ''),
-            link=action_dict.get('link', '')
+            notes=str(action_dict.get('notes', '')),
+            link=str(action_dict.get('link', ''))
         )
 
     if 'expense' in action_dict:
         amount, asset = deserialize_amount(action_dict['expense'])
         return LedgerAction(
             identifier=None,
-            location='',
+            location=Location.EXTERNAL,
             action_type=LedgerActionType.EXPENSE,
             amount=amount,
             rate=None,
             rate_asset=None,
             timestamp=deserialize_timestamp(action_dict['timestamp']),
             asset=asset,
-            notes=action_dict.get('notes', ''),
-            link=action_dict.get('link', '')
+            notes=str(action_dict.get('notes', '')),
+            link=str(action_dict.get('link', ''))
         )
 
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
@@ -147,14 +147,14 @@ def deserialize_trade(trade_dict) -> Trade:
     if 'pair' in trade_dict:
         return Trade(
             trade_dict['timestamp'],
-            trade_dict.get('location', ''),
+            Location.deserialize(trade_dict.get('location', '')),
             trade_dict['pair'],
             deserialize_tradetype(trade_dict['trade_type']),
             deserialize_fval(trade_dict['amount']),
             deserialize_fval(trade_dict['rate']),
             deserialize_fval(trade_dict['fee']),
             deserialize_asset(trade_dict['fee_currency']),
-            trade_dict['link']
+            str(trade_dict['link'])
         )
 
     if 'buy' in trade_dict:
@@ -181,7 +181,7 @@ def deserialize_trade(trade_dict) -> Trade:
 
     return Trade(
         dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
-        trade_dict.get('location', ''),
+        Location.deserialize(trade_dict.get('location', '')),
         base_asset,
         quote_asset,
         trade_type,
@@ -189,7 +189,7 @@ def deserialize_trade(trade_dict) -> Trade:
         quote_amount / amount,
         fee,
         fee_currency,
-        trade_dict.get('link', '')
+        str(trade_dict.get('link', ''))
     )
 
 
