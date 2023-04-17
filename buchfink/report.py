@@ -175,7 +175,8 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
         "name": report_config.name,
         "title": report_config.title,
         "overview": overview_data,
-        "events": events
+        "events": events,
+        "config": buchfink_db.config,
     })
 
     _, ext = os.path.splitext(report_config.template)
