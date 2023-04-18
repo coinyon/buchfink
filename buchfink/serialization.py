@@ -147,7 +147,7 @@ def deserialize_trade(trade_dict) -> Trade:
     if 'pair' in trade_dict:
         return Trade(
             trade_dict['timestamp'],
-            Location.deserialize(trade_dict.get('location', '')),
+            Location.deserialize(trade_dict.get('location') or 'external'),
             trade_dict['pair'],
             deserialize_tradetype(trade_dict['trade_type']),
             deserialize_fval(trade_dict['amount']),
@@ -181,7 +181,7 @@ def deserialize_trade(trade_dict) -> Trade:
 
     return Trade(
         dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
-        Location.deserialize(trade_dict.get('location', '')),
+        Location.deserialize(trade_dict.get('location') or 'external'),
         base_asset,
         quote_asset,
         trade_type,
