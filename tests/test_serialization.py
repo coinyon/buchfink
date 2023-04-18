@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 import yaml
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
+from rotkehlchen.types import Location
 
 from buchfink.datatypes import Asset, Balance, BalanceSheet, EvmEvent, FVal, Trade, TradeType
 from buchfink.db import BuchfinkDB
@@ -28,7 +29,7 @@ from buchfink.serialization import (
 def dummy_trade():
     return Trade(
         datetime(2020, 1, 3, tzinfo=timezone.utc).timestamp(),
-        'coinbase',
+        Location.COINBASE,
         Asset('BTC'),
         Asset('EUR'),
         TradeType.BUY,
