@@ -280,7 +280,6 @@ class BuchfinkDB(DBHandler):
         for report in self.config.reports:
             yield ReportConfig.from_config(report)
 
-
     def get_settings(self, cursor=None, have_premium: bool = False) -> DBSettings:
         clean_settings = self.config.settings.dict().copy()
 
