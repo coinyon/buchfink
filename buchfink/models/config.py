@@ -57,12 +57,14 @@ AccountConfig = Union[
     ]
 
 
-class ReportConfig2(BaseModel):
+class ReportConfigFromConfigFile(BaseModel):
     name: str
     from_: str
     to: str
     title: Optional[str]
     template: Optional[str]
+    limit_accounts: List[str] = []
+    exclude_accounts: List[str] = []
 
     class Config:
         fields = {
@@ -118,7 +120,7 @@ class HistoricalPriceConfig(BaseModel):
 class Config(BaseModel):
     accounts: List[AccountConfig] = []
     tokens: List[AssetConfig] = []
-    reports: List[ReportConfig2] = []
+    reports: List[ReportConfigFromConfigFile] = []
     prices: List[HistoricalPriceConfig] = []
     settings: Settings
 
@@ -129,3 +131,17 @@ class ReportConfig(BaseModel):
     template: Optional[str]
     from_dt: datetime
     to_dt: datetime
+    limit_accounts: List[str] = []
+    exclude_accounts: List[str] = []
+
+    @staticmethod
+    def from_config(report: ReportConfigFromConfigFile) -> 'ReportConfig':
+        return ReportConfig(
+            name=str(report.name),
+            title=report.title,
+            template=report.template,
+            from_dt=datetime.fromisoformat(str(report.from_)),
+            to_dt=datetime.fromisoformat(str(report.to)),
+            limit_accounts=report.limit_accounts,
+            exclude_accounts=report.exclude_accounts,
+        )

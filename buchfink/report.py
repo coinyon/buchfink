@@ -59,10 +59,19 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
     for account in accounts:
         num_matched_accounts += 1
+
+        if report_config.limit_accounts and \
+                account.name not in report_config.limit_accounts:
+            continue
+
+        if report_config.exclude_accounts and \
+                account.name in report_config.exclude_accounts:
+            continue
+
         all_trades.extend(buchfink_db.get_local_trades_for_account(account))
         all_actions.extend(buchfink_db.get_local_ledger_actions_for_account(account))
 
-    logger.info('Collected %d trades / %d actions from %d exchange account(s)',
+    logger.info('Collected %d trades / %d actions from %d account(s)',
             len(all_trades), len(all_actions), num_matched_accounts)
 
     # Check if we have any trades or actions that share an event identifier

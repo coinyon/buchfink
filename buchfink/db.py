@@ -3,7 +3,6 @@ import operator
 import os
 import os.path
 import sys
-from datetime import datetime
 from functools import reduce
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, cast
@@ -279,13 +278,8 @@ class BuchfinkDB(DBHandler):
 
     def get_all_reports(self) -> Iterable[ReportConfig]:
         for report in self.config.reports:
-            yield ReportConfig(
-                name=str(report.name),
-                title=report.title,
-                template=report.template,
-                from_dt=datetime.fromisoformat(str(report.from_)),
-                to_dt=datetime.fromisoformat(str(report.to))
-            )
+            yield ReportConfig.from_config(report)
+
 
     def get_settings(self, cursor=None, have_premium: bool = False) -> DBSettings:
         clean_settings = self.config.settings.dict().copy()
