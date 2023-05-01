@@ -88,9 +88,11 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     for action in all_actions:
         if not isinstance(action, HistoryBaseEntry):
             # Must be LedgerAction then
+            if not action.link:
+                continue
             if action.link in action_ids:
                 raise ValueError((
-                    'Action with identifier {} is also present as an event '
+                    'Action with identifier "{}" is also present as an event '
                     'This might be an unidentified duplicate. Please check your '
                     'events and trades for duplicates.'
                 ).format(action.link))
@@ -98,8 +100,10 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
     for trade in all_trades:
         if trade.link in action_ids:
+            if not trade.link:
+                continue
             raise ValueError((
-                'Trade with identifier {} is also present as an event '
+                'Trade with identifier "{}" is also present as an event '
                 'This might be an unidentified duplicate. Please check your '
                 'events and trades for duplicates.'
             ).format(trade.link))

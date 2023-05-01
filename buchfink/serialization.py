@@ -388,6 +388,11 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     ser_event = event.serialize()
     ser_event['timestamp'] = serialize_timestamp_ms(event.timestamp)
 
+    if 'entry_type' in ser_event:
+        if ser_event['entry_type'] != 'evm event':
+            raise ValueError('Do not know how to serialize entry type ' + ser_event['entry_type'])
+        del ser_event['entry_type']
+
     if event.event_type == HistoryEventType.SPEND and \
             event.event_subtype == HistoryEventSubType.FEE:
         ser_event['spend_fee'] = serialize_amount(FVal(event.balance.amount), event.asset)
@@ -420,6 +425,9 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
 
     if 'location_label' in ser_event:
         del ser_event['location_label']
+
+    if 'tx_hash' in ser_event:
+        del ser_event['tx_hash']  # should be the same as link
 
     if 'extra_data' in ser_event and not ser_event['extra_data']:
         del ser_event['extra_data']
@@ -488,7 +496,8 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             product=event_dict.get('product'),
             address=event_dict.get('address'),
             identifier=None,
-            extra_data=None
+            extra_data=None,
+            tx_hash=event_dict.get('link', '').encode(),
         )
 
     # return HistoryEvent(
