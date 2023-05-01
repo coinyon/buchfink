@@ -43,7 +43,6 @@ from buchfink.serialization import (
 )
 
 from .classification import classify_tx
-from .importers import zerion_csv
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
 from .report import render_report, run_report
@@ -417,32 +416,6 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                                            event.sequence_index)
 
                     buchfink_db._active_eth_address = None
-
-            if fetch_trades_for_this_account:
-                logger.info('Fetching trades for %s', name)
-
-                trades = []
-
-                # manager = buchfink_db.get_chains_aggregator(account)
-                # amm_module = manager.get_module('uniswap')
-                # if amm_module:
-                #     trades.extend(amm_module.get_trades(
-                #             addresses=manager.accounts.eth,
-                #             from_timestamp=epoch_start_ts,
-                #             to_timestamp=epoch_end_ts,
-                #             only_cache=False
-                #         ))
-                #
-                # amm_module = manager.get_module('sushiswap')
-                # if amm_module:
-                #     trades.extend(amm_module.get_trades(
-                #             addresses=manager.accounts.eth,
-                #             from_timestamp=epoch_start_ts,
-                #             to_timestamp=epoch_end_ts,
-                #             only_cache=False
-                #         ))
-
-                trades.extend(zerion_csv.get_trades(buchfink_db, account))
 
         elif account.account_type == "exchange":
 
