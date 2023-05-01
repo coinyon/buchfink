@@ -613,21 +613,27 @@ class BuchfinkDB(DBHandler):
 
         if account.account_type == "bitcoin":
             manager = self.get_chains_aggregator(account)
-            manager.query_balances()
-            btc = Asset('BTC')
-
-            return BalanceSheet(assets={
-                btc: reduce(operator.add, manager.balances.btc.values())
-            }, liabilities={})
+            manager.query_balances(
+                blockchain=SupportedBlockchain.BITCOIN
+            )
+            btc = Asset("BTC")
+            return BalanceSheet(
+                assets={
+                    btc: reduce(operator.add, manager.balances.btc.values())
+                }
+            )
 
         if account.account_type == "bitcoincash":
             manager = self.get_chains_aggregator(account)
-            manager.query_balances()
-            bch = Asset('BCH')
-
-            return BalanceSheet(assets={
-                bch: reduce(operator.add, manager.balances.bch.values())
-            }, liabilities={})
+            manager.query_balances(
+                blockchain=SupportedBlockchain.BITCOIN_CASH
+            )
+            bch = Asset("BCH")
+            return BalanceSheet(
+                assets={
+                    bch: reduce(operator.add, manager.balances.bch.values())
+                }
+            )
 
         if account.account_type == "file":
             return self.get_balances_from_file(
