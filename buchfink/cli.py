@@ -480,6 +480,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
 
             logger.info('Fetched %d action(s) (%d annotated) from %s',
                     len(actions) + len(annotated), len(annotated), name)
+
             actions.extend(annotated)
 
             if actions:
@@ -711,7 +712,7 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
         multiple=True)
 @with_buchfink_db
 def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only):
-    "Generate reports for all report definition and output overview table"
+    "Generate reports for all active report configs and output overview table"
 
     if not render_only:
         buchfink_db.perform_assets_updates()
@@ -736,8 +737,10 @@ def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_onl
     else:
         reports = [
             report_ for report_ in buchfink_db.get_all_reports()
-            if report is None or report in report_.name
+            if (report is None or report in report_.name) and report_.active
         ]
+
+    logger.info('Running reports: %s', [str(report_) for report_ in reports])
 
     for _report in reports:
         name = str(_report.name)

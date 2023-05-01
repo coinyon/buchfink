@@ -65,6 +65,7 @@ class ReportConfigFromConfigFile(BaseModel):
     template: Optional[str]
     limit_accounts: List[str] = []
     exclude_accounts: List[str] = []
+    active: Optional[bool] = True
 
     class Config:
         fields = {
@@ -133,6 +134,7 @@ class ReportConfig(BaseModel):
     to_dt: datetime
     limit_accounts: List[str] = []
     exclude_accounts: List[str] = []
+    active: Optional[bool] = True
 
     @staticmethod
     def from_config(report: ReportConfigFromConfigFile) -> 'ReportConfig':
@@ -144,4 +146,5 @@ class ReportConfig(BaseModel):
             to_dt=datetime.fromisoformat(str(report.to)),
             limit_accounts=report.limit_accounts,
             exclude_accounts=report.exclude_accounts,
+            active=report.active
         )
