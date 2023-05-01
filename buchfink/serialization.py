@@ -9,7 +9,7 @@ from rotkehlchen.accounting.structures.evm_event import EvmEvent
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
-from rotkehlchen.types import EvmTokenKind, Location
+from rotkehlchen.types import EvmTokenKind, Location, deserialize_evm_tx_hash
 
 from buchfink.datatypes import (
     Asset,
@@ -427,13 +427,13 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         del ser_event['location_label']
 
     if 'tx_hash' in ser_event:
-        del ser_event['tx_hash']  # should be the same as link
+        ser_event['link'] = ser_event['tx_hash']
+        del ser_event['tx_hash']
 
     if 'extra_data' in ser_event and not ser_event['extra_data']:
         del ser_event['extra_data']
 
     if 'event_identifier' in ser_event:
-        ser_event['link'] = ser_event['event_identifier']
         del ser_event['event_identifier']
 
     if 'product' in ser_event and not ser_event['product']:
@@ -482,7 +482,9 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
 
     if is_evm_event:
         return EvmEvent(
-            event_identifier=event_dict.get('link', '').encode(),
+            tx_hash=deserialize_evm_tx_hash(event_dict['link'][2:]
+                                            if event_dict['link'].startswith('0x')
+                                            else event_dict['link']),
             sequence_index=event_dict['sequence_index'],
             timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
             location=Location.ETHEREUM,
@@ -497,7 +499,6 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             address=event_dict.get('address'),
             identifier=None,
             extra_data=None,
-            tx_hash=event_dict.get('link', '').encode(),
         )
 
     # return HistoryEvent(

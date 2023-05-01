@@ -413,7 +413,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                                            'sequence_index=%s)',
                                            event.event_type,
                                            event,
-                                           event.event_identifier.hex(),
+                                           event.event_identifier,
                                            event.sequence_index)
 
                     buchfink_db._active_eth_address = None

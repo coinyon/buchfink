@@ -2,15 +2,15 @@
 actions:
 - buy: 1 ETH
   for: 1000 USD
-  link: '1'
+  link: '0x11'
   timestamp: '2021-01-15T19:49:27'
 - sell: 0.5 ETH
   for: 1000 USD
-  link: '2'
+  link: '0x22'
   timestamp: '2021-02-15T19:51:26'
 - spend_fee: 0.0203523 ETH
   counterparty: gas
-  link: '0x3'
+  link: '0x33'
   notes: Burned 0.0203523 ETH in gas
   sequence_index: 0
   timestamp: '2021-02-19T10:15:50+00:00'

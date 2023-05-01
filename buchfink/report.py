@@ -11,6 +11,7 @@ from rotkehlchen.db.filtering import ReportDataFilterQuery
 from rotkehlchen.db.reports import DBAccountingReports
 
 from buchfink.datatypes import (
+    EvmEvent,
     HistoryBaseEntry,
     HistoryEventSubType,
     LedgerAction,
@@ -79,11 +80,11 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     # duplicate and we should warn the user
     action_ids = set()
     for action in all_actions:
-        if isinstance(action, HistoryBaseEntry):
+        if isinstance(action, EvmEvent):
             if action.event_subtype == HistoryEventSubType.FEE \
                     and action.counterparty == 'gas':
                 continue
-            action_ids.add(action.event_identifier.decode())
+            action_ids.add(action.tx_hash.hex())
 
     for action in all_actions:
         if not isinstance(action, HistoryBaseEntry):
