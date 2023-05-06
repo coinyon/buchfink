@@ -3,14 +3,16 @@ import logging
 import os.path
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Union
+from typing import List, Literal, Union
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
+from rotkehlchen.accounting.structures.processed_event import ProcessedAccountingEvent
 from rotkehlchen.db.filtering import ReportDataFilterQuery
 from rotkehlchen.db.reports import DBAccountingReports
 
 from buchfink.datatypes import (
+    Asset,
     EvmEvent,
     HistoryBaseEntry,
     HistoryEventSubType,
@@ -161,11 +163,31 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
         report_id = overview_data['identifier']
 
     @lru_cache
-    def asset_symbol(symbol):
-        if not symbol:
+    def asset_symbol(asset: Union[Asset, None]) -> str:
+        if not asset:
             return ''
-        asset = buchfink_db.get_asset_by_symbol(symbol)
-        return asset.symbol
+        return str(asset.symbol_or_name())
+
+    def get_event_type(event: ProcessedAccountingEvent) -> \
+            Literal['buy', 'sell', 'transaction_fee', 'receive', 'spend', 'dividend', 'other']:
+
+        if event.notes.startswith('Burned'):
+            return 'transaction_fee'
+        if event.notes.startswith('Swap') or event.notes.startswith('Sell'):
+            return 'sell'
+        if event.notes.startswith('Buy'):
+            return 'buy'
+        if event.notes.startswith('Received'):
+            return 'receive'
+        if event.notes.startswith('Register ENS name'):
+            return 'spend'
+        if event.notes == "Fei Genesis Commit":
+            return 'spend'
+        if 'rewards' in event.notes or 'Payout' in event.notes or 'asset return' in event.notes:
+            return 'dividend'
+
+        return 'other'
+        # raise ValueError(f'Unknown event type: {event}')
 
     # Look for templates relative to the data_directory, that is the directory where
     # the buchfink.yaml is residing.
@@ -174,6 +196,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     env.globals['float'] = float
     env.globals['str'] = str
     env.globals['asset_symbol'] = asset_symbol
+    env.globals['get_event_type'] = get_event_type
     template = env.get_template(report_config.template)
 
     accountant = buchfink_db.get_accountant()

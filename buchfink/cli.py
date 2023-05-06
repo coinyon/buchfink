@@ -683,8 +683,9 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
         help='Do not actually run the report but only render the template')
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
+@click.option('--progress/--no-progress', default=True, help='Show progress bar')
 @with_buchfink_db
-def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only):
+def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only, progress: bool):
     "Generate reports for all active report configs and output overview table"
 
     if not render_only:
@@ -713,9 +714,13 @@ def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_onl
             if (report is None or report in report_.name) and report_.active
         ]
 
-    logger.info('Running reports: %s', [str(report_) for report_ in reports])
+    logger.info('Running %s report%s: %s',
+                len(reports),
+                's' if len(reports) != 1 else '',
+                ', '.join([report_.name for report_ in reports])
+            )
 
-    for _report in reports:
+    for _report in track(reports, description='Generating reports', disable=not progress):
         name = str(_report.name)
         if not render_only:
             results[name] = run_report(buchfink_db, accounts, _report)
