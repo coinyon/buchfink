@@ -37,7 +37,9 @@ def test_run_on_ens_domain():
         assert os.path.exists(os.path.join(d, 'actions/coinyon.eth.yaml'))
         assert os.path.exists(os.path.join(d, 'balances/coinyon.eth.yaml'))
 
-        result = runner.invoke(buchfink, ['report', '-e', 'coinyon.eth', '--year', '2020'])
+        result = runner.invoke(buchfink, [
+            'report', '-e', 'coinyon.eth', '--year', '2020', '--no-vcs-check'
+        ])
         logger.debug('output of %s: %s', 'report', result.output)
         assert result.exception is None
         assert result.exit_code == 0
@@ -114,7 +116,7 @@ def test_ethereum_gas_report_cli():
 
         assert not os.path.exists(os.path.join(d, 'reports/all'))
 
-        result = runner.invoke(buchfink, ['report', '-k', 'whale1'])
+        result = runner.invoke(buchfink, ['report', '-k', 'whale1', '--no-vcs-check'])
         logger.debug('output of %s: %s', 'report', result.output)
         assert 'all' in result.output
         assert 'Free P/L' in result.output
