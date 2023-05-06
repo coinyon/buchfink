@@ -3,6 +3,7 @@ import os
 import os.path
 import re
 import shutil
+import subprocess
 import sys
 import webbrowser
 from datetime import datetime
@@ -684,13 +685,29 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
 @click.option('--progress/--no-progress', default=True, help='Show progress bar')
+@click.option('--vcs-check/--no-vcs-check', default=True, help='Check if we are in a clean VCS state')
 @with_buchfink_db
-def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only, progress: bool):
+def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only, progress: bool, vcs_check: bool):
     "Generate reports for all active report configs and output overview table"
 
     if not render_only:
         buchfink_db.perform_assets_updates()
         buchfink_db.sync_manual_prices()
+
+    if vcs_check:
+        # Check wether we have uncommited changes
+        # Currently only implemented for git
+        try:
+            # Check for uncommited changes
+            subprocess.check_output(['git', 'diff', '--quiet'],
+                                    cwd=buchfink_db.data_directory)
+            # Check for staged changes
+            subprocess.check_output(['git', 'diff', '--cached', '--quiet'],
+                                    cwd=buchfink_db.data_directory)
+        except subprocess.CalledProcessError:
+            logger.error('You have uncommited or staged changes. Please commit or '
+                         'stash them before running a report, or use --no-vcs-check')
+            sys.exit(1)
 
     results = {}
 
