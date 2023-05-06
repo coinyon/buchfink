@@ -97,7 +97,6 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
                     'This might be an unidentified duplicate. Please check your '
                     'events and trades for duplicates.'
                 ).format(action.link))
-            action_ids.add(action.link)
 
     for trade in all_trades:
         if trade.link in action_ids:

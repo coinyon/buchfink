@@ -184,7 +184,7 @@ def test_load_yaml_parse_action_and_deserialize(buchfink_db):
     yaml_content = """
 - spend_fee: 0.0203523 ETH
   counterparty: gas
-  link: '0x123'
+  link: '0x1234'
   notes: Burned 0.0203523 ETH in gas
   sequence_index: 0
   timestamp: '2021-08-19T10:15:50+00:00'"""
@@ -193,7 +193,7 @@ def test_load_yaml_parse_action_and_deserialize(buchfink_db):
     dict_action = serialize_event(action)
     assert dict_action['spend_fee'] == '0.0203523 ETH'
     assert dict_action['counterparty'] == 'gas'
-    # assert dict_action['link'] == '0x123'
+    assert dict_action['link'] == '0x1234'
     assert dict_action['notes'] == 'Burned 0.0203523 ETH in gas'
     assert dict_action['sequence_index'] == 0
     assert dict_action['timestamp'] == '2021-08-19T10:15:50+00:00'

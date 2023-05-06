@@ -1,21 +1,21 @@
 actions:
 - counterparty: uniswap-v3
-  link: '0x5'
+  link: '0x55'
   sequence_index: 80
   timestamp: '2020-02-20T09:32:02+00:00'
   trade_spend: 2200 USD
 - counterparty: uniswap-v3
-  link: '0x5'
+  link: '0x55'
   sequence_index: 82
   timestamp: '2020-02-20T09:32:02+00:00'
   trade_receive: 1 ETH
 - counterparty: uniswap-v3
-  link: '0x6'
+  link: '0x66'
   sequence_index: 80
   timestamp: '2020-02-20T09:32:02+00:00'
   trade_spend: 1 ETH
 - counterparty: uniswap-v3
-  link: '0x6'
+  link: '0x66'
   sequence_index: 82
   timestamp: '2020-02-24T09:32:02+00:00'
   trade_receive: 2300 USD
