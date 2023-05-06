@@ -23,11 +23,11 @@ from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
 from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
+from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.manager import DataMigrationManager
-from rotkehlchen.data_migrations.migrations.migration_4 import read_and_write_nodes_in_database
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.evmtx import DBEvmTx
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
@@ -772,10 +772,16 @@ class BuchfinkDB(DBHandler):
     def sync_rpc_nodes(self):
         'Ensures that the database matches the config file'
 
-        with self.user_write() as cursor:
+        with (
+            self.user_write() as write_cursor,
+            GlobalDBHandler().conn.read_ctx() as cursor,
+        ):
             # Not the best solution but the easiest to implement :blush:
-            cursor.execute('DELETE FROM rpc_nodes;')
-            read_and_write_nodes_in_database(cursor)
+            write_cursor.execute('DELETE FROM rpc_nodes;')
+            populate_rpc_nodes_in_database(
+                db_write_cursor=write_cursor,
+                globaldb_cursor=cursor,
+            )
 
         settings_rpc_nodes = list(self.config.settings.rpc_nodes or [])
         db_rpc_nodes = list(self.get_rpc_nodes(SupportedBlockchain.ETHEREUM))
