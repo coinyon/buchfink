@@ -170,6 +170,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
 
     def get_event_type(event: ProcessedAccountingEvent) -> \
             Literal['buy', 'sell', 'transaction_fee', 'receive', 'spend', 'dividend', 'other']:
+        # pylint: disable=too-many-return-statements
 
         if event.notes.startswith('Burned'):
             return 'transaction_fee'

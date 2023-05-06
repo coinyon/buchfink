@@ -685,9 +685,11 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
 @click.option('--year', type=int, default=None, help='Run adhoc-report for given year',
         multiple=True)
 @click.option('--progress/--no-progress', default=True, help='Show progress bar')
-@click.option('--vcs-check/--no-vcs-check', default=True, help='Check if we are in a clean VCS state')
+@click.option('--vcs-check/--no-vcs-check', default=True,
+              help='Check if we are in a clean VCS state')
 @with_buchfink_db
-def report_(buchfink_db: BuchfinkDB, keyword, external, report, year, render_only, progress: bool, vcs_check: bool):
+def report_(buchfink_db: BuchfinkDB, keyword, external, report, year,
+            render_only, progress: bool, vcs_check: bool):
     "Generate reports for all active report configs and output overview table"
 
     if not render_only:
