@@ -386,9 +386,11 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
                     buchfink_db.evm_tx_decoder.base.tracked_accounts = \
                             buchfink_db.get_blockchain_accounts()
                     try:
-                        events: List[EvmEvent] = buchfink_db.\
-                                evm_tx_decoder.get_or_decode_transaction_events(tx, receipt,
+                        ev: Tuple[List[EvmEvent], bool] = buchfink_db.\
+                                evm_tx_decoder._get_or_decode_transaction_events(tx, receipt,
                                                                                 ignore_cache=False)
+                        events, _ = ev
+
                     except (IOError, CannotHandleRequest) as e:
                         logger.warning(
                                 'Exception while decoding events for tx %s: %s',
