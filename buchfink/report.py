@@ -169,7 +169,8 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
         return str(asset.symbol_or_name())
 
     def get_event_type(event: ProcessedAccountingEvent) -> \
-            Literal['buy', 'sell', 'transaction_fee', 'receive', 'spend', 'dividend', 'other']:
+            Literal['buy', 'sell', 'transaction_fee', 'loss', 'receive',
+                    'spend', 'dividend', 'other']:
         # pylint: disable=too-many-return-statements
 
         if event.notes.startswith('Burned'):
@@ -182,6 +183,8 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             return 'receive'
         if event.notes.startswith('Register ENS name'):
             return 'spend'
+        if event.notes.startswith('Liquidated'):
+            return 'loss'
         if event.notes == "Fei Genesis Commit":
             return 'spend'
         if 'rewards' in event.notes or 'Payout' in event.notes or 'asset return' in event.notes:
