@@ -1,4 +1,5 @@
 import datetime
+import re
 import logging
 import os.path
 from functools import lru_cache
@@ -187,7 +188,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             return 'loss'
         if event.notes == "Fei Genesis Commit":
             return 'spend'
-        if 'rewards' in event.notes or 'Payout' in event.notes or 'asset return' in event.notes:
+        if re.search(r'rewards|payout|asset return|settlement', event.notes, re.IGNORECASE):
             return 'dividend'
 
         return 'other'
