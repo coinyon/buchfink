@@ -1,7 +1,7 @@
 # Buchfink - Plaintext Crypto Portfolio
 
 <p align="center">
-  <img width="460" src="./docs/buchfink_logo" />
+  <img width="460" src="./docs/buchfink_logo.png" />
 
   ![Tests](https://github.com/coinyon/buchfink/workflows/Tests/badge.svg)
 </p>
