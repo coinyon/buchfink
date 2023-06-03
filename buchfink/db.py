@@ -11,7 +11,6 @@ import yaml
 from rotkehlchen.accounting.accountant import Accountant
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.spam_assets import update_spam_assets
-from rotkehlchen.assets.types import AssetType
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.aggregator import ChainsAggregator
 from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
@@ -216,7 +215,7 @@ class BuchfinkDB(DBHandler):
             self.migration_manager.maybe_migrate_data()
 
         self.sync_rpc_nodes()
-        ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
+        # ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
 
         self.ethereum_inquirer = EthereumInquirer(
             greenlet_manager=self.greenlet_manager,
@@ -522,6 +521,7 @@ class BuchfinkDB(DBHandler):
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
+            polygon_pos_manager=None,
             premium=premium,
             eth_modules=eth_modules
         )
@@ -837,7 +837,7 @@ class BuchfinkDB(DBHandler):
                     self.globaldb.edit_evm_token(eth_token)
 
             except UnknownAsset:
-                self.globaldb.add_asset(identifier, AssetType.EVM_TOKEN, eth_token)
+                self.globaldb.add_asset(eth_token)
                 try:
                     self.get_asset_by_symbol(identifier)
                 except UnknownAsset as exc:
