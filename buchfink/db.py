@@ -201,7 +201,8 @@ class BuchfinkDB(DBHandler):
                 'password',
                 self.msg_aggregator,
                 None,
-                sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
+                sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB,
+                resume_from_backup=False
         )
 
         if ENABLE_DATA_MIGRATION:
@@ -219,7 +220,6 @@ class BuchfinkDB(DBHandler):
 
         self.ethereum_inquirer = EthereumInquirer(
             greenlet_manager=self.greenlet_manager,
-            connect_at_start=ethereum_nodes,
             database=self
         )
 
