@@ -1,7 +1,7 @@
 import datetime
-import re
 import logging
 import os.path
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import List, Literal, Union
@@ -176,10 +176,10 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
 
         if event.notes.startswith('Burned'):
             return 'transaction_fee'
-        if event.notes.startswith('Swap') or event.notes.startswith('Sell'):
+        if re.search(r'^swap|sell|buy', event.notes, re.IGNORECASE):
+            # Even when doing a buy, the taxable action is the sell of the
+            # other asset
             return 'sell'
-        if event.notes.startswith('Buy'):
-            return 'buy'
         if event.notes.startswith('Received'):
             return 'receive'
         if event.notes.startswith('Register ENS name'):
