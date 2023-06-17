@@ -15,6 +15,7 @@ from rotkehlchen.db.reports import DBAccountingReports
 from buchfink.datatypes import (
     Asset,
     EvmEvent,
+    FVal,
     HistoryBaseEntry,
     HistoryEventSubType,
     LedgerAction,
@@ -192,7 +193,24 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             return 'dividend'
 
         return 'other'
-        # raise ValueError(f'Unknown event type: {event}')
+
+    def get_profit_loss(event: ProcessedAccountingEvent) -> float:
+        return float(event.pnl.total)
+
+    def get_proceeds(event: ProcessedAccountingEvent) -> float:
+        return get_cost_basis(event) + get_profit_loss(event)
+
+    def get_cost_basis(event: ProcessedAccountingEvent) -> float:
+        cost_basis = event.cost_basis
+        cost_basis_num = 0.0
+
+        if cost_basis is None:
+            return cost_basis_num
+
+        for acquisition in event.cost_basis.matched_acquisitions:
+            cost_basis_num += float(acquisition.amount * FVal(acquisition.event.rate))
+
+        return cost_basis_num
 
     # Look for templates relative to the data_directory, that is the directory where
     # the buchfink.yaml is residing.
@@ -202,6 +220,10 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     env.globals['str'] = str
     env.globals['asset_symbol'] = asset_symbol
     env.globals['get_event_type'] = get_event_type
+    env.globals['get_proceeds'] = get_proceeds
+    env.globals['get_cost_basis'] = get_cost_basis
+    env.globals['get_profit_loss'] = get_profit_loss
+
     template = env.get_template(report_config.template)
 
     accountant = buchfink_db.get_accountant()
