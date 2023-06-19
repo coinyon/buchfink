@@ -331,10 +331,11 @@ def balances(buchfink_db: BuchfinkDB, keyword, minimum_balance, fetch, total,
 @click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
 @click.option('--nfts', 'fetch_nfts', is_flag=True, help='Fetch NFT balances only')
 @click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
+@click.option('--progress/--no-progress', default=True, help='Show progress bar')
 @with_buchfink_db
 def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclude,
-        fetch_balances, fetch_trades, fetch_nfts, external):
-    "Fetch trades for configured accounts"
+        fetch_balances, fetch_trades, fetch_nfts, external, progress):
+    "Fetch events and balances"
 
     buchfink_db.perform_assets_updates()
     fetch_limited = fetch_actions or fetch_balances or fetch_trades or fetch_nfts
@@ -343,7 +344,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
     accounts = _get_accounts(buchfink_db, external=external, keyword=keyword,
             exclude=exclude, account_type=account_type)
 
-    for account in track(accounts, description='Fetching data'):
+    for account in track(accounts, description='Fetching data', disable=not progress):
         name = account.name
         trades = []  # type: List[Trade]
         actions = []  # type: List[LedgerAction]
