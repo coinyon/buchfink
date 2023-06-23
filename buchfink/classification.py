@@ -86,6 +86,7 @@ ADDR_DYDX_REWARDS = '0x01d3348601968aB85b4bb028979006eac235a588'
 ADDR_THALES_AIRDROP = '0x0f33af99f3C124189B8dA7C7BE6Dc08C77a9ddc7'
 ADDR_DAPPRADAR_AIRDROP = '0x2E424a4953940aE99f153a50d0139E7CD108c071'
 
+ADDR_PLSD = '0x34F0915a5f15a66Eba86F6a58bE1A471FB7836A7'
 ADDR_DODO = '0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd'
 ADDR_SUSHI = '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2'
 ADDR_TORN = '0x77777feddddffc19ff86db637967013e6c6a116c'
@@ -753,6 +754,11 @@ def classify_tx(
                 link=txn.tx_hash.hex()
             )]
 
+        elif event.topics[0] == CLAIM:
+            logger.warning(
+                f'Unknown claim event: {event.topics[0]} {event.address} {event.data}'
+            )
+
         if event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_ENS):
             amount = hexstr_to_int(event.data[2:])
             actions += [LedgerAction(
@@ -767,5 +773,25 @@ def classify_tx(
                 notes='ENS retroactive airdrop',
                 link=txn.tx_hash.hex()
             )]
+
+        elif event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_PLSD):
+            amount = hexstr_to_int(event.data[2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.AIRDROP,
+                amount=FVal(amount) / FVal(1e12),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_PLSD),
+                notes='PLSD airdrop',
+                link=txn.tx_hash.hex()
+            )]
+
+        elif event.topics[0] == CLAIM_2:
+            logger.warning(
+                f'Unknown claim event: {event.topics[0]} {event.address} {event.data}'
+            )
 
     return actions
