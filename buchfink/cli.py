@@ -10,7 +10,7 @@ from datetime import datetime
 from functools import update_wrapper
 from operator import itemgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple, Union
 
 import click
 import coloredlogs
@@ -28,6 +28,7 @@ from buchfink.datatypes import (
     FVal,
     HistoryEventSubType,
     HistoryEventType,
+    HistoryBaseEntry,
     LedgerAction,
     Timestamp,
     Trade
@@ -559,47 +560,86 @@ def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     logger.info("Overview: %s", result['overview'])
 
 
-@buchfink.command('trades')
+@buchfink.command('events')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
-@click.option('--fetch', '-f', is_flag=True, help='Fetch trades from sources')
 @with_buchfink_db
-def trades_(buchfink_db: BuchfinkDB, keyword, asset, fetch):  # pylint: disable=unused-argument
-    "Show trades"
+def events(buchfink_db: BuchfinkDB, keyword, asset):
+    "List events"
 
-    trades: List[Tuple[Trade, Account]] = []
-    for account in buchfink_db.get_all_accounts():
-        if keyword is not None and keyword not in account.name:
-            continue
+    events: List[Tuple[Union[LedgerAction, HistoryBaseEntry, Trade], Account]] = []
 
-        trades.extend(
-                (trade, account)
-                for trade in buchfink_db.get_local_trades_for_account(account.name)
-                )
+    print("Asset: ", asset)
 
-    if asset is not None:
-        the_asset = buchfink_db.get_asset_by_symbol(asset)
-        trades = [
-                trade
-                for trade in trades
-                if the_asset in (trade[0].base_asset, trade[0].quote_asset)
-                ]
+    accounts = buchfink_db.get_all_accounts()
 
-    trades = sorted(trades, key=lambda trade_account: trade_account[0].timestamp)
+    filter_asset = buchfink_db.get_asset_by_symbol(asset) if asset is not None else None
 
-    if trades:
+    # TODO: This should move to BuchfinkDB.get_accounts()
+    if keyword is not None:
+        if keyword.startswith('/') and keyword.endswith('/'):
+            keyword_re = re.compile(keyword[1:-1])
+            accounts = [acc for acc in accounts if keyword_re.search(acc.name)]
+        else:
+            accounts = [acc for acc in accounts if keyword in acc.name]
+
+    for account in accounts:
+        events.extend(
+            (trade, account)
+            for trade in buchfink_db.get_local_trades_for_account(account.name)
+            if filter_asset is None or filter_asset in (trade.base_asset, trade.quote_asset)
+        )
+
+        events.extend(
+            (event, account)
+            for event in buchfink_db.get_local_ledger_actions_for_account(account.name)
+            if filter_asset is None or filter_asset in (event.asset,)
+        )
+
+    events = sorted(events, key=lambda ev_acc: ev_acc[0].timestamp)
+
+    if events:
         table = []
-        for (trade, account) in trades:
-            table.append([
-                serialize_timestamp(trade.timestamp),
-                str(trade.trade_type),
-                str(trade.amount),
-                str(trade.base_asset.symbol),
-                str(trade.amount * trade.rate),
-                str(trade.quote_asset.symbol),
-                str(trade.rate),
-                str(account.name)
-            ])
+        for (event, account) in events:
+
+            print(event, account)
+            if isinstance(event, Trade):
+                trade: Trade = event
+                table.append([
+                    serialize_timestamp(trade.timestamp),
+                    str(trade.trade_type),
+                    str(trade.amount),
+                    str(trade.base_asset.symbol),
+                    str(trade.amount * trade.rate),
+                    str(trade.quote_asset.symbol),
+                    str(trade.rate),
+                    str(account.name)
+                ])
+            elif isinstance(event, LedgerAction):
+                table.append([
+                    serialize_timestamp(event.timestamp),
+                    str(event.action_type),
+                    str(event.amount),
+                    str(event.asset.symbol_or_name()),
+                    str(event.amount),
+                    str(event.asset.symbol_or_name()),
+                    str(""),
+                    str(account.name)
+                ])
+            elif isinstance(event, HistoryBaseEntry):
+                print(event.timestamp)
+                table.append([
+                    serialize_timestamp(int(event.timestamp / 1000)),
+                    str(event.event_subtype),
+                    str(event.balance.amount),
+                    str(event.asset.symbol_or_name()),
+                    str(event.balance.amount),
+                    str(event.asset.symbol_or_name()),
+                    str(""),
+                    str(account.name)
+                ])
+            else:
+                raise Exception("Unknown event type")
         print(tabulate(table, headers=[
             'Time',
             'Type',
