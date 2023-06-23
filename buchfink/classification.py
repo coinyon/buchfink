@@ -755,9 +755,7 @@ def classify_tx(
             )]
 
         elif event.topics[0] == CLAIM:
-            logger.warning(
-                f'Unknown claim event: {event.topics[0]} {event.address} {event.data}'
-            )
+            logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
         if event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_ENS):
             amount = hexstr_to_int(event.data[2:])
@@ -769,7 +767,7 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_ENS),
+                asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_ENS}'),
                 notes='ENS retroactive airdrop',
                 link=txn.tx_hash.hex()
             )]
@@ -784,14 +782,12 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_PLSD),
+                asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_PLSD}'),
                 notes='PLSD airdrop',
                 link=txn.tx_hash.hex()
             )]
 
         elif event.topics[0] == CLAIM_2:
-            logger.warning(
-                f'Unknown claim event: {event.topics[0]} {event.address} {event.data}'
-            )
+            logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
     return actions
