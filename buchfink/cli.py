@@ -569,8 +569,6 @@ def events(buchfink_db: BuchfinkDB, keyword, asset):
 
     events: List[Tuple[Union[LedgerAction, HistoryBaseEntry, Trade], Account]] = []
 
-    print("Asset: ", asset)
-
     accounts = buchfink_db.get_all_accounts()
 
     filter_asset = buchfink_db.get_asset_by_symbol(asset) if asset is not None else None
