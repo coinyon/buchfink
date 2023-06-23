@@ -564,7 +564,7 @@ def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
 @with_buchfink_db
-def events(buchfink_db: BuchfinkDB, keyword, asset):
+def events_(buchfink_db: BuchfinkDB, keyword, asset):
     "List events"
 
     events: List[Tuple[Union[LedgerAction, HistoryBaseEntry, Trade], Account]] = []
@@ -637,7 +637,7 @@ def events(buchfink_db: BuchfinkDB, keyword, asset):
                     str(account.name)
                 ])
             else:
-                raise Exception("Unknown event type")
+                raise RuntimeError("Unknown event type")
         print(tabulate(table, headers=[
             'Time',
             'Type',
