@@ -34,6 +34,7 @@ TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
 MINTED = '0x9d228d69b5fdb8d273a2336f8fb8612d039631024ea9bf09c424a9503aa078f0'
 PURCHASE = '0x2499a5330ab0979cc612135e7883ebc3cd5c9f7a8508f042540c34723348f632'
+REDEEM = '0xbd5034ffbd47e4e72a94baa2cdb74c6fad73cb3bcdc13036b72ec8306f5a7646'
 HUNT = '0x8eaf15614908a4e9022141fe4a596b1ab0cb72ab32b25023e3da2a459c9a335c'
 STAKEEND = '0x72d9c5a7ab13846e08d9c838f9e866a1bb4a66a2fd3ba3c9e7da3cf9e394dfd7'
 VESTED = '0xfbeff59d2bfda0d79ea8a29f8c57c66d48c7a13eabbdb90908d9115ec41c9dc6'
@@ -432,6 +433,39 @@ def classify_tx(
 
         elif event.topics[0] == PURCHASE:
             logger.warning('Unknown Purchase event for tx %s at %s', txn.tx_hash.hex(), tx_time)
+
+        if event.topics[0] == REDEEM and same_addr(event.address, ADDR_FEI_GENESIS_GROUP):
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                amount_fei = hexstr_to_int(event.data[2:][64:128])
+                amount_tribe = hexstr_to_int(event.data[2:][128:])
+                print(amount_fei, amount_tribe)
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.AIRDROP,
+                    amount=FVal(amount_fei) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('eip155:1/erc20:0x956F47F50A910163D8BF957Cf5846D573E7f87CA'),
+                    notes='FEI in Tribe Genesis Redeem',
+                    link=txn.tx_hash.hex()
+                )]
+                actions += [LedgerAction(
+                    identifier=None,
+                    location='',
+                    action_type=LedgerActionType.AIRDROP,
+                    amount=FVal(amount_tribe) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('eip155:1/erc20:0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B'),
+                    notes='TRIBE in Tribe Genesis Redeem',
+                    link=txn.tx_hash.hex()
+                )]
+
+        elif event.topics[0] == REDEEM:
+            logger.warning('Unknown redeem event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
         if event.topics[0] == TRANSFER and same_addr(event.address, ADDR_DODO):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_DODO_REWARDS) and \
