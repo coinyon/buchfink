@@ -594,7 +594,13 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
             if filter_asset is None or filter_asset in (event.asset,)
         )
 
-    events = sorted(events, key=lambda ev_acc: ev_acc[0].timestamp)
+    def get_timestamp(event):
+        if isinstance(event, HistoryBaseEntry):
+            return event.timestamp / 1000
+        else:
+            return event.timestamp
+
+    events = sorted(events, key=lambda ev_acc: get_timestamp(ev_acc[0]))
 
     if events:
         table = []
