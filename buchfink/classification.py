@@ -43,6 +43,7 @@ XFLOBBYEXIT = '0xa6b19fa7f41317a186e1d58e9d81f86a52f1102b6bce10b4eca83f37aaa5846
 REWARDS_CLAIMED = '0xfc30cddea38e2bf4d6ea7d3f9ed3b6ad7f176419f4963bd81318067a4aee73fe'
 WITHDRAWN = '0x6b4651e8f4162f82274a25e57a29f7ed9156d17078e76dd4d05f04ba08831aa4'
 MINT = '0xce84afc26010d49051ae429b96ad50c0ef3a958a5c5bdc44c80e090dee642dbe'
+HARVEST = '0x71bab65ced2e5750775a0613be067df48ef06cf92a496ebf7663ae0660924954'
 
 ADDR_UNISWAP_AIRDROP = '0x090D4613473dEE047c3f2706764f49E0821D256e'
 ADDR_MIRROR_AIRDROP = '0x2A398bBa1236890fb6e9698A698A393Bb8ee8674'
@@ -86,6 +87,7 @@ ADDR_UMA_TVL_OPT = '0x0Ee5Bb3dEAe8a44FbDeB269941f735793F8312Ef'
 ADDR_DYDX_REWARDS = '0x01d3348601968aB85b4bb028979006eac235a588'
 ADDR_THALES_AIRDROP = '0x0f33af99f3C124189B8dA7C7BE6Dc08C77a9ddc7'
 ADDR_DAPPRADAR_AIRDROP = '0x2E424a4953940aE99f153a50d0139E7CD108c071'
+ADDR_BEVERAGE_BAR = '0xDc5BBb7f25a05259b2bD559936771f8Fc0E2c4cb'
 
 ADDR_PLSD = '0x34F0915a5f15a66Eba86F6a58bE1A471FB7836A7'
 ADDR_DODO = '0x43Dfc4159D86F3A37A5A4B3D4580b888ad7d4DDd'
@@ -824,4 +826,18 @@ def classify_tx(
         elif event.topics[0] == CLAIM_2:
             logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
+        if event.topics[0] == HARVEST and same_addr(event.address, ADDR_BEVERAGE_BAR):
+            amount = hexstr_to_int(event.data[2:])
+            actions += [LedgerAction(
+                identifier=None,
+                location='',
+                action_type=LedgerActionType.INCOME,
+                amount=FVal(amount) / FVal(1e18),
+                rate=None,
+                rate_asset=None,
+                timestamp=txn.timestamp,
+                asset=symbol_to_asset_or_token(f'eip155:1/erc20:0x9257fb8fab616867cEe67C3289547403617B1938'),
+                notes='DRINK rewards for LP',
+                link=txn.tx_hash.hex()
+            )]
     return actions
