@@ -597,8 +597,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
     def get_timestamp(event):
         if isinstance(event, HistoryBaseEntry):
             return event.timestamp / 1000
-        else:
-            return event.timestamp
+        return event.timestamp
 
     events = sorted(events, key=lambda ev_acc: get_timestamp(ev_acc[0]))
 

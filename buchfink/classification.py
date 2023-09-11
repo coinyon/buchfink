@@ -449,7 +449,9 @@ def classify_tx(
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('eip155:1/erc20:0x956F47F50A910163D8BF957Cf5846D573E7f87CA'),
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x956F47F50A910163D8BF957Cf5846D573E7f87CA'
+                    ),
                     notes='FEI in Tribe Genesis Redeem',
                     link=txn.tx_hash.hex()
                 )]
@@ -461,7 +463,9 @@ def classify_tx(
                     rate=None,
                     rate_asset=None,
                     timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('eip155:1/erc20:0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B'),
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B'
+                    ),
                     notes='TRIBE in Tribe Genesis Redeem',
                     link=txn.tx_hash.hex()
                 )]
@@ -836,7 +840,9 @@ def classify_tx(
                 rate=None,
                 rate_asset=None,
                 timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(f'eip155:1/erc20:0x9257fb8fab616867cEe67C3289547403617B1938'),
+                asset=symbol_to_asset_or_token(
+                    'eip155:1/erc20:0x9257fb8fab616867cEe67C3289547403617B1938'
+                ),
                 notes='DRINK rewards for LP',
                 link=txn.tx_hash.hex()
             )]
