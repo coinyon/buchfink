@@ -18,7 +18,6 @@ from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecod
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
-from rotkehlchen.chain.ethereum.oracles.saddle import SaddleOracle
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
 from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
@@ -239,11 +238,9 @@ class BuchfinkDB(DBHandler):
         self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
         uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_inquirer)
         uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_inquirer)
-        saddle_oracle = SaddleOracle(self.ethereum_inquirer)
         Inquirer().add_defi_oracles(
             uniswap_v2=uniswap_v2_oracle,
-            uniswap_v3=uniswap_v3_oracle,
-            saddle=saddle_oracle,
+            uniswap_v3=uniswap_v3_oracle
         )
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
@@ -508,7 +505,7 @@ class BuchfinkDB(DBHandler):
 
         logger.debug('Creating ChainsAggregator with modules: %s', eth_modules)
 
-        manager = ChainsAggregator(
+        chains_aggregator = ChainsAggregator(
             database=self,
             blockchain_accounts=BlockchainAccounts(**accs),
             beaconchain=self.beaconchain,
@@ -526,8 +523,8 @@ class BuchfinkDB(DBHandler):
             eth_modules=eth_modules
         )
         # Monkey-patch function that uses singleton
-        manager.queried_addresses_for_module = lambda self, module = None: [account.address]
-        return manager
+        chains_aggregator.queried_addresses_for_module = lambda self, module = None: [account.address]
+        return chains_aggregator
 
     def get_exchange(self, account: str) -> ExchangeInterface:
 
