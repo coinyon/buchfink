@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, 
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
-from rotkehlchen.assets.asset import Asset
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.utils import get_or_create_evm_token
@@ -17,14 +16,14 @@ from rotkehlchen.chain.aggregator import ChainsAggregator
 from rotkehlchen.chain.arbitrum_one.manager import ArbitrumOneManager
 from rotkehlchen.chain.arbitrum_one.node_inquirer import ArbitrumOneInquirer
 from rotkehlchen.chain.avalanche.manager import AvalancheManager
-from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
+# from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
-from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
+# from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
 from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
@@ -38,8 +37,6 @@ from rotkehlchen.data_migrations.manager import DataMigrationManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.evmtx import DBEvmTx
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
-from rotkehlchen.errors.asset import UnknownAsset
-from rotkehlchen.errors.misc import InputError
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
@@ -550,7 +547,8 @@ class BuchfinkDB(DBHandler):
             elif account.account_type == "file":
                 pass
             else:
-                raise ValueError('Unable to create chain aggregator for account: {0}'.format(account.dict()))
+                raise ValueError('Unable to create chain aggregator for account type: '
+                                 '{}'.format(account.account_type))
 
         self.sync_accounts(accounts)
 
@@ -582,7 +580,8 @@ class BuchfinkDB(DBHandler):
             eth_modules=eth_modules
         )
         # Monkey-patch function that uses singleton
-        chains_aggregator.queried_addresses_for_module = lambda self, module = None: [account.address]
+        chains_aggregator.queried_addresses_for_module = \
+                lambda self, module = None: [account.address]
         return chains_aggregator
 
     def get_exchange(self, account: str) -> ExchangeInterface:
