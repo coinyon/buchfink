@@ -27,7 +27,7 @@ class Account(BaseModel):
     name: str
     account_type: AccountType
     address: Optional[Union[ChecksumEvmAddress, str]]
-    tags: List[str]
+    tags: List[str] = []
     config: AccountConfig
 
 

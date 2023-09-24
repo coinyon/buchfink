@@ -17,35 +17,35 @@ class ExchangeAccountConfig(BaseModel):
     secret: str
     passphrase: Optional[str] = None
     fetch: Optional[FetchConfig] = None
-    tags: Optional[List[str]]
+    tags: List[str] = []
 
 
 class EthereumAccountConfig(BaseModel):
     name: str
     ethereum: str
     fetch: Optional[FetchConfig] = None
-    tags: Optional[List[str]]
+    tags: List[str] = []
 
 
 class BitcoinAccountConfig(BaseModel):
     name: str
     bitcoin: str
     fetch: Optional[FetchConfig] = None
-    tags: Optional[List[str]]
+    tags: List[str] = []
 
 
 class BitcoinCashAccountConfig(BaseModel):
     name: str
     bitcoincash: str
     fetch: Optional[FetchConfig] = None
-    tags: Optional[List[str]]
+    tags: List[str] = []
 
 
 class ManualAccountConfig(BaseModel):
     name: str
     file: str
     fetch: Optional[FetchConfig] = None
-    tags: Optional[List[str]]
+    tags: List[str] = []
 
 
 AccountConfig = Union[
@@ -65,7 +65,7 @@ class ReportConfigFromConfigFile(BaseModel):
     template: Optional[str]
     limit_accounts: List[str] = []
     exclude_accounts: List[str] = []
-    active: Optional[bool] = True
+    active: bool = True
 
     class Config:
         fields = {
@@ -74,11 +74,11 @@ class ReportConfigFromConfigFile(BaseModel):
 
 
 class ExternalServicesConfig(BaseModel):
-    etherscan: Optional[str]
-    cryptocompare: Optional[str]
-    loopring: Optional[str]
-    beaconchain: Optional[str]
-    opensea: Optional[str]
+    etherscan: Optional[str] = None
+    cryptocompare: Optional[str] = None
+    loopring: Optional[str] = None
+    beaconchain: Optional[str] = None
+    opensea: Optional[str] = None
 
 
 class RpcNode(BaseModel):
@@ -87,13 +87,15 @@ class RpcNode(BaseModel):
 
 
 class Settings(BaseModel):
-    main_currency: Optional[str]
-    taxfree_after_period: Optional[int]
-    include_gas_costs: Optional[bool]
-    include_crypto2crypto: Optional[bool]
-    external_services: Optional[ExternalServicesConfig]
-    rpc_nodes: Optional[List[RpcNode]]
+    main_currency: Optional[str] = None
+    taxfree_after_period: Optional[int] = None
+    include_gas_costs: Optional[bool] = None
+    include_crypto2crypto: Optional[bool] = None
+    external_services: Optional[ExternalServicesConfig] = None
+    rpc_nodes: Optional[List[RpcNode]] = None
     ignored_assets: List[str] = []
+    ksm_rpc_endpoint: str = ""
+    dot_rpc_endpoint: str = ""
 
 
 class AssetConfig(BaseModel):

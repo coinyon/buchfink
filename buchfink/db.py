@@ -9,10 +9,14 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, 
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
+from rotkehlchen.assets.asset import Asset
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.utils import get_or_create_evm_token
 from rotkehlchen.chain.aggregator import ChainsAggregator
+from rotkehlchen.chain.arbitrum_one.manager import ArbitrumOneManager
+from rotkehlchen.chain.arbitrum_one.node_inquirer import ArbitrumOneInquirer
+from rotkehlchen.chain.avalanche.manager import AvalancheManager
 from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
@@ -24,11 +28,18 @@ from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
 from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
+from rotkehlchen.chain.optimism.manager import OptimismManager
+from rotkehlchen.chain.optimism.node_inquirer import OptimismInquirer
+from rotkehlchen.chain.polygon_pos.manager import PolygonPOSManager
+from rotkehlchen.chain.polygon_pos.node_inquirer import PolygonPOSInquirer
+from rotkehlchen.chain.substrate.manager import SubstrateManager
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.manager import DataMigrationManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.evmtx import DBEvmTx
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
+from rotkehlchen.errors.asset import UnknownAsset
+from rotkehlchen.errors.misc import InputError
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
@@ -42,6 +53,7 @@ from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.beaconchain import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
+from rotkehlchen.externalapis.covalent import Covalent, chains_id
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.defillama import Defillama
 from rotkehlchen.globaldb.handler import GlobalDBHandler
@@ -216,12 +228,53 @@ class BuchfinkDB(DBHandler):
         self.sync_rpc_nodes()
         # ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
 
+        # Initialize blockchain querying modules
         self.ethereum_inquirer = EthereumInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self
         )
-
         self.ethereum_manager = EthereumManager(self.ethereum_inquirer)
+        self.optimism_inquirer = OptimismInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+        )
+        self.optimism_manager = OptimismManager(self.optimism_inquirer)
+        self.polygon_pos_inquirer = PolygonPOSInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+        )
+        self.polygon_pos_manager = PolygonPOSManager(self.polygon_pos_inquirer)
+        self.arbitrum_one_inquirer = ArbitrumOneInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+        )
+        self.arbitrum_one_manager = ArbitrumOneManager(self.arbitrum_one_inquirer)
+        self.kusama_manager = SubstrateManager(
+            chain=SupportedBlockchain.KUSAMA,
+            msg_aggregator=self.msg_aggregator,
+            greenlet_manager=self.greenlet_manager,
+            connect_at_start=[],
+            connect_on_startup=False,
+            own_rpc_endpoint=self.get_settings().ksm_rpc_endpoint
+        )
+        self.polkadot_manager = SubstrateManager(
+            chain=SupportedBlockchain.POLKADOT,
+            msg_aggregator=self.msg_aggregator,
+            greenlet_manager=self.greenlet_manager,
+            connect_at_start=[],
+            connect_on_startup=False,
+            own_rpc_endpoint=self.get_settings().dot_rpc_endpoint
+        )
+        self.covalent_avalanche = Covalent(
+            database=self,
+            msg_aggregator=self.msg_aggregator,
+            chain_id=chains_id['avalanche'],
+        )
+        self.avalanche_manager = AvalancheManager(
+            avaxrpc_endpoint='https://api.avax.network/ext/bc/C/rpc',
+            covalent=self.covalent_avalanche,
+            msg_aggregator=self.msg_aggregator,
+        )
         self.eth_transactions = EthereumTransactions(
                 ethereum_inquirer=self.ethereum_inquirer, database=self
         )
@@ -368,20 +421,22 @@ class BuchfinkDB(DBHandler):
 
     def get_accountant(self) -> Accountant:
 
-        ethereum_accounting_aggregator = EthereumAccountingAggregator(
-            node_inquirer=self.ethereum_inquirer,
-            msg_aggregator=self.msg_aggregator,
-        )
+        # ethereum_accounting_aggregator = EthereumAccountingAggregator(
+        #     node_inquirer=self.ethereum_inquirer,
+        #     msg_aggregator=self.msg_aggregator,
+        # )
 
-        evm_accounting_aggregators = EVMAccountingAggregators(
-            aggregators=[ethereum_accounting_aggregator]
-            # TODO: add, optimism_accounting_aggregator],
-        )
+        # evm_accounting_aggregators = EVMAccountingAggregators(
+        #     aggregators=[ethereum_accounting_aggregator]
+        #     # TODO: add, optimism_accounting_aggregator],
+        # )
+
+        chains_aggregator = self.get_chains_aggregator(self.accounts)
 
         return Accountant(
                 db=self,
                 msg_aggregator=self.msg_aggregator,
-                evm_accounting_aggregators=evm_accounting_aggregators,
+                chains_aggregator=chains_aggregator,
                 premium=None
             )
 
@@ -482,19 +537,22 @@ class BuchfinkDB(DBHandler):
 
         return []
 
-    def get_chains_aggregator(self, account: Account) -> ChainsAggregator:
+    def get_chains_aggregator(self, accounts: List[Account]) -> ChainsAggregator:
         accs = {}  # type: ignore
 
-        if account.account_type == "ethereum":
-            accs['eth'] = [account.address]
-        elif account.account_type == "bitcoin":
-            accs['btc'] = [account.address]
-        elif account.account_type == "bitcoincash":
-            accs['bch'] = [account.address]
-        else:
-            raise ValueError('Unable to create chain manager for account')
+        for account in accounts:
+            if account.account_type == "ethereum":
+                accs['eth'] = accs.get('eth', []) + [account.address]
+            elif account.account_type == "bitcoin":
+                accs['btc'] = accs.get('btc', []) + [account.address]
+            elif account.account_type == "bitcoincash":
+                accs['bch'] = accs.get('bch', []) + [account.address]
+            elif account.account_type == "file":
+                pass
+            else:
+                raise ValueError('Unable to create chain aggregator for account: {0}'.format(account.dict()))
 
-        self.sync_accounts([account])
+        self.sync_accounts(accounts)
 
         # Eventually we should allow premium credentials in config file
         premium = False
@@ -511,15 +569,16 @@ class BuchfinkDB(DBHandler):
             beaconchain=self.beaconchain,
             data_directory=self.data_directory,
             ethereum_manager=self.ethereum_manager,
-            polkadot_manager=None,
-            avalanche_manager=None,
-            kusama_manager=None,
-            optimism_manager=None,
+            polkadot_manager=self.polkadot_manager,
+            avalanche_manager=self.avalanche_manager,
+            kusama_manager=self.kusama_manager,
+            optimism_manager=self.optimism_manager,
+            arbitrum_one_manager=self.arbitrum_one_manager,
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
-            polygon_pos_manager=None,
-            premium=premium,
+            polygon_pos_manager=self.polygon_pos_manager,
+            premium=None,
             eth_modules=eth_modules
         )
         # Monkey-patch function that uses singleton
@@ -589,7 +648,7 @@ class BuchfinkDB(DBHandler):
             raise RuntimeError(error)
 
         if account.account_type == "ethereum":
-            manager = self.get_chains_aggregator(account)
+            manager = self.get_chains_aggregator([account])
 
             ethereum_tokens = self.ethereum_manager.tokens
             ethereum_tokens.detect_tokens(
@@ -609,7 +668,7 @@ class BuchfinkDB(DBHandler):
             return reduce(operator.add, manager.balances.eth.values())
 
         if account.account_type == "bitcoin":
-            manager = self.get_chains_aggregator(account)
+            manager = self.get_chains_aggregator([account])
             manager.query_balances(
                 blockchain=SupportedBlockchain.BITCOIN
             )
@@ -621,7 +680,7 @@ class BuchfinkDB(DBHandler):
             )
 
         if account.account_type == "bitcoincash":
-            manager = self.get_chains_aggregator(account)
+            manager = self.get_chains_aggregator([account])
             manager.query_balances(
                 blockchain=SupportedBlockchain.BITCOIN_CASH
             )
@@ -646,7 +705,7 @@ class BuchfinkDB(DBHandler):
 
     def query_nfts(self, account: Account) -> List[Nfts]:
         if account.account_type == "ethereum":
-            manager = self.get_chains_aggregator(account)
+            manager = self.get_chains_aggregator([account])
             nfts = manager.get_module('nfts')
             nft_result = nfts.get_all_info(addresses=[account.address], ignore_cache=True)
             if account.address in nft_result.addresses:
