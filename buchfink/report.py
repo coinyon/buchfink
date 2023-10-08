@@ -189,7 +189,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             return 'loss'
         if event.notes == "Fei Genesis Commit":
             return 'spend'
-        if re.search(r'rewards|payout|asset return|settlement', event.notes, re.IGNORECASE):
+        if re.search(r'rewards|payout|asset return|settlement|interest|dividend', event.notes, re.IGNORECASE):
             return 'dividend'
 
         return 'other'
