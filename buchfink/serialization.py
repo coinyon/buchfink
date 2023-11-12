@@ -272,6 +272,9 @@ def deserialize_balance(balance: Dict[str, Any], buchfink_db) -> Tuple[Balance, 
 
 
 def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
+    if not isinstance(amount, str):
+        raise ValueError(f'Expected str, got {type(amount)}: {amount}')
+
     elems = amount.split(' ')
     amount = FVal(elems[0])
     asset = deserialize_asset(elems[1]) if len(elems) > 1 else None
@@ -481,6 +484,9 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
         event_subtype = HistoryEventSubType.RECEIVE
 
     if is_evm_event:
+        if not 'sequence_index' in event_dict:
+            raise ValueError('Missing sequence_index in event: {}'.format(event_dict))
+
         return EvmEvent(
             tx_hash=deserialize_evm_tx_hash(event_dict['link'][2:]
                                             if event_dict['link'].startswith('0x')
