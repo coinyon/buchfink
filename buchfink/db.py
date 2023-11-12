@@ -544,7 +544,7 @@ class BuchfinkDB(DBHandler):
                 accs['btc'] = accs.get('btc', []) + [account.address]
             elif account.account_type == "bitcoincash":
                 accs['bch'] = accs.get('bch', []) + [account.address]
-            elif account.account_type == "file":
+            elif account.account_type == "file" or account.account_type == "exchange":
                 pass
             else:
                 raise ValueError('Unable to create chain aggregator for account type: '
