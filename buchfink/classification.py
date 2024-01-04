@@ -1,5 +1,3 @@
-# pylint: skip-file
-# ruff: noqa
 import logging
 from copy import deepcopy
 from typing import List
@@ -8,7 +6,7 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.types import ChainID
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_str, hexstr_to_int
 
-from .datatypes import EvmTxReceipt, EvmTransaction, FVal, HistoryEvent
+from .datatypes import EvmTransaction, EvmTxReceipt, FVal, HistoryEvent, HistoryEventType, HistoryEventSubType
 from .models import Account
 from .serialization import serialize_timestamp
 
@@ -130,10 +128,11 @@ def classify_tx(
 
         if event.topics[0] == CLAIMED and same_addr(event.address, ADDR_UNISWAP_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -147,10 +146,11 @@ def classify_tx(
 
         elif event.topics[0] == CLAIMED and same_addr(event.address, ADDR_MIRROR_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -164,10 +164,11 @@ def classify_tx(
 
         elif event.topics[0] == CLAIMED and same_addr(event.address, ADDR_POOL_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -181,10 +182,11 @@ def classify_tx(
 
         elif event.topics[0] == CLAIMED and same_addr(event.address, ADDR_IMX_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -205,10 +207,11 @@ def classify_tx(
                 token = symbol_to_asset_or_token(
                     'eip155:1/erc20:0x3472a5a71965499acd81997a54bba8d852c6e53d'
                 )
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -223,10 +226,11 @@ def classify_tx(
 
         if event.topics[0] == CLAIMED_2 and same_addr(event.address, ADDR_XTOKEN_AIRDROP):
             amount = hexstr_to_int(event.data)
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -240,10 +244,11 @@ def classify_tx(
 
         elif event.topics[0] == CLAIMED_2 and same_addr(event.address, ADDR_BALANCER_REWARDS):
             amount = hexstr_to_int(event.data[66:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -255,10 +260,11 @@ def classify_tx(
 
         elif event.topics[0] == CLAIMED_2 and same_addr(event.address, ADDR_ROOK_REWARDS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -273,10 +279,11 @@ def classify_tx(
 
         if event.topics[0] == CLAIMED_4 and same_addr(event.address, ADDR_GITCOIN_AIRDROP):
             amount = hexstr_to_int(event.data[2:][128:192])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -298,10 +305,11 @@ def classify_tx(
                 ADDR_FOX_AIRDROP_4.lower()
                 ):
             amount = hexstr_to_int(event.data[2:][64:128])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -318,10 +326,11 @@ def classify_tx(
 
         if event.topics[0] == CLAIMED_6 and same_addr(event.address, ADDR_SUSHI_VESTING):
             amount = hexstr_to_int(event.data[2:][64:128])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -336,10 +345,11 @@ def classify_tx(
 
         if event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_INDEX_REWARDS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -351,10 +361,11 @@ def classify_tx(
 
         elif event.topics[0] == REWARD_PAID and same_addr(event.address, ADDR_YFI_GOVERNANCE):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -366,10 +377,11 @@ def classify_tx(
 
         elif event.topics[0] == REWARD_PAID and event.address in ADDR_CREAM_REWARDS:
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -381,10 +393,11 @@ def classify_tx(
 
         elif event.topics[0] == REWARD_PAID and same_addr(event.address, ADDR_MIR_REWARDS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -402,10 +415,11 @@ def classify_tx(
         if event.topics[0] == MINTED and same_addr(event.address, ADDR_SWERVE_MINTER):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[66:])
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -422,10 +436,11 @@ def classify_tx(
         if event.topics[0] == PURCHASE and same_addr(event.address, ADDR_FEI_GENESIS_GROUP):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.EXPENSE,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.EXPENSE,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -443,10 +458,11 @@ def classify_tx(
                 amount_fei = hexstr_to_int(event.data[2:][64:128])
                 amount_tribe = hexstr_to_int(event.data[2:][128:])
                 print(amount_fei, amount_tribe)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.AIRDROP,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                     amount=FVal(amount_fei) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -457,10 +473,11 @@ def classify_tx(
                     notes='FEI in Tribe Genesis Redeem',
                     link=txn.tx_hash.hex()
                 )]
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.AIRDROP,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                     amount=FVal(amount_tribe) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -479,10 +496,11 @@ def classify_tx(
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_DODO_REWARDS) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -497,10 +515,11 @@ def classify_tx(
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_SUSHI_REWARDS) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -518,10 +537,11 @@ def classify_tx(
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.AIRDROP,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -539,10 +559,11 @@ def classify_tx(
             if hexstr_to_int(event.topics[1]) == 0 and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.GIFT,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.DONATE,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -558,10 +579,11 @@ def classify_tx(
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_UMA_TVL_OPT) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -575,10 +597,11 @@ def classify_tx(
             if addr_in(hex_or_bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES) and \
                     hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -591,10 +614,11 @@ def classify_tx(
         if event.topics[0] == STAKEEND and same_addr(event.address, ADDR_HEX):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 payout = hexstr_to_int(event.data[2:][:18])
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(payout) / FVal(1e8),
                     rate=None,
                     rate_asset=None,
@@ -610,10 +634,11 @@ def classify_tx(
             )
             if hexstr_to_int(event.data[2:][:64]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.AIRDROP,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -638,12 +663,11 @@ def classify_tx(
                         hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address):
 
                     amount = hexstr_to_int(ev2.data[2:])
-                    # We will classify those as GIFT instead of purchase because
-                    # we already paid earlier
-                    actions += [LedgerAction(
+                    actions += [HistoryEvent(
                         identifier=None,
                         location='',
-                        action_type=LedgerActionType.AIRDROP,
+                        event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                         amount=FVal(amount) / FVal(1e8),
                         rate=None,
                         rate_asset=None,
@@ -659,10 +683,11 @@ def classify_tx(
             )
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.AIRDROP,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -678,10 +703,11 @@ def classify_tx(
             )
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -698,10 +724,11 @@ def classify_tx(
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 # accruedEmission
                 amount = hexstr_to_int(event.data[2:][64 * 3:64 * 4])
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.INCOME,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -718,10 +745,11 @@ def classify_tx(
             borrower = hexstr_to_int(event.data[2:][:64])
             amount = hexstr_to_int(event.data[2:][64:128])
             if borrower == hexstr_to_int(account.address):
-                actions += [LedgerAction(
+                actions += [HistoryEvent(
                     identifier=None,
                     location='',
-                    action_type=LedgerActionType.GIFT,
+                    event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.DONATE,
                     amount=FVal(amount) / FVal(1e18),
                     rate=None,
                     rate_asset=None,
@@ -749,10 +777,11 @@ def classify_tx(
                     amount = hexstr_to_int(ev2.data[2:])
                     # We will classify those as GIFT instead of purchase because
                     # we already paid earlier
-                    actions += [LedgerAction(
+                    actions += [HistoryEvent(
                         identifier=None,
                         location='',
-                        action_type=LedgerActionType.GIFT,
+                        event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.DONATE,
                         amount=FVal(amount) / FVal(1e8),
                         rate=None,
                         rate_asset=None,
@@ -764,10 +793,11 @@ def classify_tx(
 
         if event.topics[0] == TOKEN_CLAIMED and same_addr(event.address, ADDR_DAPPRADAR_AIRDROP):
             amount = hexstr_to_int(event.data[2:][128:192])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -781,10 +811,11 @@ def classify_tx(
 
         if event.topics[0] == CLAIM and same_addr(event.address, ADDR_THALES_AIRDROP):
             amount = hexstr_to_int(event.data[2:][64:128])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -801,10 +832,11 @@ def classify_tx(
 
         if event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_ENS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
@@ -816,10 +848,11 @@ def classify_tx(
 
         elif event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_PLSD):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.AIRDROP,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.AIRDROP,
                 amount=FVal(amount) / FVal(1e12),
                 rate=None,
                 rate_asset=None,
@@ -834,10 +867,11 @@ def classify_tx(
 
         if event.topics[0] == HARVEST and same_addr(event.address, ADDR_BEVERAGE_BAR):
             amount = hexstr_to_int(event.data[2:])
-            actions += [LedgerAction(
+            actions += [HistoryEvent(
                 identifier=None,
                 location='',
-                action_type=LedgerActionType.INCOME,
+                event_type=HistoryEventType.RECEIVE,
+                event_subtype=HistoryEventSubType.INCOME,
                 amount=FVal(amount) / FVal(1e18),
                 rate=None,
                 rate_asset=None,
