@@ -49,12 +49,12 @@ class ManualAccountConfig(BaseModel):
 
 
 AccountConfig = Union[
-        ExchangeAccountConfig,
-        EthereumAccountConfig,
-        BitcoinAccountConfig,
-        BitcoinCashAccountConfig,
-        ManualAccountConfig
-    ]
+    ExchangeAccountConfig,
+    EthereumAccountConfig,
+    BitcoinAccountConfig,
+    BitcoinCashAccountConfig,
+    ManualAccountConfig,
+]
 
 
 class ReportConfigFromConfigFile(BaseModel):
@@ -68,9 +68,7 @@ class ReportConfigFromConfigFile(BaseModel):
     active: bool = True
 
     class Config:
-        fields = {
-            'from_': 'from'
-        }
+        fields = {'from_': 'from'}
 
 
 class ExternalServicesConfig(BaseModel):
@@ -94,8 +92,8 @@ class Settings(BaseModel):
     external_services: Optional[ExternalServicesConfig] = None
     rpc_nodes: Optional[List[RpcNode]] = None
     ignored_assets: List[str] = []
-    ksm_rpc_endpoint: str = ""
-    dot_rpc_endpoint: str = ""
+    ksm_rpc_endpoint: str = ''
+    dot_rpc_endpoint: str = ''
 
 
 class AssetConfig(BaseModel):
@@ -115,9 +113,7 @@ class HistoricalPriceConfig(BaseModel):
     price: Optional[float]
 
     class Config:
-        fields = {
-            'from_': 'from'
-        }
+        fields = {'from_': 'from'}
 
 
 class Config(BaseModel):
@@ -148,5 +144,5 @@ class ReportConfig(BaseModel):
             to_dt=datetime.fromisoformat(str(report.to)),
             limit_accounts=report.limit_accounts,
             exclude_accounts=report.exclude_accounts,
-            active=report.active
+            active=report.active,
         )

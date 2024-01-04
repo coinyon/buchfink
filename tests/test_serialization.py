@@ -21,7 +21,7 @@ from buchfink.serialization import (
     serialize_balances,
     serialize_decimal,
     serialize_event,
-    serialize_trade
+    serialize_trade,
 )
 
 
@@ -37,7 +37,7 @@ def dummy_trade():
         FVal('7200.0'),
         FVal('0.5'),
         Asset('EUR'),
-        'LINK-123'
+        'LINK-123',
     )
 
 
@@ -46,8 +46,8 @@ def buchfink_db(tmp_path):
     # An empty buchfink DB, created at tmp_path
     # For now we use bullrun scenario, but we should create an empty scenario
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     yield BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -71,8 +71,8 @@ def test_trade_serialization_2(dummy_trade):
 
 def test_trade_deserialization_with_fee(tmp_path, dummy_trade):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+        os.path.join(tmp_path, 'buchfink'),
     )
 
     BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
@@ -106,8 +106,8 @@ def test_datetime_deserialization():
 
 def test_assets_serialization(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -130,13 +130,13 @@ def test_assets_serialization(tmp_path):
     assert 'HEX' in serialize_asset(A_HEX)
 
     A_STAKEDAO = buchfink_db.get_asset_by_symbol(
-            'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
+        'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
     )
     assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
     assert 'SDT' in serialize_asset(A_STAKEDAO)
 
     A_STAKEDAO = buchfink_db.get_asset_by_symbol(
-            'SDT[eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F]'
+        'SDT[eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F]'
     )
     assert deserialize_asset(serialize_asset(A_STAKEDAO)) == A_STAKEDAO
     assert 'SDT' in serialize_asset(A_STAKEDAO)
@@ -144,8 +144,8 @@ def test_assets_serialization(tmp_path):
 
 def test_serialize_deserialize_balance(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     bal = serialize_balance(Balance(FVal('0.5')), Asset('ETH'))
@@ -156,12 +156,12 @@ def test_serialize_deserialize_balance(tmp_path):
 
 def test_serialize_deserialize_balance_secondary(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     A_STAKEDAO = buchfink_db.get_asset_by_symbol(
-            'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
+        'eip155:1/erc20:0x73968b9a57c6E53d41345FD57a6E6ae27d6CDB2F'
     )
     bal = serialize_balance(Balance(FVal('1.5')), A_STAKEDAO)
     balance, asset = deserialize_balance(bal, buchfink_db)
@@ -171,9 +171,11 @@ def test_serialize_deserialize_balance_secondary(tmp_path):
 
 def test_serialize_balance_sheet(buchfink_db):
     A_HEX = buchfink_db.get_asset_by_symbol('HEX')
-    bs = BalanceSheet(assets={
-        A_HEX: Balance(FVal('1500')),
-    })
+    bs = BalanceSheet(
+        assets={
+            A_HEX: Balance(FVal('1500')),
+        }
+    )
 
     serialized = str(serialize_balances(bs))
     assert 'HEX' in serialized
@@ -209,17 +211,18 @@ def test_load_yaml_parse_action_and_deserialize(buchfink_db):
 
 def test_deserialize_asset_without_name(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
 
     with pytest.raises(ValueError):
         # Missing ] at the end
-        deserialize_amount("1 [eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599")
+        deserialize_amount('1 [eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599')
 
     amount, asset = deserialize_amount(
-            "1 [eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599]")
+        '1 [eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599]'
+    )
     assert str(amount) == '1'
     assert asset == A_WBTC

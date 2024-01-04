@@ -6,7 +6,14 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.types import ChainID
 from rotkehlchen.utils.misc import hex_or_bytes_to_address, hex_or_bytes_to_str, hexstr_to_int
 
-from .datatypes import EvmTransaction, EvmTxReceipt, FVal, HistoryEvent, HistoryEventType, HistoryEventSubType
+from .datatypes import (
+    EvmTransaction,
+    EvmTxReceipt,
+    FVal,
+    HistoryEvent,
+    HistoryEventType,
+    HistoryEventSubType,
+)
 from .models import Account
 from .serialization import serialize_timestamp
 
@@ -56,12 +63,12 @@ ADDR_PIEDAO_INCENTIVES = (
 )
 ADDR_INDEX_REWARDS = (
     '0x8f06FBA4684B5E0988F215a47775Bb611Af0F986',
-    '0xB93b505Ed567982E2b6756177ddD23ab5745f309'
+    '0xB93b505Ed567982E2b6756177ddD23ab5745f309',
 )
 ADDR_YFI_GOVERNANCE = '0xba37b002abafdd8e89a1995da52740bbc013d992'
 ADDR_CREAM_REWARDS = (
     '0x224061756c150e5048a1e4a3e6e066db35037462',
-    '0x3ba3c0e8a9e5f4a01ce8e086b3d8e8a603a2129e'
+    '0x3ba3c0e8a9e5f4a01ce8e086b3d8e8a603a2129e',
 )
 ADDR_BALANCER_REWARDS = '0x6d19b2bF3A36A61530909Ae65445a906D98A2Fa8'
 ADDR_POOL_AIRDROP = '0xBE1a33519F586A4c8AA37525163Df8d67997016f'
@@ -103,11 +110,7 @@ ADDR_XDAI_EASYSTAKING = '0xecbCd6D7264e3c9eAc24C7130Ed3cd2B38F5A7AD'
 ADDR_HEDRON = '0x3819f64f282bf135d62168C1e513280dAF905e06'
 
 
-def classify_tx(
-        account: Account,
-        txn: EvmTransaction,
-        receipt: EvmTxReceipt
-) -> List[HistoryEvent]:
+def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) -> List[HistoryEvent]:
     actions = []  # type: List[HistoryEvent]
 
     tx_time = serialize_timestamp(txn.timestamp)
@@ -128,75 +131,83 @@ def classify_tx(
 
         if event.topics[0] == CLAIMED and same_addr(event.address, ADDR_UNISWAP_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
-                ),
-                notes='',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
+                    ),
+                    notes='',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED and same_addr(event.address, ADDR_MIRROR_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'
-                ),
-                notes='',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'
+                    ),
+                    notes='',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED and same_addr(event.address, ADDR_POOL_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'
-                ),
-                notes='PoolTogether airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'
+                    ),
+                    notes='PoolTogether airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED and same_addr(event.address, ADDR_IMX_AIRDROP):
             amount = hexstr_to_int(event.data[130:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x7b35ce522cb72e4077baeb96cb923a5529764a00'
-                ),
-                notes='IMX airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x7b35ce522cb72e4077baeb96cb923a5529764a00'
+                    ),
+                    notes='IMX airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED:
             logger.warning('Unknown Claimed event for tx %s at %s', txn.tx_hash.hex(), tx_time)
@@ -207,207 +218,229 @@ def classify_tx(
                 token = symbol_to_asset_or_token(
                     'eip155:1/erc20:0x3472a5a71965499acd81997a54bba8d852c6e53d'
                 )
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=token,
-                    notes='Badger rewards for staking',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=token,
+                        notes='Badger rewards for staking',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == CLAIMED_3:
             logger.warning('Unknown Claimed event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
         if event.topics[0] == CLAIMED_2 and same_addr(event.address, ADDR_XTOKEN_AIRDROP):
             amount = hexstr_to_int(event.data)
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x7f3edcdd180dbe4819bd98fee8929b5cedb3adeb'
-                ),
-                notes='xToken airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x7f3edcdd180dbe4819bd98fee8929b5cedb3adeb'
+                    ),
+                    notes='xToken airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED_2 and same_addr(event.address, ADDR_BALANCER_REWARDS):
             amount = hexstr_to_int(event.data[66:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('BAL', chain_id=ChainID.ETHEREUM),
-                notes='Balancer rewards for providing liquidity',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('BAL', chain_id=ChainID.ETHEREUM),
+                    notes='Balancer rewards for providing liquidity',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED_2 and same_addr(event.address, ADDR_ROOK_REWARDS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('ROOK', chain_id=ChainID.ETHEREUM),
-                notes='Rook rewards for providing liquidity',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('ROOK', chain_id=ChainID.ETHEREUM),
+                    notes='Rook rewards for providing liquidity',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED_2:
             logger.warning('Unknown Claimed event for tx: %s', txn.tx_hash.hex())
 
         if event.topics[0] == CLAIMED_4 and same_addr(event.address, ADDR_GITCOIN_AIRDROP):
             amount = hexstr_to_int(event.data[2:][128:192])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F'
-                ),
-                notes='Gitcoin retroactive airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F'
+                    ),
+                    notes='Gitcoin retroactive airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED_4:
             logger.warning('Unknown Claimed event for tx: %s', txn.tx_hash.hex())
 
         if event.topics[0] == CLAIMED_5 and event.address in (
-                ADDR_FOX_AIRDROP.lower(),
-                ADDR_FOX_AIRDROP_2.lower(),
-                ADDR_FOX_AIRDROP_3.lower(),
-                ADDR_FOX_AIRDROP_4.lower()
-                ):
+            ADDR_FOX_AIRDROP.lower(),
+            ADDR_FOX_AIRDROP_2.lower(),
+            ADDR_FOX_AIRDROP_3.lower(),
+            ADDR_FOX_AIRDROP_4.lower(),
+        ):
             amount = hexstr_to_int(event.data[2:][64:128])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0xc770EEfAd204B5180dF6a14Ee197D99d808ee52d'
-                ),
-                notes='FOX token airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0xc770EEfAd204B5180dF6a14Ee197D99d808ee52d'
+                    ),
+                    notes='FOX token airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED_5:
             logger.warning('Unknown Claimed event for tx: %s', txn.tx_hash.hex())
 
         if event.topics[0] == CLAIMED_6 and same_addr(event.address, ADDR_SUSHI_VESTING):
             amount = hexstr_to_int(event.data[2:][64:128])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('SUSHI', chain_id=ChainID.ETHEREUM),
-                notes='SUSHI rewards vesting',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('SUSHI', chain_id=ChainID.ETHEREUM),
+                    notes='SUSHI rewards vesting',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIMED_6:
             logger.warning('Unknown Claimed event for tx: %s', txn.tx_hash.hex())
 
         if event.topics[0] == REWARD_PAID and addr_in(event.address, ADDR_INDEX_REWARDS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('INDEX', chain_id=ChainID.ETHEREUM),
-                notes='rewards for providing liquidity',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('INDEX', chain_id=ChainID.ETHEREUM),
+                    notes='rewards for providing liquidity',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == REWARD_PAID and same_addr(event.address, ADDR_YFI_GOVERNANCE):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('yDAI+yUSDC+yUSDT+yTUSD'),
-                notes='rewards from yearn governance',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('yDAI+yUSDC+yUSDT+yTUSD'),
+                    notes='rewards from yearn governance',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == REWARD_PAID and event.address in ADDR_CREAM_REWARDS:
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token('CREAM', chain_id=ChainID.ETHEREUM),
-                notes='rewards from cream incentives',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token('CREAM', chain_id=ChainID.ETHEREUM),
+                    notes='rewards from cream incentives',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == REWARD_PAID and same_addr(event.address, ADDR_MIR_REWARDS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'
-                ),
-                notes='rewards for staking MIR LP',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'
+                    ),
+                    notes='rewards for staking MIR LP',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == REWARD_PAID:
             logger.warning('Unknown RewardPaid event for tx %s at %s', txn.tx_hash.hex(), tx_time)
@@ -415,20 +448,21 @@ def classify_tx(
         if event.topics[0] == MINTED and same_addr(event.address, ADDR_SWERVE_MINTER):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[66:])
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('SWRV',
-                                                   chain_id=ChainID.ETHEREUM),
-                    notes='Swerve rewards for pooling liquidity',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token('SWRV', chain_id=ChainID.ETHEREUM),
+                        notes='Swerve rewards for pooling liquidity',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == MINTED:
             logger.warning('Unknown Minted event for tx %s at %s', txn.tx_hash.hex(), tx_time)
@@ -436,19 +470,21 @@ def classify_tx(
         if event.topics[0] == PURCHASE and same_addr(event.address, ADDR_FEI_GENESIS_GROUP):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.EXPENSE,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('ETH'),
-                    notes='Fei Genesis Commit',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.EXPENSE,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token('ETH'),
+                        notes='Fei Genesis Commit',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == PURCHASE:
             logger.warning('Unknown Purchase event for tx %s at %s', txn.tx_hash.hex(), tx_time)
@@ -458,195 +494,219 @@ def classify_tx(
                 amount_fei = hexstr_to_int(event.data[2:][64:128])
                 amount_tribe = hexstr_to_int(event.data[2:][128:])
                 print(amount_fei, amount_tribe)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                    amount=FVal(amount_fei) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token(
-                        'eip155:1/erc20:0x956F47F50A910163D8BF957Cf5846D573E7f87CA'
-                    ),
-                    notes='FEI in Tribe Genesis Redeem',
-                    link=txn.tx_hash.hex()
-                )]
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                    amount=FVal(amount_tribe) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token(
-                        'eip155:1/erc20:0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B'
-                    ),
-                    notes='TRIBE in Tribe Genesis Redeem',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.AIRDROP,
+                        amount=FVal(amount_fei) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token(
+                            'eip155:1/erc20:0x956F47F50A910163D8BF957Cf5846D573E7f87CA'
+                        ),
+                        notes='FEI in Tribe Genesis Redeem',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.AIRDROP,
+                        amount=FVal(amount_tribe) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token(
+                            'eip155:1/erc20:0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B'
+                        ),
+                        notes='TRIBE in Tribe Genesis Redeem',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == REDEEM:
             logger.warning('Unknown redeem event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
         if event.topics[0] == TRANSFER and same_addr(event.address, ADDR_DODO):
-            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_DODO_REWARDS) and \
-                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_DODO_REWARDS) and hexstr_to_int(
+                event.topics[2]
+            ) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('DODO',
-                                                   chain_id=ChainID.ETHEREUM),
-                    notes='Claim DODO rewards',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token('DODO', chain_id=ChainID.ETHEREUM),
+                        notes='Claim DODO rewards',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_SUSHI):
-            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_SUSHI_REWARDS) and \
-                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(
+                ADDR_SUSHI_REWARDS
+            ) and hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('SUSHI',
-                                                   chain_id=ChainID.ETHEREUM),
-                    notes='Claim SUSHI rewards for staking LP',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token('SUSHI', chain_id=ChainID.ETHEREUM),
+                        notes='Claim SUSHI rewards for staking LP',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_TORN):
             asset = symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x77777FeDdddFfC19Ff86DB637967013e6C6A116C'
+                'eip155:1/erc20:0x77777FeDdddFfC19Ff86DB637967013e6C6A116C'
             )
-            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_TORN_VTORN) and \
-                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_TORN_VTORN) and hexstr_to_int(
+                event.topics[2]
+            ) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='TORN airdrop',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.AIRDROP,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='TORN airdrop',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_DAI):
             # MakerDAO Mint
             # Until we clarify generalized lending support in Buchfink,
             # treat borrowed DAI as a gift you have to pay back
             asset = symbol_to_asset_or_token('DAI', chain_id=ChainID.ETHEREUM)
-            if hexstr_to_int(event.topics[1]) == 0 and \
-                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if hexstr_to_int(event.topics[1]) == 0 and hexstr_to_int(
+                event.topics[2]
+            ) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.DONATE,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='DAI mint',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.DONATE,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='DAI mint',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_UMA):
             # UMA TVL Option Settlement
             asset = symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_UMA)
-            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_UMA_TVL_OPT) and \
-                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(ADDR_UMA_TVL_OPT) and hexstr_to_int(
+                event.topics[2]
+            ) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='UMA TVL option settlement',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='UMA TVL option settlement',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_PIEDAO_DOUGH):
-            if addr_in(hex_or_bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES) and \
-                    hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if addr_in(
+                hex_or_bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES
+            ) and hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('DOUGH'),
-                    notes='rewards for providing liquidity',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token('DOUGH'),
+                        notes='rewards for providing liquidity',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         if event.topics[0] == STAKEEND and same_addr(event.address, ADDR_HEX):
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 payout = hexstr_to_int(event.data[2:][:18])
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(payout) / FVal(1e8),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEX),
-                    notes='HEX Payout for staking',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(payout) / FVal(1e8),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEX),
+                        notes='HEX Payout for staking',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         if event.topics[0] == REWARDS_CLAIMED and same_addr(event.address, ADDR_DYDX_REWARDS):
             asset = symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x92D6C1e31e14520e676a687F0a93788B716BEff5'
+                'eip155:1/erc20:0x92D6C1e31e14520e676a687F0a93788B716BEff5'
             )
             if hexstr_to_int(event.data[2:][:64]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='dYdX retroactive airdrop',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.AIRDROP,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='dYdX retroactive airdrop',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         if event.topics[0] == MINT and same_addr(event.address, ADDR_HEDRON):
             asset = symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEDRON)
@@ -658,85 +718,94 @@ def classify_tx(
                 ev2.address = str(ev2.address).lower()  # type: ignore
                 for i, topic in enumerate(ev2.topics):
                     ev2.topics[i] = '0x' + hex_or_bytes_to_str(topic)  # type: ignore
-                if ev2.topics[0] == TRANSFER and \
-                        same_addr(ev2.address, ADDR_HEDRON) and \
-                        hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address):
-
+                if (
+                    ev2.topics[0] == TRANSFER
+                    and same_addr(ev2.address, ADDR_HEDRON)
+                    and hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address)
+                ):
                     amount = hexstr_to_int(ev2.data[2:])
-                    actions += [HistoryEvent(
+                    actions += [
+                        HistoryEvent(
+                            identifier=None,
+                            location='',
+                            event_type=HistoryEventType.RECEIVE,
+                            event_subtype=HistoryEventSubType.AIRDROP,
+                            amount=FVal(amount) / FVal(1e8),
+                            rate=None,
+                            rate_asset=None,
+                            timestamp=txn.timestamp,
+                            asset=asset,
+                            notes='HEDRON airdrop mint',
+                            link=txn.tx_hash.hex(),
+                        )
+                    ]
+
+        if event.topics[0] == HUNT and same_addr(event.address, ADDR_BLACKPOOL_AIRDROP):
+            asset = symbol_to_asset_or_token(
+                'eip155:1/erc20:0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da'
+            )
+            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
+                amount = hexstr_to_int(event.data[2:][64:128])
+                actions += [
+                    HistoryEvent(
                         identifier=None,
                         location='',
                         event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                        amount=FVal(amount) / FVal(1e8),
+                        event_subtype=HistoryEventSubType.AIRDROP,
+                        amount=FVal(amount) / FVal(1e18),
                         rate=None,
                         rate_asset=None,
                         timestamp=txn.timestamp,
                         asset=asset,
-                        notes='HEDRON airdrop mint',
-                        link=txn.tx_hash.hex()
-                    )]
-
-        if event.topics[0] == HUNT and same_addr(event.address, ADDR_BLACKPOOL_AIRDROP):
-            asset = symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x0eC9F76202a7061eB9b3a7D6B59D36215A7e37da'
-            )
-            if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
-                amount = hexstr_to_int(event.data[2:][64:128])
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='Blackpool airdrop',
-                    link=txn.tx_hash.hex()
-                )]
+                        notes='Blackpool airdrop',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         if event.topics[0] == VESTED and same_addr(event.address, ADDR_XTK_VESTING):
             asset = symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x7F3EDcdD180Dbe4819Bd98FeE8929b5cEdB3AdEB'
+                'eip155:1/erc20:0x7F3EDcdD180Dbe4819Bd98FeE8929b5cEdB3AdEB'
             )
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data[2:][64:128])
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='XTK Rewards for LP staking',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='XTK Rewards for LP staking',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         if event.topics[0] == WITHDRAWN and same_addr(event.address, ADDR_XDAI_EASYSTAKING):
             asset = symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x0Ae055097C6d159879521C384F1D2123D1f195e6'
+                'eip155:1/erc20:0x0Ae055097C6d159879521C384F1D2123D1f195e6'
             )
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 # accruedEmission
-                amount = hexstr_to_int(event.data[2:][64 * 3:64 * 4])
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='STAKE rewards for easystaking',
-                    link=txn.tx_hash.hex()
-                )]
+                amount = hexstr_to_int(event.data[2:][64 * 3 : 64 * 4])
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.INCOME,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='STAKE rewards for easystaking',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         # Until we clarify generalized lending support in Buchfink,
         # treat borrowed DAI as a gift you have to pay back
@@ -745,19 +814,21 @@ def classify_tx(
             borrower = hexstr_to_int(event.data[2:][:64])
             amount = hexstr_to_int(event.data[2:][64:128])
             if borrower == hexstr_to_int(account.address):
-                actions += [HistoryEvent(
-                    identifier=None,
-                    location='',
-                    event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.DONATE,
-                    amount=FVal(amount) / FVal(1e18),
-                    rate=None,
-                    rate_asset=None,
-                    timestamp=txn.timestamp,
-                    asset=asset,
-                    notes='Compound DAI mint',
-                    link=txn.tx_hash.hex()
-                )]
+                actions += [
+                    HistoryEvent(
+                        identifier=None,
+                        location='',
+                        event_type=HistoryEventType.RECEIVE,
+                        event_subtype=HistoryEventSubType.DONATE,
+                        amount=FVal(amount) / FVal(1e18),
+                        rate=None,
+                        rate_asset=None,
+                        timestamp=txn.timestamp,
+                        asset=asset,
+                        notes='Compound DAI mint',
+                        link=txn.tx_hash.hex(),
+                    )
+                ]
 
         if event.topics[0] == XFLOBBYEXIT and same_addr(event.address, ADDR_HEX):
             asset = symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEX)
@@ -769,117 +840,130 @@ def classify_tx(
                 ev2.address = str(ev2.address).lower()  # type: ignore
                 for i, topic in enumerate(ev2.topics):
                     ev2.topics[i] = '0x' + hex_or_bytes_to_str(topic)  # type: ignore
-                if ev2.topics[0] == TRANSFER and \
-                        same_addr(ev2.address, ADDR_HEX) and \
-                        hexstr_to_int(ev2.topics[1]) == 0 and \
-                        hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address):
-
+                if (
+                    ev2.topics[0] == TRANSFER
+                    and same_addr(ev2.address, ADDR_HEX)
+                    and hexstr_to_int(ev2.topics[1]) == 0
+                    and hexstr_to_int(ev2.topics[2]) == hexstr_to_int(account.address)
+                ):
                     amount = hexstr_to_int(ev2.data[2:])
                     # We will classify those as GIFT instead of purchase because
                     # we already paid earlier
-                    actions += [HistoryEvent(
-                        identifier=None,
-                        location='',
-                        event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.DONATE,
-                        amount=FVal(amount) / FVal(1e8),
-                        rate=None,
-                        rate_asset=None,
-                        timestamp=txn.timestamp,
-                        asset=asset,
-                        notes='XFLOBBYEXIT HEX mint',
-                        link=txn.tx_hash.hex()
-                    )]
+                    actions += [
+                        HistoryEvent(
+                            identifier=None,
+                            location='',
+                            event_type=HistoryEventType.RECEIVE,
+                            event_subtype=HistoryEventSubType.DONATE,
+                            amount=FVal(amount) / FVal(1e8),
+                            rate=None,
+                            rate_asset=None,
+                            timestamp=txn.timestamp,
+                            asset=asset,
+                            notes='XFLOBBYEXIT HEX mint',
+                            link=txn.tx_hash.hex(),
+                        )
+                    ]
 
         if event.topics[0] == TOKEN_CLAIMED and same_addr(event.address, ADDR_DAPPRADAR_AIRDROP):
             amount = hexstr_to_int(event.data[2:][128:192])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x44709a920fCcF795fbC57BAA433cc3dd53C44DbE'
-                ),
-                notes='DappRadar airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x44709a920fCcF795fbC57BAA433cc3dd53C44DbE'
+                    ),
+                    notes='DappRadar airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         if event.topics[0] == CLAIM and same_addr(event.address, ADDR_THALES_AIRDROP):
             amount = hexstr_to_int(event.data[2:][64:128])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'
-                ),
-                notes='Thales retroactive airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'
+                    ),
+                    notes='Thales retroactive airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIM:
             logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
         if event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_ENS):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_ENS}'),
-                notes='ENS retroactive airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_ENS}'),
+                    notes='ENS retroactive airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIM_2 and same_addr(event.address, ADDR_PLSD):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.AIRDROP,
-                amount=FVal(amount) / FVal(1e12),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_PLSD}'),
-                notes='PLSD airdrop',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.AIRDROP,
+                    amount=FVal(amount) / FVal(1e12),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_PLSD}'),
+                    notes='PLSD airdrop',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
 
         elif event.topics[0] == CLAIM_2:
             logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
         if event.topics[0] == HARVEST and same_addr(event.address, ADDR_BEVERAGE_BAR):
             amount = hexstr_to_int(event.data[2:])
-            actions += [HistoryEvent(
-                identifier=None,
-                location='',
-                event_type=HistoryEventType.RECEIVE,
-                event_subtype=HistoryEventSubType.INCOME,
-                amount=FVal(amount) / FVal(1e18),
-                rate=None,
-                rate_asset=None,
-                timestamp=txn.timestamp,
-                asset=symbol_to_asset_or_token(
-                    'eip155:1/erc20:0x9257fb8fab616867cEe67C3289547403617B1938'
-                ),
-                notes='DRINK rewards for LP',
-                link=txn.tx_hash.hex()
-            )]
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.INCOME,
+                    amount=FVal(amount) / FVal(1e18),
+                    rate=None,
+                    rate_asset=None,
+                    timestamp=txn.timestamp,
+                    asset=symbol_to_asset_or_token(
+                        'eip155:1/erc20:0x9257fb8fab616867cEe67C3289547403617B1938'
+                    ),
+                    notes='DRINK rewards for LP',
+                    link=txn.tx_hash.hex(),
+                )
+            ]
     return actions

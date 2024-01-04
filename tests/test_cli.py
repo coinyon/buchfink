@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(autouse=True)
 def remove_buchfink_config_envvar(monkeypatch):
-    monkeypatch.delenv("BUCHFINK_CONFIG", raising=False)
+    monkeypatch.delenv('BUCHFINK_CONFIG', raising=False)
     yield
 
 
@@ -37,9 +37,9 @@ def test_run_on_ens_domain():
         assert os.path.exists(os.path.join(d, 'actions/coinyon.eth.yaml'))
         assert os.path.exists(os.path.join(d, 'balances/coinyon.eth.yaml'))
 
-        result = runner.invoke(buchfink, [
-            'report', '-e', 'coinyon.eth', '--year', '2020', '--no-vcs-check'
-        ])
+        result = runner.invoke(
+            buchfink, ['report', '-e', 'coinyon.eth', '--year', '2020', '--no-vcs-check']
+        )
         logger.debug('output of %s: %s', 'report', result.output)
         assert result.exception is None
         assert result.exit_code == 0
@@ -81,9 +81,7 @@ def test_ethereum_qrcode():
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
         shutil.copytree(
-                os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum'),
-                d,
-                dirs_exist_ok=True
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum'), d, dirs_exist_ok=True
         )
         result = runner.invoke(buchfink, ['list'])
         logger.debug('output of %s: %s', 'list', result.output)
@@ -105,9 +103,9 @@ def test_ethereum_gas_report_cli():
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
         shutil.copytree(
-                os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum_gas'),
-                d,
-                dirs_exist_ok=True
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum_gas'),
+            d,
+            dirs_exist_ok=True,
         )
         result = runner.invoke(buchfink, ['list'])
         logger.debug('output of %s: %s', 'list', result.output)

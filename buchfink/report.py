@@ -19,7 +19,7 @@ from buchfink.datatypes import (
     HistoryBaseEntry,
     HistoryEventSubType,
     Timestamp,
-    Trade
+    Trade,
 )
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_fval, serialize_fval
@@ -64,19 +64,21 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     for account in accounts:
         num_matched_accounts += 1
 
-        if report_config.limit_accounts and \
-                account.name not in report_config.limit_accounts:
+        if report_config.limit_accounts and account.name not in report_config.limit_accounts:
             continue
 
-        if report_config.exclude_accounts and \
-                account.name in report_config.exclude_accounts:
+        if report_config.exclude_accounts and account.name in report_config.exclude_accounts:
             continue
 
         all_trades.extend(buchfink_db.get_local_trades_for_account(account))
         all_actions.extend(buchfink_db.get_local_ledger_actions_for_account(account))
 
-    logger.info('Collected %d trades / %d actions from %d account(s)',
-            len(all_trades), len(all_actions), num_matched_accounts)
+    logger.info(
+        'Collected %d trades / %d actions from %d account(s)',
+        len(all_trades),
+        len(all_actions),
+        num_matched_accounts,
+    )
 
     # Check if we have any trades or actions that share an event identifier
     # with another trade or action. If so then we it might an unidentified
@@ -84,8 +86,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     action_ids = set()
     for action in all_actions:
         if isinstance(action, EvmEvent):
-            if action.event_subtype == HistoryEventSubType.FEE \
-                    and action.counterparty == 'gas':
+            if action.event_subtype == HistoryEventSubType.FEE and action.counterparty == 'gas':
                 continue
             action_ids.add(action.tx_hash.hex())
 
@@ -95,21 +96,25 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             if not action.link:
                 continue
             if action.link in action_ids:
-                raise ValueError((
-                    'Action with identifier "{}" is also present as an event '
-                    'This might be an unidentified duplicate. Please check your '
-                    'events and trades for duplicates.'
-                ).format(action.link))
+                raise ValueError(
+                    (
+                        'Action with identifier "{}" is also present as an event '
+                        'This might be an unidentified duplicate. Please check your '
+                        'events and trades for duplicates.'
+                    ).format(action.link)
+                )
 
     for trade in all_trades:
         if trade.link in action_ids:
             if not trade.link:
                 continue
-            raise ValueError((
-                'Trade with identifier "{}" is also present as an event '
-                'This might be an unidentified duplicate. Please check your '
-                'events and trades for duplicates.'
-            ).format(trade.link))
+            raise ValueError(
+                (
+                    'Trade with identifier "{}" is also present as an event '
+                    'This might be an unidentified duplicate. Please check your '
+                    'events and trades for duplicates.'
+                ).format(trade.link)
+            )
 
     def timestamp(act):
         return act.get_timestamp()
@@ -134,7 +139,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
             ),
             'taxable': serialize_fval(
                 sum(deserialize_fval(entry['taxable']) for entry in pnl_overview.values())
-            )
+            ),
         }
 
     report_data['pnl_totals'] = get_total_pnl_from_overview(report_data['overview'])
@@ -142,8 +147,8 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     with (folder / 'report.yaml').open('w') as report_file:
         yaml.dump(report_data, stream=report_file)
 
-    logger.info('Report information has been written to: %s',
-            buchfink_db.reports_directory / Path(name)
+    logger.info(
+        'Report information has been written to: %s', buchfink_db.reports_directory / Path(name)
     )
 
     return report_data
@@ -169,9 +174,9 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             return ''
         return str(asset.symbol_or_name())
 
-    def get_event_type(event: ProcessedAccountingEvent) -> \
-            Literal['buy', 'sell', 'transaction_fee', 'loss', 'receive',
-                    'spend', 'dividend', 'other']:
+    def get_event_type(
+        event: ProcessedAccountingEvent,
+    ) -> Literal['buy', 'sell', 'transaction_fee', 'loss', 'receive', 'spend', 'dividend', 'other']:
         # pylint: disable=too-many-return-statements
 
         if event.notes.startswith('Burned'):
@@ -186,9 +191,11 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             return 'spend'
         if event.notes.startswith('Liquidated'):
             return 'loss'
-        if event.notes == "Fei Genesis Commit":
+        if event.notes == 'Fei Genesis Commit':
             return 'spend'
-        if re.search(r'rewards|payout|asset return|settlement|interest|dividend', event.notes, re.IGNORECASE):
+        if re.search(
+            r'rewards|payout|asset return|settlement|interest|dividend', event.notes, re.IGNORECASE
+        ):
             return 'dividend'
 
         return 'other'
@@ -233,18 +240,20 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     )
     events = report_data[0]
 
-    rendered_report = template.render({
-        "name": report_config.name,
-        "title": report_config.title,
-        "overview": overview_data,
-        "events": events,
-        "config": buchfink_db.config,
-    })
+    rendered_report = template.render(
+        {
+            'name': report_config.name,
+            'title': report_config.title,
+            'overview': overview_data,
+            'events': events,
+            'config': buchfink_db.config,
+        }
+    )
 
     _, ext = os.path.splitext(report_config.template)
 
     # to save the results
-    with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), "w") as reportf:
+    with open(buchfink_db.reports_directory / Path(name) / ('report' + ext), 'w') as reportf:
         reportf.write(rendered_report)
 
     logger.info("Rendered template to 'report%s'.", ext)

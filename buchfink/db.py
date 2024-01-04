@@ -19,6 +19,7 @@ from rotkehlchen.chain.arbitrum_one.node_inquirer import ArbitrumOneInquirer
 from rotkehlchen.chain.avalanche.manager import AvalancheManager
 from rotkehlchen.chain.base.manager import BaseManager
 from rotkehlchen.chain.base.node_inquirer import BaseInquirer
+
 # from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
@@ -26,6 +27,7 @@ from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
+
 # from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
 from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
@@ -76,7 +78,7 @@ from rotkehlchen.types import (
     Location,
     Price,
     SupportedBlockchain,
-    Timestamp
+    Timestamp,
 )
 from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
@@ -91,7 +93,7 @@ from buchfink.datatypes import (
     EvmTxReceipt,
     HistoryBaseEntry,
     Nfts,
-    Trade
+    Trade,
 )
 from buchfink.exceptions import InputError, UnknownAsset
 from buchfink.models import (
@@ -100,7 +102,7 @@ from buchfink.models import (
     ExchangeAccountConfig,
     HistoricalPriceConfig,
     ManualAccountConfig,
-    ReportConfig
+    ReportConfig,
 )
 from buchfink.models.account import accounts_from_config
 from buchfink.serialization import (
@@ -111,7 +113,7 @@ from buchfink.serialization import (
     deserialize_identifier,
     deserialize_ledger_action,
     deserialize_trade,
-    serialize_balances
+    serialize_balances,
 )
 
 if TYPE_CHECKING:
@@ -148,11 +150,11 @@ class BuchfinkDB(DBHandler):
 
         # Buchfink directories, these include the YAML storage and the reports
         # etc. Basically these are the ones you want version-controlled.
-        self.reports_directory = self.data_directory / "reports"
-        self.trades_directory = self.data_directory / "trades"
-        self.actions_directory = self.data_directory / "actions"
-        self.balances_directory = self.data_directory / "balances"
-        self.annotations_directory = self.data_directory / "annotations"
+        self.reports_directory = self.data_directory / 'reports'
+        self.trades_directory = self.data_directory / 'trades'
+        self.actions_directory = self.data_directory / 'actions'
+        self.balances_directory = self.data_directory / 'balances'
+        self.annotations_directory = self.data_directory / 'annotations'
         self.reports_directory.mkdir(exist_ok=True)
         self.trades_directory.mkdir(exist_ok=True)
         self.actions_directory.mkdir(exist_ok=True)
@@ -162,8 +164,8 @@ class BuchfinkDB(DBHandler):
         # Rotki files, these are treated as a cache from Buchfinks perspective.
         # You should be able to delete them and have them automatically rebuild
         # by Buchfink. Ignore them in version control.
-        self.cache_directory = self.data_directory / ".buchfink"
-        self.user_data_dir = self.cache_directory / "user"
+        self.cache_directory = self.data_directory / '.buchfink'
+        self.user_data_dir = self.cache_directory / 'user'
         self.cache_directory.mkdir(exist_ok=True)
         self.user_data_dir.mkdir(exist_ok=True)
         (self.cache_directory / 'cryptocompare').mkdir(exist_ok=True)
@@ -178,11 +180,8 @@ class BuchfinkDB(DBHandler):
         self.coingecko = Coingecko()
         self.defillama = Defillama()
         self.historian = PriceHistorian(
-                self.cache_directory / 'history',
-                self.cryptocompare,
-                self.coingecko,
-                self.defillama
-            )
+            self.cache_directory / 'history', self.cryptocompare, self.coingecko, self.defillama
+        )
 
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
@@ -190,43 +189,42 @@ class BuchfinkDB(DBHandler):
         self.etherscan = EthereumEtherscan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
         self.globaldb = GlobalDBHandler(
-            data_dir=self.cache_directory,
-            sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
+            data_dir=self.cache_directory, sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
         )
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
-        self.data_updater = RotkiDataUpdater(
-            msg_aggregator=self.msg_aggregator,
-            user_db=self
-        )
+        self.data_updater = RotkiDataUpdater(msg_aggregator=self.msg_aggregator, user_db=self)
 
         self.inquirer = Inquirer(
-                data_dir=self.cache_directory / 'inquirer',
-                cryptocompare=self.cryptocompare,
-                coingecko=self.coingecko,
-                manualcurrent=ManualCurrentOracle(),
-                msg_aggregator=self.msg_aggregator,
-                defillama=self.defillama
-            )
+            data_dir=self.cache_directory / 'inquirer',
+            cryptocompare=self.cryptocompare,
+            coingecko=self.coingecko,
+            manualcurrent=ManualCurrentOracle(),
+            msg_aggregator=self.msg_aggregator,
+            defillama=self.defillama,
+        )
 
         # After calling the parent constructor, we will have a db connection.
         super().__init__(
-                self.user_data_dir,
-                'password',
-                self.msg_aggregator,
-                None,
-                sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB,
-                resume_from_backup=False
+            self.user_data_dir,
+            'password',
+            self.msg_aggregator,
+            None,
+            sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB,
+            resume_from_backup=False,
         )
 
         if ENABLE_DATA_MIGRATION:
-            class FakeRotki():
-                class FakeData():
+
+            class FakeRotki:
+                class FakeData:
                     db = self
+
                 data = FakeData()
                 msg_aggregator = self.msg_aggregator
                 greenlet_manager = self.greenlet_manager
+
             self.migration_manager = DataMigrationManager(FakeRotki())  # type: ignore
             self.migration_manager.maybe_migrate_data()
 
@@ -237,8 +235,7 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.ethereum_inquirer = EthereumInquirer(
-            greenlet_manager=self.greenlet_manager,
-            database=self
+            greenlet_manager=self.greenlet_manager, database=self
         )
         self.ethereum_manager = EthereumManager(self.ethereum_inquirer)
         self.optimism_inquirer = OptimismInquirer(
@@ -272,7 +269,7 @@ class BuchfinkDB(DBHandler):
             greenlet_manager=self.greenlet_manager,
             connect_at_start=[],
             connect_on_startup=False,
-            own_rpc_endpoint=self.get_settings().ksm_rpc_endpoint
+            own_rpc_endpoint=self.get_settings().ksm_rpc_endpoint,
         )
         self.polkadot_manager = SubstrateManager(
             chain=SupportedBlockchain.POLKADOT,
@@ -280,7 +277,7 @@ class BuchfinkDB(DBHandler):
             greenlet_manager=self.greenlet_manager,
             connect_at_start=[],
             connect_on_startup=False,
-            own_rpc_endpoint=self.get_settings().dot_rpc_endpoint
+            own_rpc_endpoint=self.get_settings().dot_rpc_endpoint,
         )
         self.covalent_avalanche = Covalent(
             database=self,
@@ -293,7 +290,7 @@ class BuchfinkDB(DBHandler):
             msg_aggregator=self.msg_aggregator,
         )
         self.eth_transactions = EthereumTransactions(
-                ethereum_inquirer=self.ethereum_inquirer, database=self
+            ethereum_inquirer=self.ethereum_inquirer, database=self
         )
         self.evm_tx_decoder = EthereumTransactionDecoder(
             database=self,
@@ -308,10 +305,7 @@ class BuchfinkDB(DBHandler):
         self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
         uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_inquirer)
         uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_inquirer)
-        Inquirer().add_defi_oracles(
-            uniswap_v2=uniswap_v2_oracle,
-            uniswap_v3=uniswap_v3_oracle
-        )
+        Inquirer().add_defi_oracles(uniswap_v2=uniswap_v2_oracle, uniswap_v3=uniswap_v3_oracle)
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
@@ -362,7 +356,7 @@ class BuchfinkDB(DBHandler):
 
     def sync_accounts(self, accounts: List[Account]) -> None:
         for account in accounts:
-            if account.account_type != "ethereum":
+            if account.account_type != 'ethereum':
                 continue
 
             try:
@@ -376,17 +370,17 @@ class BuchfinkDB(DBHandler):
                                 address=account.address,
                                 label=account.name,
                                 chain=SupportedBlockchain.ETHEREUM,
-                                tags=[]
+                                tags=[],
                             )
-                        ]
+                        ],
                     )
             except InputError:
                 pass
 
-    def get_eth_transactions(self, account: Account, with_receipts: bool = False) \
-            -> List[Tuple[EvmTransaction, Optional[EvmTxReceipt]]]:
-
-        assert account.account_type == "ethereum"
+    def get_eth_transactions(
+        self, account: Account, with_receipts: bool = False
+    ) -> List[Tuple[EvmTransaction, Optional[EvmTxReceipt]]]:
+        assert account.account_type == 'ethereum'
         address = cast(ChecksumEvmAddress, account.address)
 
         now = ts_now()
@@ -394,19 +388,17 @@ class BuchfinkDB(DBHandler):
         self.sync_accounts([account])
 
         self.eth_transactions.single_address_query_transactions(
-                address,
-                start_ts=Timestamp(0),
-                end_ts=now
+            address, start_ts=Timestamp(0), end_ts=now
         )
 
         dbevmtx = DBEvmTx(self)
         with self.conn.read_ctx() as cursor:
             txs, txs_total_count = dbevmtx.get_evm_transactions_and_limit_info(
                 cursor=cursor,
-                filter_=EvmTransactionsFilterQuery.make(accounts=[
-                    EvmAccount(address, ChainID.ETHEREUM)
-                ]),
-                has_premium=False
+                filter_=EvmTransactionsFilterQuery.make(
+                    accounts=[EvmAccount(address, ChainID.ETHEREUM)]
+                ),
+                has_premium=False,
             )
             assert len(txs) == txs_total_count
 
@@ -414,16 +406,14 @@ class BuchfinkDB(DBHandler):
         for txn in txs:
             receipt = None
             if with_receipts:
-                receipt = self.eth_transactions.get_or_query_transaction_receipt(
-                        txn.tx_hash
-                )
+                receipt = self.eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
             result.append((txn, receipt))
 
         return result
 
     def get_external_service_credentials(
-            self,
-            service_name: ExternalService,
+        self,
+        service_name: ExternalService,
     ) -> Optional[ExternalServiceApiCredentials]:
         """If existing it returns the external service credentials for the given service"""
         short_name = service_name.name.lower()
@@ -437,7 +427,6 @@ class BuchfinkDB(DBHandler):
         return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
     def get_accountant(self) -> Accountant:
-
         # ethereum_accounting_aggregator = EthereumAccountingAggregator(
         #     node_inquirer=self.ethereum_inquirer,
         #     msg_aggregator=self.msg_aggregator,
@@ -451,11 +440,11 @@ class BuchfinkDB(DBHandler):
         chains_aggregator = self.get_chains_aggregator(self.accounts)
 
         return Accountant(
-                db=self,
-                msg_aggregator=self.msg_aggregator,
-                chains_aggregator=chains_aggregator,
-                premium=None
-            )
+            db=self,
+            msg_aggregator=self.msg_aggregator,
+            chains_aggregator=chains_aggregator,
+            premium=None,
+        )
 
     def get_blockchain_accounts(self, cursor=None) -> BlockchainAccounts:
         if self._active_eth_address:
@@ -473,15 +462,19 @@ class BuchfinkDB(DBHandler):
         with open(trades_file, 'r') as trades_f:
             exchange = yaml.load(trades_f, Loader=yaml.SafeLoader)
 
-        return [ser_trade
-                for ser_trade in [
-                    safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
-                if ser_trade is not None] \
-                + [ser_trade
-                for ser_trade in [
-                    safe_deserialize_trade(trade) for trade in exchange.get('actions', [])
-                    if 'buy' in trade or 'sell' in trade]
-                if ser_trade is not None]
+        return [
+            ser_trade
+            for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
+            if ser_trade is not None
+        ] + [
+            ser_trade
+            for ser_trade in [
+                safe_deserialize_trade(trade)
+                for trade in exchange.get('actions', [])
+                if 'buy' in trade or 'sell' in trade
+            ]
+            if ser_trade is not None
+        ]
 
     def get_local_trades_for_account(self, account_name: Union[str, Account]) -> List[Trade]:
         if isinstance(account_name, str):
@@ -492,7 +485,7 @@ class BuchfinkDB(DBHandler):
         if account.account_type == 'file':
             if not isinstance(account.config, ManualAccountConfig):
                 # TODO: this check should already be enforced by type system
-                raise ValueError("Invalid account config")
+                raise ValueError('Invalid account config')
 
             trades_file = os.path.join(self.data_directory, account.config.file)
             return self.get_trades_from_file(trades_file)
@@ -504,8 +497,7 @@ class BuchfinkDB(DBHandler):
 
         return []
 
-    def get_actions_from_file(self, actions_file, include_trades=True) \
-            -> List[HistoryBaseEntry]:
+    def get_actions_from_file(self, actions_file, include_trades=True) -> List[HistoryBaseEntry]:
         def safe_deserialize_ledger_action(action):
             if 'buy' in action or 'sell' in action:
                 # it is a Trade
@@ -524,15 +516,17 @@ class BuchfinkDB(DBHandler):
         with open(actions_file, 'r') as actions_f:
             exchange = yaml.load(actions_f, Loader=yaml.SafeLoader)
 
-        return [ser_action
-                for ser_action in [
-                    safe_deserialize_ledger_action(action)
-                    for action in exchange.get('actions', [])
-                ]
-                if ser_action is not None]
+        return [
+            ser_action
+            for ser_action in [
+                safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])
+            ]
+            if ser_action is not None
+        ]
 
-    def get_local_ledger_actions_for_account(self, account_name: Union[str, Account]) \
-            -> List[HistoryBaseEntry]:
+    def get_local_ledger_actions_for_account(
+        self, account_name: Union[str, Account]
+    ) -> List[HistoryBaseEntry]:
         if isinstance(account_name, str):
             account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
         else:
@@ -541,7 +535,7 @@ class BuchfinkDB(DBHandler):
         if account.account_type == 'file':
             if not isinstance(account.config, ManualAccountConfig):
                 # TODO: this check should already be enforced by type system
-                raise ValueError("Invalid account config")
+                raise ValueError('Invalid account config')
 
             actions_file = self.data_directory / account.config.file
             if actions_file.exists():
@@ -558,17 +552,20 @@ class BuchfinkDB(DBHandler):
         accs = {}  # type: ignore
 
         for account in accounts:
-            if account.account_type == "ethereum":
+            if account.account_type == 'ethereum':
                 accs['eth'] = accs.get('eth', []) + [account.address]
-            elif account.account_type == "bitcoin":
+            elif account.account_type == 'bitcoin':
                 accs['btc'] = accs.get('btc', []) + [account.address]
-            elif account.account_type == "bitcoincash":
+            elif account.account_type == 'bitcoincash':
                 accs['bch'] = accs.get('bch', []) + [account.address]
-            elif account.account_type == "file" or account.account_type == "exchange":
+            elif account.account_type == 'file' or account.account_type == 'exchange':
                 pass
             else:
-                raise ValueError('Unable to create chain aggregator for account type: '
-                                 '{}'.format(account.account_type))
+                raise ValueError(
+                    'Unable to create chain aggregator for account type: ' '{}'.format(
+                        account.account_type
+                    )
+                )
 
         self.sync_accounts(accounts)
 
@@ -599,27 +596,25 @@ class BuchfinkDB(DBHandler):
             greenlet_manager=self.greenlet_manager,
             polygon_pos_manager=self.polygon_pos_manager,
             premium=None,
-            eth_modules=eth_modules
+            eth_modules=eth_modules,
         )
         # Monkey-patch function that uses singleton
-        chains_aggregator.queried_addresses_for_module = \
-                lambda self, module = None: [account.address]
+        chains_aggregator.queried_addresses_for_module = lambda self, module=None: [account.address]
         return chains_aggregator
 
     def get_exchange(self, account: str) -> ExchangeInterface:
-
         account_ = [a for a in self.accounts if a.name == account][0]
         account_config = account_.config
 
         if not isinstance(account_config, ExchangeAccountConfig):
-            raise ValueError("Not an exchange account: " + account)
+            raise ValueError('Not an exchange account: ' + account)
 
         exchange_opts = {
             'name': account_config.name,
             'api_key': str(account_config.api_key),
             'secret': str(account_config.secret).encode(),
             'database': self,
-            'msg_aggregator': self.msg_aggregator
+            'msg_aggregator': self.msg_aggregator,
         }
 
         if account_config.exchange == 'kraken':
@@ -641,12 +636,12 @@ class BuchfinkDB(DBHandler):
         elif account_config.exchange == 'iconomi':
             exchange = Iconomi(**exchange_opts)
         else:
-            raise ValueError("Unknown exchange: " + account_config.exchange)
+            raise ValueError('Unknown exchange: ' + account_config.exchange)
 
         return exchange
 
     def query_balances(self, account) -> BalanceSheet:
-        if account.account_type == "exchange":
+        if account.account_type == 'exchange':
             exchange = self.get_exchange(account.name)
 
             api_key_is_valid, error = exchange.validate_api_key()
@@ -658,15 +653,13 @@ class BuchfinkDB(DBHandler):
 
             if not error:
                 logger.info(
-                        'Fetched balances for %d assets from %s',
-                        len(balances.keys()),
-                        account.name
-                    )
+                    'Fetched balances for %d assets from %s', len(balances.keys()), account.name
+                )
                 return BalanceSheet(assets=balances, liabilities={})
 
             raise RuntimeError(error)
 
-        if account.account_type == "ethereum":
+        if account.account_type == 'ethereum':
             manager = self.get_chains_aggregator([account])
 
             ethereum_tokens = self.ethereum_manager.tokens
@@ -679,51 +672,37 @@ class BuchfinkDB(DBHandler):
             # into out get_blockchain_accounts() without providing context (for
             # example from makerdao module).
             self._active_eth_address = account.address
-            manager.query_balances(
-                blockchain=SupportedBlockchain.ETHEREUM
-            )
+            manager.query_balances(blockchain=SupportedBlockchain.ETHEREUM)
             self._active_eth_address = None
 
             return reduce(operator.add, manager.balances.eth.values())
 
-        if account.account_type == "bitcoin":
+        if account.account_type == 'bitcoin':
             manager = self.get_chains_aggregator([account])
-            manager.query_balances(
-                blockchain=SupportedBlockchain.BITCOIN
-            )
-            btc = Asset("BTC")
-            return BalanceSheet(
-                assets={
-                    btc: reduce(operator.add, manager.balances.btc.values())
-                }
-            )
+            manager.query_balances(blockchain=SupportedBlockchain.BITCOIN)
+            btc = Asset('BTC')
+            return BalanceSheet(assets={btc: reduce(operator.add, manager.balances.btc.values())})
 
-        if account.account_type == "bitcoincash":
+        if account.account_type == 'bitcoincash':
             manager = self.get_chains_aggregator([account])
-            manager.query_balances(
-                blockchain=SupportedBlockchain.BITCOIN_CASH
-            )
-            bch = Asset("BCH")
-            return BalanceSheet(
-                assets={
-                    bch: reduce(operator.add, manager.balances.bch.values())
-                }
-            )
+            manager.query_balances(blockchain=SupportedBlockchain.BITCOIN_CASH)
+            bch = Asset('BCH')
+            return BalanceSheet(assets={bch: reduce(operator.add, manager.balances.bch.values())})
 
-        if account.account_type == "file":
+        if account.account_type == 'file':
             return self.get_balances_from_file(
                 os.path.join(self.data_directory, account.config.file)
             )
 
         logger.warning(
             'Returning empty BalanceSheet because account type "%s" is not supported yet.',
-            account.account_type
+            account.account_type,
         )
 
         return BalanceSheet(assets={}, liabilities={})
 
     def query_nfts(self, account: Account) -> List[Nfts]:
-        if account.account_type == "ethereum":
+        if account.account_type == 'ethereum':
             manager = self.get_chains_aggregator([account])
             nfts = manager.get_module('nfts')
             nft_result = nfts.get_all_info(addresses=[account.address], ignore_cache=True)
@@ -801,20 +780,12 @@ class BuchfinkDB(DBHandler):
             yaml.dump(contents, stream=balances_file, sort_keys=True)
 
     def update_used_query_range(
-            self,
-            write_cursor,
-            name: str,
-            start_ts: Timestamp,
-            end_ts: Timestamp
+        self, write_cursor, name: str, start_ts: Timestamp, end_ts: Timestamp
     ) -> None:
         pass
 
     def update_used_block_query_range(
-            self,
-            write_cursor,
-            name: str,
-            from_block: int,
-            to_block: int
+        self, write_cursor, name: str, from_block: int, to_block: int
     ) -> None:
         pass
 
@@ -822,10 +793,10 @@ class BuchfinkDB(DBHandler):
         return None
 
     def get_ignored_action_ids(
-            self,
-            cursor,
-            action_type: Optional[ActionType],
-            ) -> Dict[ActionType, List[str]]:
+        self,
+        cursor,
+        action_type: Optional[ActionType],
+    ) -> Dict[ActionType, List[str]]:
         return {}
 
     # def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:
@@ -845,7 +816,7 @@ class BuchfinkDB(DBHandler):
         self.sync_config_assets()
 
     def sync_rpc_nodes(self):
-        'Ensures that the database matches the config file'
+        "Ensures that the database matches the config file"
 
         with (
             self.user_write() as write_cursor,
@@ -870,8 +841,7 @@ class BuchfinkDB(DBHandler):
                     ]
                 else:
                     self.delete_rpc_node(
-                            db_rpc_node.identifier,
-                            blockchain=SupportedBlockchain.ETHEREUM
+                        db_rpc_node.identifier, blockchain=SupportedBlockchain.ETHEREUM
                     )
 
         for rpc_node in settings_rpc_nodes:
@@ -890,7 +860,7 @@ class BuchfinkDB(DBHandler):
             )
 
     def sync_config_assets(self):
-        'Sync assets defined in config with database'
+        "Sync assets defined in config with database"
 
         for token in self.config.tokens:
             eth_token = deserialize_evm_token(token.dict())
@@ -924,7 +894,6 @@ class BuchfinkDB(DBHandler):
             ignored_assets = self.get_ignored_asset_ids(cursor)
 
         for ignored_asset in self.config.settings.ignored_assets:
-
             token_identifier = deserialize_identifier(ignored_asset)
 
             if token_identifier in ignored_assets:
@@ -958,15 +927,13 @@ class BuchfinkDB(DBHandler):
                 to_asset=self.get_asset_by_symbol(historical_price.to),
                 source=HistoricalPriceOracle.MANUAL,
                 price=Price(FVal(str(historical_price.price))),
-                timestamp=Timestamp(int(historical_price.at.timestamp()))
+                timestamp=Timestamp(int(historical_price.at.timestamp())),
             )
 
         prices = [to_historical_price(historical_price) for historical_price in self.config.prices]
         for price in prices:
             logger.debug('Adding %s', price)
             self.globaldb.delete_historical_prices(
-                    price.from_asset,
-                    price.to_asset,
-                    HistoricalPriceOracle.MANUAL
+                price.from_asset, price.to_asset, HistoricalPriceOracle.MANUAL
             )
         self.globaldb.add_historical_prices(prices)

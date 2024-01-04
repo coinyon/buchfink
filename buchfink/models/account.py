@@ -11,15 +11,15 @@ from .config import (
     Config,
     EthereumAccountConfig,
     ExchangeAccountConfig,
-    ManualAccountConfig
+    ManualAccountConfig,
 )
 
 AccountType = Union[
-    Literal["ethereum"],
-    Literal["bitcoin"],
-    Literal["bitcoincash"],
-    Literal["exchange"],
-    Literal["file"]
+    Literal['ethereum'],
+    Literal['bitcoin'],
+    Literal['bitcoincash'],
+    Literal['exchange'],
+    Literal['file'],
 ]
 
 
@@ -32,29 +32,29 @@ class Account(BaseModel):
 
 
 def account_from_config(account_config: AccountConfig):
-    account_type = "ethereum"   # type: AccountType
+    account_type = 'ethereum'  # type: AccountType
     address = None  # type: Optional[str]
     if isinstance(account_config, EthereumAccountConfig):
-        account_type = "ethereum"
+        account_type = 'ethereum'
         address = account_config.ethereum
     elif isinstance(account_config, BitcoinAccountConfig):
-        account_type = "bitcoin"
+        account_type = 'bitcoin'
         address = account_config.bitcoin
     elif isinstance(account_config, BitcoinCashAccountConfig):
-        account_type = "bitcoincash"
+        account_type = 'bitcoincash'
         address = account_config.bitcoincash
     elif isinstance(account_config, ExchangeAccountConfig):
-        account_type = "exchange"
+        account_type = 'exchange'
     elif isinstance(account_config, ManualAccountConfig):
-        account_type = "file"
+        account_type = 'file'
     else:
-        raise ValueError("Invalid account")
+        raise ValueError('Invalid account')
     return Account(
         name=account_config.name,
         account_type=account_type,
         address=address,
         config=account_config,
-        tags=account_config.tags or []
+        tags=account_config.tags or [],
     )
 
 
@@ -76,12 +76,8 @@ def account_from_string(acc_def: str, buchfink_db=None) -> Account:
             'ethereum': eth_address,
         }
         return Account(
-                name=acc_def,
-                account_type='ethereum',
-                address=eth_address,
-                config=config,
-                tags=[]
-            )
+            name=acc_def, account_type='ethereum', address=eth_address, config=config, tags=[]
+        )
 
     if acc_def.lower().startswith('0x'):
         config = {
@@ -89,11 +85,7 @@ def account_from_string(acc_def: str, buchfink_db=None) -> Account:
             'ethereum': acc_def,
         }
         return Account(
-                name=acc_def,
-                account_type='ethereum',
-                address=acc_def,
-                config=config,
-                tags=[]
-            )
+            name=acc_def, account_type='ethereum', address=acc_def, config=config, tags=[]
+        )
 
     raise ValueError(acc_def)

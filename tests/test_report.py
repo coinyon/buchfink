@@ -9,8 +9,8 @@ from buchfink.report import render_report, run_report
 
 def test_bullrun_config(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -31,8 +31,8 @@ def test_bullrun_config(tmp_path):
 
 def test_bullrun_report_template(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -53,8 +53,8 @@ def test_bullrun_report_template(tmp_path):
 
 def test_manual_price(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -82,10 +82,10 @@ def test_manual_price(tmp_path):
 
 def test_ethereum_gas_report_tax(tmp_path):
     shutil.copytree(
-        os.path.join(os.path.dirname(__file__), "scenarios", "ethereum_gas"),
-        os.path.join(tmp_path, "buchfink"),
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum_gas'),
+        os.path.join(tmp_path, 'buchfink'),
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, "buchfink/buchfink.yaml"))
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     buchfink_db.perform_assets_updates()
 
     reports = list(buchfink_db.get_all_reports())
@@ -100,15 +100,16 @@ def test_ethereum_gas_report_tax(tmp_path):
 
     result = run_report(buchfink_db, [whale1], report)
 
-    assert float(result['pnl_totals']['free']) > 0.
-    assert float(result['pnl_totals']['taxable']) > 0.
+    assert float(result['pnl_totals']['free']) > 0.0
+    assert float(result['pnl_totals']['taxable']) > 0.0
     assert float(result['overview']['trade']['taxable']) == 500.0
-    assert float(result['overview']['transaction event']['taxable']) == \
-            pytest.approx(-64.816, rel=0.1)
+    assert float(result['overview']['transaction event']['taxable']) == pytest.approx(
+        -64.816, rel=0.1
+    )
 
     render_report(buchfink_db, report)
 
-    report_file = os.path.join(tmp_path, "buchfink", "reports", report.name, "report.md")
+    report_file = os.path.join(tmp_path, 'buchfink', 'reports', report.name, 'report.md')
 
     assert os.path.exists(report_file)
 
@@ -121,8 +122,9 @@ def test_ethereum_gas_report_tax(tmp_path):
     result = run_report(buchfink_db, [whale2], report)
 
     assert float(result['overview']['trade']['taxable']) == 500.0
-    assert float(result['overview']['transaction event']['taxable']) == \
-           pytest.approx(-20.35, rel=0.01)
+    assert float(result['overview']['transaction event']['taxable']) == pytest.approx(
+        -20.35, rel=0.01
+    )
 
     render_report(buchfink_db, report)
 

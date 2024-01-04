@@ -9,8 +9,8 @@ from buchfink.report import run_report
 
 def test_bullrun_full_taxes(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -27,8 +27,8 @@ def test_bullrun_full_taxes(tmp_path):
 
 def test_bullrun_no_taxes(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
@@ -46,8 +46,8 @@ def test_bullrun_no_taxes(tmp_path):
 
 def test_ledger_actions_income(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_income']
@@ -64,8 +64,8 @@ def test_ledger_actions_income(tmp_path):
 
 def test_ledger_actions_airdrop(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_airdrop']
@@ -81,8 +81,8 @@ def test_ledger_actions_airdrop(tmp_path):
 
 def test_ledger_actions_gift(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_gift']
@@ -99,8 +99,8 @@ def test_ledger_actions_gift(tmp_path):
 
 def test_ledger_actions_event_swap(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_event_swap']
@@ -117,13 +117,13 @@ def test_ledger_actions_event_swap(tmp_path):
 
 def test_ledger_actions_mixed_swap_trade(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
-    account = [acc
-               for acc in buchfink_db.get_all_accounts()
-               if acc.name == 'acc_mixed_swap_trade'][0]
+    account = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_mixed_swap_trade'][
+        0
+    ]
     trades = buchfink_db.get_local_trades_for_account(account.name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(account.name)
     assert len(ledger_actions) == 2
@@ -138,13 +138,13 @@ def test_ledger_actions_mixed_swap_trade(tmp_path):
 
 def test_ledger_actions_mixed_same_link(tmp_path):
     shutil.copytree(
-            os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
-            os.path.join(tmp_path, 'buchfink')
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'ledger_actions'),
+        os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
-    account = [acc
-               for acc in buchfink_db.get_all_accounts()
-               if acc.name == 'acc_mixed_same_link'][0]
+    account = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'acc_mixed_same_link'][
+        0
+    ]
     trades = buchfink_db.get_local_trades_for_account(account.name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(account.name)
     assert len(ledger_actions) == 2

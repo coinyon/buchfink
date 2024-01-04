@@ -24,7 +24,7 @@ from buchfink.datatypes import (
     Nfts,
     Timestamp,
     Trade,
-    TradeType
+    TradeType,
 )
 from buchfink.exceptions import UnknownAsset
 
@@ -38,7 +38,7 @@ def serialize_timestamp_ms(timestamp_ms: int) -> str:
 
 
 def deserialize_timestamp(timestamp: str) -> Timestamp:
-    'Converts ISO date or a UNIX timestamp to a Timestamp'
+    "Converts ISO date or a UNIX timestamp to a Timestamp"
     if timestamp.endswith('Z'):
         timestamp = timestamp[:-1]
     try:
@@ -151,7 +151,7 @@ def deserialize_trade(trade_dict) -> Trade:
             deserialize_fval(trade_dict['rate']),
             deserialize_fval(trade_dict['fee']),
             deserialize_asset(trade_dict['fee_currency']),
-            str(trade_dict['link'])
+            str(trade_dict['link']),
         )
 
     if 'buy' in trade_dict:
@@ -186,7 +186,7 @@ def deserialize_trade(trade_dict) -> Trade:
         quote_amount / amount,
         fee,
         fee_currency,
-        str(trade_dict.get('link', ''))
+        str(trade_dict.get('link', '')),
     )
 
 
@@ -195,7 +195,7 @@ RE_IRREGULAR_CHAR = re.compile(r'[^a-zA-Z0-9\-\+]+')
 
 
 def serialize_decimal(dec: Decimal) -> str:
-    'return a non-scientific, non-trailing-zero number representation'
+    "return a non-scientific, non-trailing-zero number representation"
     try:
         ser_amount = str(dec.quantize(QUANT_DECIMAL))
     except InvalidOperation:
@@ -235,10 +235,7 @@ def serialize_amount(amount: FVal, asset: Asset) -> str:
 
 
 def serialize_balance(balance: Balance, asset: Asset) -> dict:
-    return {
-        'amount': serialize_decimal(balance.amount.num),
-        'asset': serialize_asset(asset)
-    }
+    return {'amount': serialize_decimal(balance.amount.num), 'asset': serialize_asset(asset)}
 
 
 def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
@@ -247,17 +244,23 @@ def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
 
     ser_balances = {}
     if balances.assets:
-        ser_balances['assets'] = sorted([
-            serialize_balance(bal, asset)
-            for asset, bal in balances.assets.items()
-            if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
-        ], key=itemgetter('asset'))
+        ser_balances['assets'] = sorted(
+            [
+                serialize_balance(bal, asset)
+                for asset, bal in balances.assets.items()
+                if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
+            ],
+            key=itemgetter('asset'),
+        )
     if balances.liabilities:
-        ser_balances['liabilities'] = sorted([
-            serialize_balance(bal, asset)
-            for asset, bal in balances.liabilities.items()
-            if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
-        ], key=itemgetter('asset'))
+        ser_balances['liabilities'] = sorted(
+            [
+                serialize_balance(bal, asset)
+                for asset, bal in balances.liabilities.items()
+                if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
+            ],
+            key=itemgetter('asset'),
+        )
     return ser_balances
 
 
@@ -306,10 +309,7 @@ def serialize_trade(trade: Trade) -> dict:
     # TODO: This should probably be implemented in the actual yaml writer
     preferred_order = ['buy', 'sell', 'for', 'fee', 'location', 'link', 'timestamp']
 
-    return {
-        key: ser_trade[key]
-        for key in sorted(ser_trade.keys(), key=preferred_order.index)
-    }
+    return {key: ser_trade[key] for key in sorted(ser_trade.keys(), key=preferred_order.index)}
 
 
 def serialize_ledger_action(action):
@@ -369,20 +369,17 @@ def serialize_ledger_action(action):
 
 
 def serialize_trades(trades: List[Trade]) -> List[dict]:
-
     def trade_sort_key(trade):
         return (trade.timestamp, trade.link)
 
-    return [
-        serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)
-    ]
+    return [serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)]
 
 
 def serialize_ledger_actions(actions) -> List[dict]:
     raise NotImplementedError()
     return [
-        serialize_ledger_action(action) for action in
-        sorted(actions, key=lambda action: (action.timestamp, action.link))
+        serialize_ledger_action(action)
+        for action in sorted(actions, key=lambda action: (action.timestamp, action.link))
     ]
 
 
@@ -395,24 +392,30 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
             raise ValueError('Do not know how to serialize entry type ' + ser_event['entry_type'])
         del ser_event['entry_type']
 
-    if event.event_type == HistoryEventType.SPEND and \
-            event.event_subtype == HistoryEventSubType.FEE:
+    if (
+        event.event_type == HistoryEventType.SPEND
+        and event.event_subtype == HistoryEventSubType.FEE
+    ):
         ser_event['spend_fee'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
-    elif event.event_type == HistoryEventType.TRADE and \
-            event.event_subtype == HistoryEventSubType.SPEND:
+    elif (
+        event.event_type == HistoryEventType.TRADE
+        and event.event_subtype == HistoryEventSubType.SPEND
+    ):
         ser_event['trade_spend'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
-    elif event.event_type == HistoryEventType.TRADE and \
-            event.event_subtype == HistoryEventSubType.RECEIVE:
+    elif (
+        event.event_type == HistoryEventType.TRADE
+        and event.event_subtype == HistoryEventSubType.RECEIVE
+    ):
         ser_event['trade_receive'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
@@ -448,16 +451,13 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
 
 
 def serialize_events(actions: List[HistoryBaseEntry]) -> List[dict]:
-
     return [
         serialize_event(action)
-        for action in
-        sorted(actions, key=lambda action: (action.get_timestamp(),))
+        for action in sorted(actions, key=lambda action: (action.get_timestamp(),))
     ]
 
 
 def deserialize_event(event_dict) -> HistoryBaseEntry:
-
     is_evm_event = False
     event_type = None
     event_subtype = None
@@ -485,9 +485,11 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             raise ValueError('Missing sequence_index in event: {}'.format(event_dict))
 
         return EvmEvent(
-            tx_hash=deserialize_evm_tx_hash(event_dict['link'][2:]
-                                            if event_dict['link'].startswith('0x')
-                                            else event_dict['link']),
+            tx_hash=deserialize_evm_tx_hash(
+                event_dict['link'][2:]
+                if event_dict['link'].startswith('0x')
+                else event_dict['link']
+            ),
             sequence_index=event_dict['sequence_index'],
             timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
             location=Location.ETHEREUM,
@@ -523,10 +525,10 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
 
 
 def deserialize_tradetype(trade_type: str) -> TradeType:
-    if trade_type == "sell":
+    if trade_type == 'sell':
         return TradeType.SELL
 
-    if trade_type == "buy":
+    if trade_type == 'buy':
         return TradeType.BUY
 
     raise ValueError(trade_type)
@@ -577,13 +579,13 @@ def deserialize_asset(val: str) -> Asset:
 
 def deserialize_evm_token(token_data: dict) -> EvmToken:
     token = EvmToken.initialize(
-            address=deserialize_evm_address(token_data.get('address')),
-            name=token_data.get('name'),
-            symbol=token_data.get('symbol'),
-            decimals=token_data.get('decimals'),
-            coingecko=token_data.get('coingecko'),
-            chain_id=ChainID.ETHEREUM,
-            token_kind=EvmTokenKind.ERC20
+        address=deserialize_evm_address(token_data.get('address')),
+        name=token_data.get('name'),
+        symbol=token_data.get('symbol'),
+        decimals=token_data.get('decimals'),
+        coingecko=token_data.get('coingecko'),
+        chain_id=ChainID.ETHEREUM,
+        token_kind=EvmTokenKind.ERC20,
     )
     return token
 
@@ -593,12 +595,9 @@ def serialize_nft(nft: Nfts) -> Dict[str, Any]:
     return {
         'id': obj['token_identifier'],
         'collection_name': obj['collection']['name'],
-        'name': obj['name']
+        'name': obj['name'],
     }
 
 
 def serialize_nfts(nfts: List[Nfts]) -> List[Dict[str, Any]]:
-    return [
-        serialize_nft(nft) for nft in
-        sorted(nfts, key=lambda nft: nft.token_identifier)
-    ]
+    return [serialize_nft(nft) for nft in sorted(nfts, key=lambda nft: nft.token_identifier)]

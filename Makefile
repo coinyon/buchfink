@@ -20,3 +20,6 @@ test-remote:
 fast-lint-test:
 	ruff buchfink tests
 	py.test -m 'not blockchain_data' -x
+
+format:
+	ruff format buchfink tests
