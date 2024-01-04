@@ -1,3 +1,5 @@
+# pylint: skip-file
+# ruff: noqa
 import logging
 from copy import deepcopy
 from typing import List

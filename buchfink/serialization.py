@@ -2,7 +2,7 @@ import re
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from operator import itemgetter
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
@@ -53,15 +53,15 @@ def deserialize_timestamp_ms(timestamp: str) -> Timestamp:
 
 def deserialize_ledger_action_type(action_type: str):
     raise NotImplementedError()
-    if action_type == 'income':
-        return LedgerActionType.INCOME
-    if action_type == 'airdrop':
-        return LedgerActionType.AIRDROP
-    if action_type == 'loss':
-        return LedgerActionType.LOSS
-    if action_type == 'expense':
-        return LedgerActionType.EXPENSE
-    raise ValueError(f'Unknown ledger action type: {action_type}')
+    # if action_type == 'income':
+    #     return LedgerActionType.INCOME
+    # if action_type == 'airdrop':
+    #     return LedgerActionType.AIRDROP
+    # if action_type == 'loss':
+    #     return LedgerActionType.LOSS
+    # if action_type == 'expense':
+    #     return LedgerActionType.EXPENSE
+    # raise ValueError(f'Unknown ledger action type: {action_type}')
 
 
 def deserialize_ledger_action(action_dict) -> HistoryEvent:
@@ -314,58 +314,58 @@ def serialize_trade(trade: Trade) -> dict:
 
 def serialize_ledger_action(action):
     raise NotImplementedError()
-    ser_action = action.serialize()
-    ser_action['timestamp'] = serialize_timestamp(action.timestamp)
-
-    if action.action_type == LedgerActionType.AIRDROP:
-        ser_action['airdrop'] = serialize_amount(FVal(action.amount), action.asset)
-        del ser_action['asset']
-        del ser_action['amount']
-        del ser_action['action_type']
-
-    elif action.action_type == LedgerActionType.INCOME:
-        ser_action['income'] = serialize_amount(FVal(action.amount), action.asset)
-        del ser_action['asset']
-        del ser_action['amount']
-        del ser_action['action_type']
-
-    elif action.action_type == LedgerActionType.GIFT:
-        ser_action['gift'] = serialize_amount(FVal(action.amount), action.asset)
-        del ser_action['asset']
-        del ser_action['amount']
-        del ser_action['action_type']
-
-    elif action.action_type == LedgerActionType.LOSS:
-        ser_action['loss'] = serialize_amount(FVal(action.amount), action.asset)
-        del ser_action['asset']
-        del ser_action['amount']
-        del ser_action['action_type']
-
-    elif action.action_type == LedgerActionType.EXPENSE:
-        ser_action['expense'] = serialize_amount(FVal(action.amount), action.asset)
-        del ser_action['asset']
-        del ser_action['amount']
-        del ser_action['action_type']
-
-    if not ser_action['identifier']:
-        del ser_action['identifier']
-
-    if not ser_action['location']:
-        del ser_action['location']
-
-    if not ser_action['notes']:
-        del ser_action['notes']
-
-    if not ser_action['link']:
-        del ser_action['link']
-
-    if not ser_action['rate']:
-        del ser_action['rate']
-
-    if not ser_action['rate_asset']:
-        del ser_action['rate_asset']
-
-    return ser_action
+    # ser_action = action.serialize()
+    # ser_action['timestamp'] = serialize_timestamp(action.timestamp)
+    #
+    # if action.action_type == LedgerActionType.AIRDROP:
+    #     ser_action['airdrop'] = serialize_amount(FVal(action.amount), action.asset)
+    #     del ser_action['asset']
+    #     del ser_action['amount']
+    #     del ser_action['action_type']
+    #
+    # elif action.action_type == LedgerActionType.INCOME:
+    #     ser_action['income'] = serialize_amount(FVal(action.amount), action.asset)
+    #     del ser_action['asset']
+    #     del ser_action['amount']
+    #     del ser_action['action_type']
+    #
+    # elif action.action_type == LedgerActionType.GIFT:
+    #     ser_action['gift'] = serialize_amount(FVal(action.amount), action.asset)
+    #     del ser_action['asset']
+    #     del ser_action['amount']
+    #     del ser_action['action_type']
+    #
+    # elif action.action_type == LedgerActionType.LOSS:
+    #     ser_action['loss'] = serialize_amount(FVal(action.amount), action.asset)
+    #     del ser_action['asset']
+    #     del ser_action['amount']
+    #     del ser_action['action_type']
+    #
+    # elif action.action_type == LedgerActionType.EXPENSE:
+    #     ser_action['expense'] = serialize_amount(FVal(action.amount), action.asset)
+    #     del ser_action['asset']
+    #     del ser_action['amount']
+    #     del ser_action['action_type']
+    #
+    # if not ser_action['identifier']:
+    #     del ser_action['identifier']
+    #
+    # if not ser_action['location']:
+    #     del ser_action['location']
+    #
+    # if not ser_action['notes']:
+    #     del ser_action['notes']
+    #
+    # if not ser_action['link']:
+    #     del ser_action['link']
+    #
+    # if not ser_action['rate']:
+    #     del ser_action['rate']
+    #
+    # if not ser_action['rate_asset']:
+    #     del ser_action['rate_asset']
+    #
+    # return ser_action
 
 
 def serialize_trades(trades: List[Trade]) -> List[dict]:
@@ -481,7 +481,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
         event_subtype = HistoryEventSubType.RECEIVE
 
     if is_evm_event:
-        if not 'sequence_index' in event_dict:
+        if 'sequence_index' not in event_dict:
             raise ValueError('Missing sequence_index in event: {}'.format(event_dict))
 
         return EvmEvent(

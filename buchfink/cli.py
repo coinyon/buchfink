@@ -26,9 +26,10 @@ from web3.exceptions import CannotHandleRequest
 from buchfink.datatypes import (
     EvmEvent,
     FVal,
+    HistoryBaseEntry,
+    HistoryEvent,
     HistoryEventSubType,
     HistoryEventType,
-    HistoryBaseEntry,
     Timestamp,
     Trade
 )
@@ -347,7 +348,7 @@ def fetch_(buchfink_db: BuchfinkDB, keyword, account_type, fetch_actions, exclud
     for account in track(accounts, description='Fetching data', disable=not progress):
         name = account.name
         trades = []  # type: List[Trade]
-        actions = []  # type: List[LedgerAction]
+        actions = []  # type: List[HistoryEvent]
         fetch_config = account.config.fetch or FetchConfig()
 
         fetch_actions_for_this_account = (not fetch_limited or fetch_actions) and \
@@ -566,7 +567,7 @@ def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
 def events_(buchfink_db: BuchfinkDB, keyword, asset):
     "List events"
 
-    events: List[Tuple[Union[LedgerAction, HistoryBaseEntry, Trade], Account]] = []
+    events: List[Tuple[Union[HistoryBaseEntry, Trade], Account]] = []
 
     accounts = buchfink_db.get_all_accounts()
 
@@ -617,7 +618,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     str(trade.rate),
                     str(account.name)
                 ])
-            elif isinstance(event, LedgerAction):
+            elif isinstance(event, HistoryEvent):
                 table.append([
                     serialize_timestamp(event.timestamp),
                     str(event.action_type),
@@ -662,7 +663,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
 def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
     "Show actions"
 
-    actions: List[Tuple[LedgerAction, Account]] = []
+    actions: List[Tuple[HistoryBaseEntry, Account]] = []
     for account in buchfink_db.get_all_accounts():
         if keyword is not None and keyword not in account.name:
             continue
