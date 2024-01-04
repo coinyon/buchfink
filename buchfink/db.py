@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, 
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
+from rotkehlchen.accounting.structures.types import ActionType
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.utils import get_or_create_evm_token
@@ -81,7 +82,6 @@ from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
 
 from buchfink.datatypes import (
-    ActionType,
     Asset,
     BalanceSheet,
     BlockchainAccountData,
