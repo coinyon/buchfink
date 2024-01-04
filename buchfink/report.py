@@ -18,7 +18,6 @@ from buchfink.datatypes import (
     FVal,
     HistoryBaseEntry,
     HistoryEventSubType,
-    LedgerAction,
     Timestamp,
     Trade
 )
@@ -36,7 +35,7 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
     end_ts = Timestamp(int(report_config.to_dt.timestamp()))
     num_matched_accounts = 0
     all_trades: List[Trade] = []
-    all_actions: List[Union[LedgerAction, HistoryBaseEntry]] = []
+    all_actions: List[HistoryBaseEntry] = []
 
     root_logger = logging.getLogger('')
     formatter = logging.Formatter('%(levelname)s: %(message)s')

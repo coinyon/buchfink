@@ -42,7 +42,7 @@ setup(
             "pycodestyle==2.10.0",
             "pylint==2.16.1",
             "pytest==7.4.2",
-            "ruff==0.0.288",
+            "ruff==0.1.11",
             "types-docutils",
             "types-python-dateutil",
             "types-PyYAML",

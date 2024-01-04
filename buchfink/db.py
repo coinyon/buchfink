@@ -16,6 +16,8 @@ from rotkehlchen.chain.aggregator import ChainsAggregator
 from rotkehlchen.chain.arbitrum_one.manager import ArbitrumOneManager
 from rotkehlchen.chain.arbitrum_one.node_inquirer import ArbitrumOneInquirer
 from rotkehlchen.chain.avalanche.manager import AvalancheManager
+from rotkehlchen.chain.base.manager import BaseManager
+from rotkehlchen.chain.base.node_inquirer import BaseInquirer
 # from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
@@ -27,6 +29,8 @@ from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
 from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
+from rotkehlchen.chain.gnosis.manager import GnosisManager
+from rotkehlchen.chain.gnosis.node_inquirer import GnosisInquirer
 from rotkehlchen.chain.optimism.manager import OptimismManager
 from rotkehlchen.chain.optimism.node_inquirer import OptimismInquirer
 from rotkehlchen.chain.polygon_pos.manager import PolygonPOSManager
@@ -37,10 +41,10 @@ from rotkehlchen.data_migrations.manager import DataMigrationManager
 from rotkehlchen.db.dbhandler import DBHandler
 from rotkehlchen.db.evmtx import DBEvmTx
 from rotkehlchen.db.settings import DBSettings, db_settings_from_dict
+from rotkehlchen.db.updates import RotkiDataUpdater
 from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
-from rotkehlchen.exchanges.bittrex import Bittrex
 from rotkehlchen.exchanges.coinbase import Coinbase
 from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.exchange import ExchangeInterface
@@ -48,7 +52,7 @@ from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
-from rotkehlchen.externalapis.beaconchain import BeaconChain
+from rotkehlchen.externalapis.beaconchain.service import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.covalent import Covalent, chains_id
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
@@ -86,7 +90,6 @@ from buchfink.datatypes import (
     EvmTransaction,
     EvmTxReceipt,
     HistoryBaseEntry,
-    LedgerAction,
     Nfts,
     Trade
 )
@@ -193,6 +196,11 @@ class BuchfinkDB(DBHandler):
         self.asset_resolver = AssetResolver()
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
+        self.data_updater = RotkiDataUpdater(
+            msg_aggregator=self.msg_aggregator,
+            user_db=self
+        )
+
         self.inquirer = Inquirer(
                 data_dir=self.cache_directory / 'inquirer',
                 cryptocompare=self.cryptocompare,
@@ -222,6 +230,8 @@ class BuchfinkDB(DBHandler):
             self.migration_manager = DataMigrationManager(FakeRotki())  # type: ignore
             self.migration_manager.maybe_migrate_data()
 
+        self.data_updater.check_for_updates()
+
         self.sync_rpc_nodes()
         # ethereum_nodes = self.get_rpc_nodes(SupportedBlockchain.ETHEREUM, only_active=True)
 
@@ -246,6 +256,16 @@ class BuchfinkDB(DBHandler):
             database=self,
         )
         self.arbitrum_one_manager = ArbitrumOneManager(self.arbitrum_one_inquirer)
+        self.base_inquirer = BaseInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+        )
+        self.base_manager = BaseManager(self.base_inquirer)
+        self.gnosis_inquirer = GnosisInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+        )
+        self.gnosis_manager = GnosisManager(self.gnosis_inquirer)
         self.kusama_manager = SubstrateManager(
             chain=SupportedBlockchain.KUSAMA,
             msg_aggregator=self.msg_aggregator,
@@ -485,7 +505,7 @@ class BuchfinkDB(DBHandler):
         return []
 
     def get_actions_from_file(self, actions_file, include_trades=True) \
-            -> List[Union[LedgerAction, HistoryBaseEntry]]:
+            -> List[HistoryBaseEntry]:
         def safe_deserialize_ledger_action(action):
             if 'buy' in action or 'sell' in action:
                 # it is a Trade
@@ -512,7 +532,7 @@ class BuchfinkDB(DBHandler):
                 if ser_action is not None]
 
     def get_local_ledger_actions_for_account(self, account_name: Union[str, Account]) \
-            -> List[Union[LedgerAction, HistoryBaseEntry]]:
+            -> List[HistoryBaseEntry]:
         if isinstance(account_name, str):
             account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
         else:
@@ -572,6 +592,8 @@ class BuchfinkDB(DBHandler):
             kusama_manager=self.kusama_manager,
             optimism_manager=self.optimism_manager,
             arbitrum_one_manager=self.arbitrum_one_manager,
+            base_manager=self.base_manager,
+            gnosis_manager=self.gnosis_manager,
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
@@ -612,8 +634,6 @@ class BuchfinkDB(DBHandler):
             exchange = Gemini(**exchange_opts)
         elif account_config.exchange == 'bitmex':
             exchange = Bitmex(**exchange_opts)
-        elif account_config.exchange == 'bittrex':
-            exchange = Bittrex(**exchange_opts)
         elif account_config.exchange == 'poloniex':
             exchange = Poloniex(**exchange_opts)
         elif account_config.exchange == 'bitcoinde':

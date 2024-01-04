@@ -29,7 +29,6 @@ from buchfink.datatypes import (
     HistoryEventSubType,
     HistoryEventType,
     HistoryBaseEntry,
-    LedgerAction,
     Timestamp,
     Trade
 )

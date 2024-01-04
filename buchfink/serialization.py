@@ -5,7 +5,6 @@ from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import dateutil.parser
-from rotkehlchen.accounting.structures.evm_event import EvmEvent
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
@@ -16,12 +15,12 @@ from buchfink.datatypes import (
     Balance,
     BalanceSheet,
     EvmToken,
+    EvmEvent,
     FVal,
     HistoryBaseEntry,
+    HistoryEvent,
     HistoryEventSubType,
     HistoryEventType,
-    LedgerAction,
-    LedgerActionType,
     Nfts,
     Timestamp,
     Trade,
@@ -52,7 +51,8 @@ def deserialize_timestamp_ms(timestamp: str) -> Timestamp:
     return deserialize_timestamp(timestamp) * 1000
 
 
-def deserialize_ledger_action_type(action_type: str) -> LedgerActionType:
+def deserialize_ledger_action_type(action_type: str):
+    raise NotImplementedError()
     if action_type == 'income':
         return LedgerActionType.INCOME
     if action_type == 'airdrop':
@@ -64,80 +64,77 @@ def deserialize_ledger_action_type(action_type: str) -> LedgerActionType:
     raise ValueError(f'Unknown ledger action type: {action_type}')
 
 
-def deserialize_ledger_action(action_dict) -> LedgerAction:
+def deserialize_ledger_action(action_dict) -> HistoryEvent:
+    # TODO: incorporate "link" into HistoryEvent
+
     if 'income' in action_dict:
         amount, asset = deserialize_amount(action_dict['income'])
-        return LedgerAction(
-            identifier=None,
+        return HistoryEvent(
             location=Location.EXTERNAL,
-            action_type=LedgerActionType.INCOME,
-            amount=amount,
-            rate=None,
-            rate_asset=None,
-            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            event_identifier=None,
+            sequence_index=0,
+            timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            event_type=HistoryEventType.RECEIVE,
+            event_subtype=HistoryEventSubType.REWARD,
             asset=asset,
+            balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
-            link=str(action_dict.get('link', ''))
         )
 
     if 'airdrop' in action_dict:
         amount, asset = deserialize_amount(action_dict['airdrop'])
-        return LedgerAction(
-            identifier=None,
+        return HistoryEvent(
             location=Location.EXTERNAL,
-            action_type=LedgerActionType.AIRDROP,
-            amount=amount,
-            rate=None,
-            rate_asset=None,
-            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            event_identifier=None,
+            sequence_index=0,
+            timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            event_type=HistoryEventType.RECEIVE,
+            event_subtype=HistoryEventSubType.AIRDROP,
             asset=asset,
+            balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
-            link=str(action_dict.get('link', ''))
         )
 
     if 'loss' in action_dict:
         amount, asset = deserialize_amount(action_dict['loss'])
-        return LedgerAction(
-            identifier=None,
+        return HistoryEvent(
             location=Location.EXTERNAL,
-            action_type=LedgerActionType.LOSS,
-            amount=amount,
-            rate=None,
-            rate_asset=None,
-            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            event_identifier=None,
+            sequence_index=0,
+            timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            event_type=HistoryEventType.SPEND,
+            event_subtype=HistoryEventSubType.LIQUIDATE,
             asset=asset,
+            balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
-            link=str(action_dict.get('link', ''))
         )
 
     if 'gift' in action_dict:
         amount, asset = deserialize_amount(action_dict['gift'])
-        return LedgerAction(
-            identifier=None,
+        return HistoryEvent(
             location=Location.EXTERNAL,
-            action_type=LedgerActionType.GIFT,
-            amount=amount,
-            rate=None,
-            rate_asset=None,
-            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            event_identifier=None,
+            sequence_index=0,
+            timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            event_type=HistoryEventType.RECEIVE,
+            event_subtype=HistoryEventSubType.AIRDROP,  # not entirely correct
             asset=asset,
+            balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
-            link=str(action_dict.get('link', ''))
         )
 
     if 'expense' in action_dict:
         amount, asset = deserialize_amount(action_dict['expense'])
-        return LedgerAction(
-            identifier=None,
+        return HistoryEvent(
             location=Location.EXTERNAL,
-            action_type=LedgerActionType.EXPENSE,
-            amount=amount,
-            rate=None,
-            rate_asset=None,
-            timestamp=deserialize_timestamp(action_dict['timestamp']),
+            event_identifier=None,
+            sequence_index=0,
+            timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            event_type=HistoryEventType.SPEND,
+            event_subtype=HistoryEventSubType.EXPENSE,
             asset=asset,
+            balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
-            link=str(action_dict.get('link', ''))
         )
 
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
@@ -315,7 +312,8 @@ def serialize_trade(trade: Trade) -> dict:
     }
 
 
-def serialize_ledger_action(action: LedgerAction):
+def serialize_ledger_action(action):
+    raise NotImplementedError()
     ser_action = action.serialize()
     ser_action['timestamp'] = serialize_timestamp(action.timestamp)
 
@@ -380,7 +378,8 @@ def serialize_trades(trades: List[Trade]) -> List[dict]:
     ]
 
 
-def serialize_ledger_actions(actions: List[LedgerAction]) -> List[dict]:
+def serialize_ledger_actions(actions) -> List[dict]:
+    raise NotImplementedError()
     return [
         serialize_ledger_action(action) for action in
         sorted(actions, key=lambda action: (action.timestamp, action.link))
@@ -448,11 +447,9 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     return ser_event
 
 
-def serialize_events(actions: List[Union[LedgerAction, HistoryBaseEntry]]) -> List[dict]:
+def serialize_events(actions: List[HistoryBaseEntry]) -> List[dict]:
 
     return [
-        serialize_ledger_action(action) if
-        isinstance(action, LedgerAction) else
         serialize_event(action)
         for action in
         sorted(actions, key=lambda action: (action.get_timestamp(),))
