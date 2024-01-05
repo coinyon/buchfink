@@ -126,8 +126,8 @@ class Config(BaseModel):
 
 class ReportConfig(BaseModel):
     name: str
-    title: Optional[str]
-    template: Optional[str]
+    title: Optional[str] = None
+    template: Optional[str] = None
     from_dt: datetime
     to_dt: datetime
     limit_accounts: List[str] = []

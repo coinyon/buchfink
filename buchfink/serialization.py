@@ -377,10 +377,10 @@ def serialize_trades(trades: List[Trade]) -> List[dict]:
 
 def serialize_ledger_actions(actions) -> List[dict]:
     raise NotImplementedError()
-    return [
-        serialize_ledger_action(action)
-        for action in sorted(actions, key=lambda action: (action.timestamp, action.link))
-    ]
+    # return [
+    #     serialize_ledger_action(action)
+    #     for action in sorted(actions, key=lambda action: (action.timestamp, action.link))
+    # ]
 
 
 def serialize_event(event: HistoryBaseEntry) -> dict:

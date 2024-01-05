@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Union, cast
 
 from pydantic import BaseModel
 from rotkehlchen.types import ChecksumEvmAddress
@@ -71,19 +71,25 @@ def account_from_string(acc_def: str, buchfink_db=None) -> Account:
         if not eth_address:
             raise ValueError(f'Could not resolve ENS: {acc_def}')
 
-        config = {
-            'name': acc_def,
-            'ethereum': eth_address,
-        }
+        config = cast(
+            AccountConfig,
+            {
+                'name': acc_def,
+                'ethereum': eth_address,
+            },
+        )
         return Account(
             name=acc_def, account_type='ethereum', address=eth_address, config=config, tags=[]
         )
 
     if acc_def.lower().startswith('0x'):
-        config = {
-            'name': acc_def,
-            'ethereum': acc_def,
-        }
+        config = cast(
+            AccountConfig,
+            {
+                'name': acc_def,
+                'ethereum': acc_def,
+            },
+        )
         return Account(
             name=acc_def, account_type='ethereum', address=acc_def, config=config, tags=[]
         )

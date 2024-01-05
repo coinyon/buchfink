@@ -558,7 +558,7 @@ class BuchfinkDB(DBHandler):
                 accs['btc'] = accs.get('btc', []) + [account.address]
             elif account.account_type == 'bitcoincash':
                 accs['bch'] = accs.get('bch', []) + [account.address]
-            elif account.account_type == 'file' or account.account_type == 'exchange':
+            elif account.account_type in ('file', 'exchange'):
                 pass
             else:
                 raise ValueError(
