@@ -1,4 +1,4 @@
-all: lint typecheck test
+all: format lint typecheck test-local
 
 lint:
 	ruff buchfink tests
