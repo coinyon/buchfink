@@ -19,16 +19,13 @@ from rotkehlchen.chain.arbitrum_one.node_inquirer import ArbitrumOneInquirer
 from rotkehlchen.chain.avalanche.manager import AvalancheManager
 from rotkehlchen.chain.base.manager import BaseManager
 from rotkehlchen.chain.base.node_inquirer import BaseInquirer
-
-# from rotkehlchen.chain.ethereum.accountant import EthereumAccountingAggregator
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
 from rotkehlchen.chain.ethereum.transactions import EthereumTransactions
-
-# from rotkehlchen.chain.evm.accounting.aggregator import EVMAccountingAggregators
+from rotkehlchen.chain.evm.contracts import EvmContracts
 from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
@@ -204,6 +201,8 @@ class BuchfinkDB(DBHandler):
             msg_aggregator=self.msg_aggregator,
             defillama=self.defillama,
         )
+        # Initialize EVM Contracts common abis
+        EvmContracts.initialize_common_abis()
 
         # After calling the parent constructor, we will have a db connection.
         super().__init__(
