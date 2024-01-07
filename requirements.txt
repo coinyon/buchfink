@@ -2,7 +2,7 @@ coloredlogs
 jinja2
 pandas
 pickledb
-pydantic
+pydantic<2
 pyqrcode
 python-dateutil
 PyYAML>=5.0
