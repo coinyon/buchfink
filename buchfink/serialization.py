@@ -51,19 +51,6 @@ def deserialize_timestamp_ms(timestamp: str) -> Timestamp:
     return deserialize_timestamp(timestamp) * 1000
 
 
-def deserialize_ledger_action_type(action_type: str):
-    raise NotImplementedError()
-    # if action_type == 'income':
-    #     return LedgerActionType.INCOME
-    # if action_type == 'airdrop':
-    #     return LedgerActionType.AIRDROP
-    # if action_type == 'loss':
-    #     return LedgerActionType.LOSS
-    # if action_type == 'expense':
-    #     return LedgerActionType.EXPENSE
-    # raise ValueError(f'Unknown ledger action type: {action_type}')
-
-
 def deserialize_ledger_action(action_dict) -> HistoryEvent:
     # TODO: incorporate "link" into HistoryEvent
 
@@ -387,6 +374,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     ser_event = event.serialize()
     ser_event['timestamp'] = serialize_timestamp_ms(event.timestamp)
 
+    is_evm_event = isinstance(event, EvmEvent)
+
     if 'entry_type' in ser_event:
         if ser_event['entry_type'] not in ('evm event', 'history event'):
             raise ValueError('Do not know how to serialize entry type: ' + ser_event['entry_type'])
@@ -461,9 +450,14 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if 'location_label' in ser_event:
         del ser_event['location_label']
 
-    if 'tx_hash' in ser_event:
-        ser_event['link'] = ser_event['tx_hash']
-        del ser_event['tx_hash']
+    if is_evm_event:
+        if 'tx_hash' in ser_event:
+            ser_event['link'] = ser_event['tx_hash']
+            del ser_event['tx_hash']
+    else:
+        if 'event_identifier' in ser_event:
+            ser_event['link'] = ser_event['event_identifier']
+            del ser_event['event_identifier']
 
     if 'extra_data' in ser_event and not ser_event['extra_data']:
         del ser_event['extra_data']
@@ -476,6 +470,9 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
 
     if 'address' in ser_event and not ser_event['address']:
         del ser_event['address']
+
+    if not is_evm_event and 'sequence_index' in ser_event and not ser_event['sequence_index']:
+        del ser_event['sequence_index']
 
     return ser_event
 
@@ -536,6 +533,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             extra_data=None,
         )
 
+    return deserialize_ledger_action(event_dict)
     # return HistoryEvent(
     #     event_identifier=event_dict.get('link', '').encode(),
     #     sequence_index=event_dict['sequence_index'],
@@ -551,7 +549,6 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
     #     identifier=None,
     #     extra_data=None
     # )
-    raise NotImplementedError()
 
 
 def deserialize_tradetype(trade_type: str) -> TradeType:

@@ -6,9 +6,20 @@ from decimal import Decimal
 import pytest
 import yaml
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
-from rotkehlchen.types import Location
+from rotkehlchen.types import Location, TimestampMS
 
-from buchfink.datatypes import Asset, Balance, BalanceSheet, EvmEvent, FVal, Trade, TradeType
+from buchfink.datatypes import (
+    Asset,
+    Balance,
+    BalanceSheet,
+    EvmEvent,
+    FVal,
+    HistoryEvent,
+    HistoryEventSubType,
+    HistoryEventType,
+    Trade,
+    TradeType,
+)
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (
     deserialize_amount,
@@ -226,3 +237,27 @@ def test_deserialize_asset_without_name(tmp_path):
     )
     assert str(amount) == '1'
     assert asset == A_WBTC
+
+
+def test_serialize_and_deserialize_history_event(buchfink_db):
+    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+    amount = 42
+    ts = deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
+    event = HistoryEvent(
+        identifier=None,
+        sequence_index=0,
+        location=Location.COINBASE,
+        event_type=HistoryEventType.RECEIVE,
+        event_subtype=HistoryEventSubType.AIRDROP,
+        balance=Balance(FVal(amount), 0),
+        timestamp=TimestampMS(ts),
+        asset=A_WBTC,
+        notes='test 123',
+        event_identifier='0x0',
+    )
+    serialized = serialize_event(event)
+    assert serialized['airdrop'] == '42 WBTC'
+    event_2 = deserialize_event(serialized)
+    assert event.event_type == event_2.event_type
+    assert event.event_subtype == event_2.event_subtype
+    # TODO assert event.location == event_2.location

@@ -36,7 +36,6 @@ from buchfink.datatypes import (
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
-    deserialize_ledger_action_type,
     deserialize_timestamp,
     serialize_events,
     serialize_nfts,
@@ -683,10 +682,10 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
 
 @buchfink.command('actions')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-@click.option('--type', '-t', 'action_type', type=str, default=None, help='Filter by action type')
+# @click.option('--type', '-t', 'action_type', type=str, default=None, help='Filter by action type')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
 @with_buchfink_db
-def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
+def actions_(buchfink_db: BuchfinkDB, keyword, asset):
     "Show actions"
 
     actions: List[Tuple[HistoryBaseEntry, Account]] = []
@@ -703,12 +702,12 @@ def actions_(buchfink_db: BuchfinkDB, keyword, asset, action_type):
         the_asset = buchfink_db.get_asset_by_symbol(asset)
         actions = [action for action in actions if the_asset in (action[0].asset,)]
 
-    if action_type is not None:
-        actions = [
-            action
-            for action in actions
-            if action[0].action_type == deserialize_ledger_action_type(action_type)
-        ]
+    # if action_type is not None:
+    #     actions = [
+    #         action
+    #         for action in actions
+    #         if action[0].action_type == deserialize_ledger_action_type(action_type)
+    #     ]
 
     actions = sorted(actions, key=lambda action_account: action_account[0].timestamp)
 
