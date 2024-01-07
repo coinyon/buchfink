@@ -261,3 +261,27 @@ def test_serialize_and_deserialize_history_event(buchfink_db):
     assert event.event_type == event_2.event_type
     assert event.event_subtype == event_2.event_subtype
     # TODO assert event.location == event_2.location
+
+
+def test_serialize_and_deserialize_history_event_loss(buchfink_db):
+    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+    amount = 42
+    ts = deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
+    event = HistoryEvent(
+        identifier=None,
+        sequence_index=0,
+        location=Location.COINBASE,
+        event_type=HistoryEventType.SPEND,
+        event_subtype=HistoryEventSubType.LIQUIDATE,
+        balance=Balance(FVal(amount), 0),
+        timestamp=TimestampMS(ts),
+        asset=A_WBTC,
+        notes='test 123',
+        event_identifier='0x0',
+    )
+    serialized = serialize_event(event)
+    assert serialized['loss'] == '42 WBTC'
+    event_2 = deserialize_event(serialized)
+    assert event.event_type == event_2.event_type
+    assert event.event_subtype == event_2.event_subtype
+    # TODO assert event.location == event_2.location

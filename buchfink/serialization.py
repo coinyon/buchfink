@@ -392,6 +392,16 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         del ser_event['event_subtype']
 
     elif (
+        event.event_type == HistoryEventType.SPEND
+        and event.event_subtype == HistoryEventSubType.LIQUIDATE
+    ):
+        ser_event['loss'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
         event.event_type == HistoryEventType.TRADE
         and event.event_subtype == HistoryEventSubType.SPEND
     ):
