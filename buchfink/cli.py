@@ -451,7 +451,7 @@ def fetch_(
         else:
             logger.debug('No way to retrieve trades for %s, yet', name)
 
-        annotations_path = 'annotations/' + name + '.yaml'
+        annotations_path = buchfink_db.annotations_directory / (name + '.yaml')
 
         if fetch_actions_for_this_account:
             if os.path.exists(annotations_path):
