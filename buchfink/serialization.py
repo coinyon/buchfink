@@ -388,8 +388,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     ser_event['timestamp'] = serialize_timestamp_ms(event.timestamp)
 
     if 'entry_type' in ser_event:
-        if ser_event['entry_type'] != 'evm event':
-            raise ValueError('Do not know how to serialize entry type ' + ser_event['entry_type'])
+        if ser_event['entry_type'] not in ('evm event', 'history event'):
+            raise ValueError('Do not know how to serialize entry type: ' + ser_event['entry_type'])
         del ser_event['entry_type']
 
     if (
@@ -417,6 +417,36 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.RECEIVE
     ):
         ser_event['trade_receive'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.RECEIVE
+        and event.event_subtype == HistoryEventSubType.DONATE
+    ):
+        ser_event['gift'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.RECEIVE
+        and event.event_subtype == HistoryEventSubType.REWARD
+    ):
+        ser_event['income'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.RECEIVE
+        and event.event_subtype == HistoryEventSubType.AIRDROP
+    ):
+        ser_event['airdrop'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
         del ser_event['event_type']
