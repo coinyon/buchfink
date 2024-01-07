@@ -8,7 +8,7 @@ from rotkehlchen.utils.misc import (
     hex_or_bytes_to_address,
     hex_or_bytes_to_str,
     hexstr_to_int,
-    ts_sec_to_ms
+    ts_sec_to_ms,
 )
 
 from .datatypes import (
@@ -18,7 +18,7 @@ from .datatypes import (
     FVal,
     HistoryEvent,
     HistoryEventSubType,
-    HistoryEventType
+    HistoryEventType,
 )
 from .models import Account
 from .serialization import serialize_timestamp
