@@ -108,7 +108,6 @@ from buchfink.serialization import (
     deserialize_event,
     deserialize_evm_token,
     deserialize_identifier,
-    deserialize_ledger_action,
     deserialize_trade,
     serialize_balances,
 )
@@ -497,20 +496,13 @@ class BuchfinkDB(DBHandler):
         return []
 
     def get_actions_from_file(self, actions_file, include_trades=True) -> List[HistoryBaseEntry]:
-        def safe_deserialize_ledger_action(action):
+        def safe_deserialize_event(action):
             if 'buy' in action or 'sell' in action:
                 # it is a Trade
                 if not include_trades:
                     return None
                 return deserialize_trade(action)
-            if 'spend_fee' in action or 'trade_spend' in action or 'trade_receive' in action:
-                # it is a EvmEvent/HistoryBaseEntry
-                return deserialize_event(action)
-            try:
-                return deserialize_ledger_action(action)
-            except UnknownAsset:
-                logger.warning('Ignoring ledger action with unknown asset: %s', action)
-                return None
+            return deserialize_event(action)
 
         with open(actions_file, 'r') as actions_f:
             exchange = yaml.load(actions_f, Loader=yaml.SafeLoader)
@@ -518,7 +510,7 @@ class BuchfinkDB(DBHandler):
         return [
             ser_action
             for ser_action in [
-                safe_deserialize_ledger_action(action) for action in exchange.get('actions', [])
+                safe_deserialize_event(action) for action in exchange.get('actions', [])
             ]
             if ser_action is not None
         ]
