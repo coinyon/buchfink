@@ -494,7 +494,31 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if not is_evm_event and 'sequence_index' in ser_event and not ser_event['sequence_index']:
         del ser_event['sequence_index']
 
-    return ser_event
+    preferred_order = [
+        # Action keys
+        'gift',
+        'income',
+        'airdrop',
+        'spend_fee',
+        'trade_spend',
+        'trade_receive',
+        'spend',
+        'loss',
+        # Regular event keys
+        'counterparty',
+        'product',
+        'address',
+        'link',
+        'sequence_index',
+        'timestamp',
+        'extra_data',
+        'notes',
+    ]
+
+    def sort_dict_keys(d: dict) -> dict:
+        return {key: d[key] for key in sorted(d.keys(), key=preferred_order.index)}
+
+    return sort_dict_keys(ser_event)
 
 
 def serialize_events(actions: List[HistoryBaseEntry]) -> List[dict]:
