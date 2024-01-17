@@ -110,15 +110,15 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             notes=str(action_dict.get('notes', '')),
         )
 
-    if 'expense' in action_dict:
-        amount, asset = deserialize_amount(action_dict['expense'])
+    if 'spend' in action_dict:
+        amount, asset = deserialize_amount(action_dict['spend'])
         return HistoryEvent(
             location=Location.EXTERNAL,
             event_identifier=None,
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.SPEND,
-            event_subtype=HistoryEventSubType.EXPENSE,
+            event_subtype=HistoryEventSubType.NONE,
             asset=asset,
             balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
@@ -406,6 +406,16 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.SPEND
     ):
         ser_event['trade_spend'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        del ser_event['asset']
+        del ser_event['balance']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.SPEND
+        and event.event_subtype == HistoryEventSubType.NONE
+    ):
+        ser_event['spend'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
         del ser_event['event_type']
