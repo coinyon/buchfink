@@ -39,10 +39,10 @@ setup(
     extras_require={
         "test": [
             "mypy==1.8.0",
-            "pycodestyle==2.10.0",
-            "pylint==2.16.1",
+            "pycodestyle==2.11.1",
+            "pylint==3.0.3",
             "pytest==7.4.2",
-            "ruff==0.1.11",
+            "ruff==0.1.13",
             "types-docutils",
             "types-python-dateutil",
             "types-PyYAML",
