@@ -471,7 +471,10 @@ def fetch_(
             if actions:
                 with open(buchfink_db.actions_directory / (name + '.yaml'), 'w') as yaml_file:
                     yaml.dump(
-                        {'actions': serialize_events(actions)}, stream=yaml_file, sort_keys=True
+                        {'actions': serialize_events(actions)},
+                        stream=yaml_file,
+                        sort_keys=True,
+                        width=-1,
                     )
 
         if fetch_trades_for_this_account:
@@ -505,6 +508,7 @@ def fetch_(
                         {'trades': serialize_trades(unique_trades)},
                         stream=yaml_file,
                         sort_keys=True,
+                        width=-1,
                     )
             elif os.path.exists(trades_path):
                 # If we have no trades, make sure that the according yaml does not exist
@@ -538,7 +542,7 @@ def fetch_(
 
                 with open(buchfink_db.balances_directory / (name + '.yaml'), 'w') as yaml_file:
                     contents['nfts'] = serialize_nfts(nfts)
-                    yaml.dump(contents, stream=yaml_file, sort_keys=True)
+                    yaml.dump(contents, stream=yaml_file, sort_keys=True, width=-1)
 
     if error_occured:
         print('One or more errors occured')
