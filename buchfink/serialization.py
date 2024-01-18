@@ -492,6 +492,9 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if 'address' in ser_event and not ser_event['address']:
         del ser_event['address']
 
+    if 'notes' in ser_event and not ser_event['notes']:
+        del ser_event['notes']
+
     if not is_evm_event and 'sequence_index' in ser_event and not ser_event['sequence_index']:
         del ser_event['sequence_index']
 
