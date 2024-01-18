@@ -21,11 +21,13 @@ from buchfink.datatypes import (
     TradeType,
 )
 from buchfink.db import BuchfinkDB
+from buchfink.models.config import AssetConfig
 from buchfink.serialization import (
     deserialize_amount,
     deserialize_asset,
     deserialize_balance,
     deserialize_event,
+    deserialize_evm_token,
     deserialize_trade,
     serialize_asset,
     serialize_balance,
@@ -285,3 +287,18 @@ def test_serialize_and_deserialize_history_event_loss(buchfink_db):
     assert event.event_type == event_2.event_type
     assert event.event_subtype == event_2.event_subtype
     # TODO assert event.location == event_2.location
+
+
+def test_evm_token_on_polygon():
+    deserialized = deserialize_evm_token(
+        AssetConfig(
+            address='0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+            chain_id=137,
+            decimals=18,
+            name='Wrapped Ether',
+            symbol='WETH',
+            type='ethereum',
+        )
+    )
+    assert str(deserialized.chain_id) == 'polygon_pos'
+    assert deserialized.identifier == 'eip155:137/erc20:0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619'

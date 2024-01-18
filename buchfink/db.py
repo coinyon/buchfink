@@ -854,30 +854,34 @@ class BuchfinkDB(DBHandler):
         "Sync assets defined in config with database"
 
         for token in self.config.tokens:
-            eth_token = deserialize_evm_token(token.dict())
-            identifier = 'eip155:1/erc20:' + eth_token.evm_address
+            evm_token = deserialize_evm_token(token)
 
             try:
-                evm_token = self.globaldb.get_evm_token(eth_token.evm_address, eth_token.chain_id)
-                if evm_token is None:
-                    raise UnknownAsset(eth_token.evm_address)
-                logger.debug('Asset already exists: %s', evm_token)
+                db_token = self.globaldb.get_evm_token(evm_token.evm_address, evm_token.chain_id)
+                if db_token is None:
+                    raise UnknownAsset(evm_token.evm_address)
+
+                logger.debug('Asset already exists: %s', db_token)
 
                 # This could be more involved
-                if eth_token.coingecko and eth_token.coingecko != evm_token.coingecko:
-                    logger.info('Updating asset db for token: %s', eth_token)
-                    self.globaldb.edit_evm_token(eth_token)
+                if evm_token.coingecko and evm_token.coingecko != db_token.coingecko:
+                    logger.info('Updating asset db for token: %s', evm_token)
+                    self.globaldb.edit_evm_token(evm_token)
 
-                if eth_token.decimals and eth_token.decimals != evm_token.decimals:
-                    logger.info('Updating asset db for token: %s', eth_token)
-                    self.globaldb.edit_evm_token(eth_token)
+                if evm_token.decimals and evm_token.decimals != db_token.decimals:
+                    logger.info('Updating asset db for token: %s', evm_token)
+                    self.globaldb.edit_evm_token(evm_token)
+
+                if evm_token.chain_id and evm_token.chain_id != db_token.chain_id:
+                    logger.info('Updating asset db for token: %s', evm_token)
+                    self.globaldb.edit_evm_token(evm_token)
 
             except UnknownAsset:
-                self.globaldb.add_asset(eth_token)
+                self.globaldb.add_asset(evm_token)
                 try:
-                    self.get_asset_by_symbol(identifier)
+                    self.get_asset_by_symbol(evm_token.identifier)
                 except UnknownAsset as exc:
-                    raise ValueError('Unable to add asset: ' + str(eth_token)) from exc
+                    raise ValueError('Unable to add asset: ' + str(evm_token)) from exc
 
             self.asset_resolver.clean_memory_cache()
 

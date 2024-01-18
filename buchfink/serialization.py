@@ -27,6 +27,7 @@ from buchfink.datatypes import (
     TradeType,
 )
 from buchfink.exceptions import UnknownAsset
+from buchfink.models.config import AssetConfig
 
 
 def serialize_timestamp(timestamp: int) -> str:
@@ -648,14 +649,14 @@ def deserialize_asset(val: str) -> Asset:
     return asset
 
 
-def deserialize_evm_token(token_data: dict) -> EvmToken:
+def deserialize_evm_token(token_data: AssetConfig) -> EvmToken:
     token = EvmToken.initialize(
-        address=deserialize_evm_address(token_data.get('address')),
-        name=token_data.get('name'),
-        symbol=token_data.get('symbol'),
-        decimals=token_data.get('decimals'),
-        coingecko=token_data.get('coingecko'),
-        chain_id=ChainID.ETHEREUM,
+        address=deserialize_evm_address(token_data.address),
+        name=token_data.name,
+        symbol=token_data.symbol,
+        decimals=token_data.decimals,
+        coingecko=token_data.coingecko,
+        chain_id=ChainID(token_data.chain_id) if token_data.chain_id else ChainID.ETHEREUM,
         token_kind=EvmTokenKind.ERC20,
     )
     return token

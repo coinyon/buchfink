@@ -102,6 +102,7 @@ class AssetConfig(BaseModel):
     address: Optional[str]
     symbol: Optional[str]
     decimals: Optional[int]
+    chain_id: Optional[int]
     coingecko: Optional[str] = None
     cryptocompare: Optional[str] = None
 
