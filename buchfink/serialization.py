@@ -5,7 +5,7 @@ from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple
 
 import dateutil.parser
-from rotkehlchen.assets.utils import symbol_to_asset_or_token, symbol_to_evm_token
+from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.types import EvmTokenKind, Location, deserialize_evm_tx_hash
@@ -14,8 +14,8 @@ from buchfink.datatypes import (
     Asset,
     Balance,
     BalanceSheet,
-    EvmToken,
     EvmEvent,
+    EvmToken,
     FVal,
     HistoryBaseEntry,
     HistoryEvent,

@@ -581,10 +581,10 @@ def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     logger.info('Overview: %s', result['overview'])
 
 
-@buchfink.command()
+@buchfink.command('asset')
 @click.argument('identifier', type=str)
 @with_buchfink_db
-def asset(buchfink_db: BuchfinkDB, identifier: str):
+def asset_(buchfink_db: BuchfinkDB, identifier: str):
     "Asset info"
     direct_hit = None
     try:
@@ -990,18 +990,18 @@ def quote(
             symbol, base_symbol = symbol.split('/')
             base_asset = buchfink_db.get_asset_by_symbol(base_symbol)
             base_in_usd = FVal(buchfink_db.inquirer.find_usd_price(base_asset))
-        asset_ = buchfink_db.get_asset_by_symbol(symbol)
+        quote_asset = buchfink_db.get_asset_by_symbol(symbol)
         if ds_timestamp:
             asset_usd = historian.query_historical_price(
-                from_asset=asset_, to_asset=a_usd, timestamp=ds_timestamp
+                from_asset=quote_asset, to_asset=a_usd, timestamp=ds_timestamp
             )
         else:
-            asset_usd = FVal(buchfink_db.inquirer.find_usd_price(asset_))
+            asset_usd = FVal(buchfink_db.inquirer.find_usd_price(quote_asset))
         click.echo(
             '{} {} ({}) = {} {}'.format(
                 click.style(f'{amount}', fg='white'),
-                click.style(asset_.symbol, fg='green'),
-                click.style(asset_.name, fg='white'),
+                click.style(quote_asset.symbol, fg='green'),
+                click.style(quote_asset.name, fg='white'),
                 click.style(f'{FVal(amount) * asset_usd / base_in_usd}', fg='white'),
                 click.style(base_asset.symbol, fg='green'),
             )
@@ -1023,8 +1023,8 @@ def cache(buchfink_db: BuchfinkDB, asset: Tuple[str], base_asset_: Optional[str]
     )
 
     for symbol in asset:
-        asset_ = buchfink_db.get_asset_by_symbol(symbol)
-        buchfink_db.cryptocompare.create_cache(asset_, base_asset, False)
+        asset_2 = buchfink_db.get_asset_by_symbol(symbol)
+        buchfink_db.cryptocompare.create_cache(asset_2, base_asset, False)
 
 
 @buchfink.command('explore')

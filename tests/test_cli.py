@@ -94,7 +94,9 @@ def test_asset_info():
         assert 'evm token' in result.output
         assert 'own chain' in result.output
         assert 'SNX' not in result.output
-        result = runner.invoke(buchfink, ['asset', '[eip155:1/erc20:0xdd974D5C2e2928deA5F71b9825b8b646686BD200]'])
+        result = runner.invoke(
+            buchfink, ['asset', '[eip155:1/erc20:0xdd974D5C2e2928deA5F71b9825b8b646686BD200]']
+        )
         logger.debug('output of %s: %s', 'asset', result.output)
         if result.exception:
             logger.exception(result.exception)
