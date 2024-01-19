@@ -29,6 +29,7 @@ from buchfink.datatypes import (
     HistoryBaseEntry,
     HistoryEvent,
     HistoryEventSubType,
+    AssetType,
     HistoryEventType,
     Timestamp,
     Trade,
@@ -37,6 +38,7 @@ from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
     deserialize_timestamp,
+    deserialize_asset,
     serialize_events,
     serialize_nfts,
     serialize_timestamp,
@@ -577,6 +579,39 @@ def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     )
 
     logger.info('Overview: %s', result['overview'])
+
+
+@buchfink.command()
+@click.argument('identifier', type=str)
+@with_buchfink_db
+def asset(buchfink_db: BuchfinkDB, identifier: str):
+    "Asset info"
+    direct_hit = None
+    try:
+        direct_hit = deserialize_asset(identifier)
+    except ValueError:
+        pass
+    assets = buchfink_db.globaldb.get_assets_with_symbol(identifier)
+
+    # Make sure that direct hit is in list and is first
+    if direct_hit is not None and direct_hit in assets:
+        assets.remove(direct_hit)
+    assets.insert(0, direct_hit)
+
+    table = []
+    for asset in assets:
+        table.append(
+            [
+                '*' if asset == direct_hit else '',
+                str(asset.identifier),
+                str(asset.name),
+                str(asset.symbol),
+                str(asset.asset_type),
+                str(asset.chain_id) if asset.asset_type == AssetType.EVM_TOKEN else '',
+            ]
+        )
+
+    print(tabulate(table, headers=['Hit', 'Identifier', 'Name', 'Symbol', 'Type', 'Chain']))
 
 
 @buchfink.command('events')

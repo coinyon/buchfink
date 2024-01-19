@@ -5,7 +5,7 @@ from operator import itemgetter
 from typing import Any, Dict, List, Optional, Tuple
 
 import dateutil.parser
-from rotkehlchen.assets.utils import symbol_to_asset_or_token
+from rotkehlchen.assets.utils import symbol_to_asset_or_token, symbol_to_evm_token
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.types import EvmTokenKind, Location, deserialize_evm_tx_hash
@@ -644,7 +644,10 @@ def deserialize_asset(val: str) -> Asset:
         try:
             asset = symbol_to_asset_or_token(symbol)
         except UnknownAsset:
-            asset = symbol_to_asset_or_token(symbol, chain_id=ChainID.ETHEREUM)
+            try:
+                asset = symbol_to_asset_or_token(symbol, chain_id=ChainID.ETHEREUM)
+            except UnknownAsset:
+                asset = None
 
     if asset is None:
         raise ValueError(f'Symbol not found or ambigous: {val}')

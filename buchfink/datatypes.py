@@ -11,3 +11,4 @@ from rotkehlchen.exchanges.data_structures import Trade  # noqa: F401
 from rotkehlchen.fval import FVal  # noqa: F401
 from rotkehlchen.types import ChecksumEvmAddress, EvmTransaction, EVMTxHash, Timestamp, TradeType  # noqa: F401, E501
 from rotkehlchen.chain.accounts import BlockchainAccountData, BlockchainAccounts  # noqa: F401
+from rotkehlchen.assets.types import AssetType  # noqa: F401
