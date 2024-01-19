@@ -76,6 +76,35 @@ def test_init_and_subsequent_quote():
         assert result.exit_code == 0
 
 
+def test_asset_info():
+    runner = CliRunner()
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
+        result = runner.invoke(buchfink, ['init'])
+        logger.debug('output of %s: %s', 'init', result.output)
+        assert result.exception is None
+        assert result.exit_code == 0
+        result = runner.invoke(buchfink, ['asset', 'ETH'])
+        logger.debug('output of %s: %s', 'assert', result.output)
+        if result.exception:
+            logger.exception(result.exception)
+            raise result.exception
+        assert result.exception is None
+        assert result.exit_code == 0
+        assert 'evm token' in result.output
+        assert 'own chain' in result.output
+        assert 'SNX' not in result.output
+        result = runner.invoke(buchfink, ['asset', '[eip155:1/erc20:0xdd974D5C2e2928deA5F71b9825b8b646686BD200]'])
+        logger.debug('output of %s: %s', 'asset', result.output)
+        if result.exception:
+            logger.exception(result.exception)
+            raise result.exception
+        assert result.exception is None
+        assert result.exit_code == 0
+        assert 'KNC' in result.output
+        assert 'evm token' in result.output
+
+
 def test_ethereum_qrcode():
     runner = CliRunner()
     with runner.isolated_filesystem() as d:
