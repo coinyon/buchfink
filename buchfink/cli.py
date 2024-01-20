@@ -594,9 +594,10 @@ def asset_(buchfink_db: BuchfinkDB, identifier: str):
     assets = buchfink_db.globaldb.get_assets_with_symbol(identifier)
 
     # Make sure that direct hit is in list and is first
-    if direct_hit is not None and direct_hit in assets:
-        assets.remove(direct_hit)
-    assets.insert(0, direct_hit)
+    if direct_hit is not None:
+        if direct_hit in assets:
+            assets.remove(direct_hit)
+        assets.insert(0, direct_hit)
 
     table = []
     for asset in assets:
