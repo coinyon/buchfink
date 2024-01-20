@@ -603,15 +603,15 @@ def asset_(buchfink_db: BuchfinkDB, identifier: str):
         table.append(
             [
                 '*' if asset == direct_hit else '',
-                str(asset.identifier),
                 str(asset.name),
                 str(asset.symbol),
                 str(asset.asset_type),
+                str(asset.identifier),
                 str(asset.chain_id) if asset.asset_type == AssetType.EVM_TOKEN else '',
             ]
         )
 
-    print(tabulate(table, headers=['Hit', 'Identifier', 'Name', 'Symbol', 'Type', 'Chain']))
+    print(tabulate(table, headers=['Hit', 'Name', 'Symbol', 'Type', 'Identifier', 'Chain']))
 
 
 @buchfink.command('events')
