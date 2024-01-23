@@ -615,6 +615,45 @@ def asset_(buchfink_db: BuchfinkDB, identifier: str):
     print(tabulate(table, headers=['Hit', 'Name', 'Symbol', 'Type', 'Identifier', 'Chain']))
 
 
+@buchfink.command('format')
+@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@with_buchfink_db
+def format_(buchfink_db: BuchfinkDB, keyword):
+    "Reads and formats all balances, trades and actions"
+    accounts = _get_accounts(buchfink_db, keyword=keyword)
+
+    for account in accounts:
+        name = account.name
+        logger.info('Formatting %s', name)
+
+        actions_path = buchfink_db.actions_directory / (name + '.yaml')
+        if os.path.exists(actions_path):
+            actions = buchfink_db.get_actions_from_file(actions_path)
+            with open(actions_path, 'w') as yaml_file:
+                yaml.dump(
+                    {'actions': serialize_events(actions)},
+                    stream=yaml_file,
+                    sort_keys=True,
+                    width=-1,
+                )
+
+        trades_path = buchfink_db.trades_directory / (name + '.yaml')
+        if os.path.exists(trades_path):
+            trades = buchfink_db.get_trades_from_file(trades_path)
+            with open(trades_path, 'w') as yaml_file:
+                yaml.dump(
+                    {'trades': serialize_trades(trades)},
+                    stream=yaml_file,
+                    sort_keys=True,
+                    width=-1,
+                )
+
+        balances_path = buchfink_db.balances_directory / (name + '.yaml')
+        if os.path.exists(balances_path):
+            balances_ = buchfink_db.get_balances_from_file(balances_path)
+            buchfink_db.write_balances(account, balances_)
+
+
 @buchfink.command('events')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
