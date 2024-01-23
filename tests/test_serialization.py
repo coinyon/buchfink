@@ -7,6 +7,7 @@ import pytest
 import yaml
 from rotkehlchen.serialization.deserialize import deserialize_timestamp_from_date
 from rotkehlchen.types import Location, TimestampMS
+from rotkehlchen.utils.misc import ts_sec_to_ms
 
 from buchfink.datatypes import (
     Asset,
@@ -244,7 +245,9 @@ def test_deserialize_asset_without_name(tmp_path):
 def test_serialize_and_deserialize_history_event(buchfink_db):
     A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
     amount = 42
-    ts = deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
+    ts = ts_sec_to_ms(
+        deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
+    )
     event = HistoryEvent(
         identifier=None,
         sequence_index=0,
@@ -252,17 +255,22 @@ def test_serialize_and_deserialize_history_event(buchfink_db):
         event_type=HistoryEventType.RECEIVE,
         event_subtype=HistoryEventSubType.AIRDROP,
         balance=Balance(FVal(amount), 0),
-        timestamp=TimestampMS(ts),
+        timestamp=ts,
         asset=A_WBTC,
         notes='test 123',
-        event_identifier='0x0',
+        event_identifier='0x123',
     )
     serialized = serialize_event(event)
     assert serialized['airdrop'] == '42 WBTC'
+    assert serialized['link'] == '0x123'
+    assert serialized['timestamp'] == '2022-05-05T09:48:52+00:00'
     event_2 = deserialize_event(serialized)
     assert event.event_type == event_2.event_type
     assert event.event_subtype == event_2.event_subtype
-    # TODO assert event.location == event_2.location
+
+    # roundtrip should be the same
+    serialized_2 = serialize_event(event_2)
+    assert serialized_2 == serialized
 
 
 def test_serialize_and_deserialize_history_event_loss(buchfink_db):

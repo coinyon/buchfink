@@ -55,11 +55,14 @@ def deserialize_timestamp_ms(timestamp: str) -> Timestamp:
 def deserialize_ledger_action(action_dict) -> HistoryEvent:
     # TODO: incorporate "link" into HistoryEvent
 
+    if 'link' in action_dict and action_dict['link'] in ('', None, 'None', 'null'):
+        del action_dict['link']
+
     if 'income' in action_dict:
         amount, asset = deserialize_amount(action_dict['income'])
         return HistoryEvent(
             location=Location.EXTERNAL,
-            event_identifier=None,
+            event_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.RECEIVE,
@@ -73,7 +76,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
         amount, asset = deserialize_amount(action_dict['airdrop'])
         return HistoryEvent(
             location=Location.EXTERNAL,
-            event_identifier=None,
+            event_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.RECEIVE,
@@ -87,7 +90,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
         amount, asset = deserialize_amount(action_dict['loss'])
         return HistoryEvent(
             location=Location.EXTERNAL,
-            event_identifier=None,
+            event_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.SPEND,
@@ -101,7 +104,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
         amount, asset = deserialize_amount(action_dict['gift'])
         return HistoryEvent(
             location=Location.EXTERNAL,
-            event_identifier=None,
+            event_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.RECEIVE,
@@ -115,7 +118,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
         amount, asset = deserialize_amount(action_dict['spend'])
         return HistoryEvent(
             location=Location.EXTERNAL,
-            event_identifier=None,
+            event_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.SPEND,
@@ -477,7 +480,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
             del ser_event['tx_hash']
     else:
         if 'event_identifier' in ser_event:
-            ser_event['link'] = ser_event['event_identifier']
+            if ser_event['event_identifier']:
+                ser_event['link'] = ser_event['event_identifier']
             del ser_event['event_identifier']
 
     if 'extra_data' in ser_event and not ser_event['extra_data']:
