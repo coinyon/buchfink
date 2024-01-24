@@ -196,7 +196,12 @@ def serialize_decimal(dec: Decimal) -> str:
     return ser_amount.rstrip('0').rstrip('.')
 
 
-def serialize_asset(asset: Asset) -> str:
+def serialize_asset(
+    asset: Asset,
+    allow_name_if_own_chain: bool = True,
+    allow_name_if_globally_unique: bool = False,
+    allow_name_if_unique_on_eth: bool = False,
+) -> str:
     asset_name = asset.symbol_or_name()
 
     if RE_IRREGULAR_CHAR.search(asset_name):
@@ -204,8 +209,13 @@ def serialize_asset(asset: Asset) -> str:
         clean_name = RE_IRREGULAR_CHAR.sub('', asset_name)
         return f'{clean_name}[{asset.identifier}]'
 
+    if allow_name_if_own_chain and asset_name == asset.identifier:
+        # If the symbol_or_name is the same as the identifier, we can simply
+        # return the identifier.
+        return asset.identifier
+
     try:
-        if asset == symbol_to_asset_or_token(asset_name):
+        if allow_name_if_globally_unique and asset == symbol_to_asset_or_token(asset_name):
             # If we resolve the asset symbol_or_name and receive the same
             # asset, we can simply return the symbol_or_name.
             return asset_name
@@ -213,7 +223,9 @@ def serialize_asset(asset: Asset) -> str:
         pass
 
     try:
-        if asset == symbol_to_asset_or_token(asset_name, chain_id=ChainID.ETHEREUM):
+        if allow_name_if_unique_on_eth and asset == symbol_to_asset_or_token(
+            asset_name, chain_id=ChainID.ETHEREUM
+        ):
             return asset_name
     except UnknownAsset:
         pass

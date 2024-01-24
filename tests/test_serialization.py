@@ -261,7 +261,7 @@ def test_serialize_and_deserialize_history_event(buchfink_db):
         event_identifier='0x123',
     )
     serialized = serialize_event(event)
-    assert serialized['airdrop'] == '42 WBTC'
+    assert serialized['airdrop'].startswith('42 WBTC')
     assert serialized['link'] == '0x123'
     assert serialized['timestamp'] == '2022-05-05T09:48:52+00:00'
     event_2 = deserialize_event(serialized)
@@ -290,7 +290,7 @@ def test_serialize_and_deserialize_history_event_loss(buchfink_db):
         event_identifier='0x0',
     )
     serialized = serialize_event(event)
-    assert serialized['loss'] == '42 WBTC'
+    assert serialized['loss'].startswith('42 WBTC')
     event_2 = deserialize_event(serialized)
     assert event.event_type == event_2.event_type
     assert event.event_subtype == event_2.event_subtype
