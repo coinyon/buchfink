@@ -621,6 +621,8 @@ def asset_(buchfink_db: BuchfinkDB, identifier: str):
 @with_buchfink_db
 def format_(buchfink_db: BuchfinkDB, keyword: Optional[str], account_type: Optional[str]):
     "Reads and formats all balances, trades and actions"
+    # TODO: nfts are currently not reformatted
+
     accounts = _get_accounts(buchfink_db, keyword=keyword, account_type=account_type)
 
     for account in accounts:
