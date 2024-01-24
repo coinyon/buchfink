@@ -617,10 +617,11 @@ def asset_(buchfink_db: BuchfinkDB, identifier: str):
 
 @buchfink.command('format')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
+@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @with_buchfink_db
-def format_(buchfink_db: BuchfinkDB, keyword):
+def format_(buchfink_db: BuchfinkDB, keyword: Optional[str], account_type: Optional[str]):
     "Reads and formats all balances, trades and actions"
-    accounts = _get_accounts(buchfink_db, keyword=keyword)
+    accounts = _get_accounts(buchfink_db, keyword=keyword, account_type=account_type)
 
     for account in accounts:
         name = account.name
