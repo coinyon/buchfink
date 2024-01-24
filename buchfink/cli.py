@@ -24,12 +24,12 @@ from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
 from buchfink.datatypes import (
+    AssetType,
     EvmEvent,
     FVal,
     HistoryBaseEntry,
     HistoryEvent,
     HistoryEventSubType,
-    AssetType,
     HistoryEventType,
     Timestamp,
     Trade,
@@ -37,8 +37,8 @@ from buchfink.datatypes import (
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
-    deserialize_timestamp,
     deserialize_asset,
+    deserialize_timestamp,
     serialize_events,
     serialize_nfts,
     serialize_timestamp,
@@ -475,7 +475,7 @@ def fetch_(
                     yaml.dump(
                         {'actions': serialize_events(actions)},
                         stream=yaml_file,
-                        sort_keys=True,
+                        sort_keys=False,
                         width=-1,
                     )
 
@@ -509,7 +509,7 @@ def fetch_(
                     yaml.dump(
                         {'trades': serialize_trades(unique_trades)},
                         stream=yaml_file,
-                        sort_keys=True,
+                        sort_keys=False,
                         width=-1,
                     )
             elif os.path.exists(trades_path):
@@ -544,7 +544,7 @@ def fetch_(
 
                 with open(buchfink_db.balances_directory / (name + '.yaml'), 'w') as yaml_file:
                     contents['nfts'] = serialize_nfts(nfts)
-                    yaml.dump(contents, stream=yaml_file, sort_keys=True, width=-1)
+                    yaml.dump(contents, stream=yaml_file, sort_keys=False, width=-1)
 
     if error_occured:
         print('One or more errors occured')
@@ -633,7 +633,7 @@ def format_(buchfink_db: BuchfinkDB, keyword):
                 yaml.dump(
                     {'actions': serialize_events(actions)},
                     stream=yaml_file,
-                    sort_keys=True,
+                    sort_keys=False,
                     width=-1,
                 )
 
@@ -644,7 +644,7 @@ def format_(buchfink_db: BuchfinkDB, keyword):
                 yaml.dump(
                     {'trades': serialize_trades(trades)},
                     stream=yaml_file,
-                    sort_keys=True,
+                    sort_keys=False,
                     width=-1,
                 )
 
