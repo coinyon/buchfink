@@ -768,7 +768,7 @@ class BuchfinkDB(DBHandler):
             if not balances.assets and 'assets' in contents:
                 del contents['assets']
 
-            yaml.dump(contents, stream=balances_file, sort_keys=True, width=-1)
+            yaml.dump(contents, stream=balances_file, sort_keys=False, width=-1)
 
     def update_used_query_range(
         self, write_cursor, name: str, start_ts: Timestamp, end_ts: Timestamp
