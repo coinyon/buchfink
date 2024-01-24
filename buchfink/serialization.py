@@ -2,7 +2,7 @@ import re
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from operator import itemgetter
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import dateutil.parser
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
@@ -108,7 +108,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             event_type=HistoryEventType.RECEIVE,
-            event_subtype=HistoryEventSubType.AIRDROP,  # not entirely correct
+            event_subtype=HistoryEventSubType.NONE,
             asset=asset,
             balance=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
@@ -274,14 +274,16 @@ def deserialize_balance(balance: Dict[str, Any], buchfink_db) -> Tuple[Balance, 
     return Balance(amount, usd_value), asset
 
 
-def deserialize_amount(amount: str) -> Tuple[FVal, Optional[Asset]]:
+def deserialize_amount(amount: str) -> Tuple[FVal, Asset]:
     if not isinstance(amount, str):
         raise ValueError(f'Expected str, got {type(amount)}: {amount}')
 
     elems = amount.split(' ')
-    amount = FVal(elems[0])
+    fval = FVal(elems[0])
     asset = deserialize_asset(elems[1]) if len(elems) > 1 else None
-    return amount, asset
+    if asset is None:
+        raise ValueError(f'Could not parse asset: {elems[1]}')
+    return fval, asset
 
 
 def serialize_trade(trade: Trade) -> dict:
@@ -449,7 +451,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
 
     elif (
         event.event_type == HistoryEventType.RECEIVE
-        and event.event_subtype == HistoryEventSubType.DONATE
+        and event.event_subtype == HistoryEventSubType.NONE
     ):
         ser_event['gift'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
