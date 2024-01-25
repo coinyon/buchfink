@@ -3,7 +3,7 @@
 <p align="center">
   <img width="460" src="./docs/buchfink_logo.png" />
 
-  ![Tests](https://github.com/coinyon/buchfink/workflows/Tests/badge.svg)
+  ![Tests](https://github.com/coinyon/buchfink/actions/workflows/ci.yml/badge.svg)
 </p>
 
 Buchfink is a commandline application that you can use for performing book-keeping over
