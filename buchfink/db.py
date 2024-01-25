@@ -54,7 +54,6 @@ from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.beaconchain.service import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
-from rotkehlchen.externalapis.covalent import Covalent, chains_id
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.defillama import Defillama
 from rotkehlchen.globaldb.handler import GlobalDBHandler
@@ -277,14 +276,8 @@ class BuchfinkDB(DBHandler):
             connect_on_startup=False,
             own_rpc_endpoint=self.get_settings().dot_rpc_endpoint,
         )
-        self.covalent_avalanche = Covalent(
-            database=self,
-            msg_aggregator=self.msg_aggregator,
-            chain_id=chains_id['avalanche'],
-        )
         self.avalanche_manager = AvalancheManager(
             avaxrpc_endpoint='https://api.avax.network/ext/bc/C/rpc',
-            covalent=self.covalent_avalanche,
             msg_aggregator=self.msg_aggregator,
         )
         self.eth_transactions = EthereumTransactions(
