@@ -1,24 +1,17 @@
 accounts:
   - name: acc_airdrop
-    file: acc_airdrop.yaml
 
   - name: acc_income
-    file: acc_income.yaml
 
   - name: acc_gift
-    file: acc_gift.yaml
 
   - name: acc_manual_price
-    file: acc_manual_price.yaml
 
   - name: acc_event_swap
-    file: acc_event_swap.yaml
 
   - name: acc_mixed_swap_trade
-    file: acc_mixed_swap_trade.yaml
 
   - name: acc_mixed_same_link
-    file: acc_mixed_same_link.yaml
 
 reports:
   - name: all

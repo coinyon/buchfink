@@ -11,7 +11,7 @@ from .config import (
     Config,
     EthereumAccountConfig,
     ExchangeAccountConfig,
-    ManualAccountConfig,
+    GenericAccountConfig,
 )
 
 AccountType = Union[
@@ -19,7 +19,7 @@ AccountType = Union[
     Literal['bitcoin'],
     Literal['bitcoincash'],
     Literal['exchange'],
-    Literal['file'],
+    Literal['generic'],
 ]
 
 
@@ -45,8 +45,8 @@ def account_from_config(account_config: AccountConfig):
         address = account_config.bitcoincash
     elif isinstance(account_config, ExchangeAccountConfig):
         account_type = 'exchange'
-    elif isinstance(account_config, ManualAccountConfig):
-        account_type = 'file'
+    elif isinstance(account_config, GenericAccountConfig):
+        account_type = 'generic'
     else:
         raise ValueError('Invalid account')
     return Account(

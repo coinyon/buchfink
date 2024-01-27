@@ -4,6 +4,7 @@ import shutil
 import pytest
 
 from buchfink.db import BuchfinkDB
+from buchfink.jobs import fetch_actions, fetch_trades
 from buchfink.report import render_report, run_report
 
 
@@ -13,6 +14,10 @@ def test_bullrun_config(tmp_path):
         os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+
+    for acc in buchfink_db.get_all_accounts():
+        fetch_actions(buchfink_db, acc)
+        fetch_trades(buchfink_db, acc)
 
     reports = list(buchfink_db.get_all_reports())
 
@@ -35,6 +40,10 @@ def test_bullrun_report_template(tmp_path):
         os.path.join(tmp_path, 'buchfink'),
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+
+    for acc in buchfink_db.get_all_accounts():
+        fetch_actions(buchfink_db, acc)
+        fetch_trades(buchfink_db, acc)
 
     reports = list(buchfink_db.get_all_reports())
 
@@ -59,6 +68,9 @@ def test_manual_price(tmp_path):
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
 
     buchfink_db.sync_manual_prices()
+    for acc in buchfink_db.get_all_accounts():
+        fetch_actions(buchfink_db, acc)
+        fetch_trades(buchfink_db, acc)
 
     reports = list(buchfink_db.get_all_reports())
 

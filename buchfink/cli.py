@@ -23,29 +23,24 @@ from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
-from buchfink.datatypes import (
-    AssetType,
-    EvmEvent,
-    FVal,
-    HistoryBaseEntry,
-    HistoryEvent,
-    HistoryEventSubType,
-    HistoryEventType,
-    Timestamp,
-    Trade,
-)
+from buchfink.datatypes import AssetType, FVal, HistoryBaseEntry, HistoryEvent, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
     deserialize_asset,
     deserialize_timestamp,
-    serialize_events,
     serialize_nfts,
     serialize_timestamp,
-    serialize_trades,
 )
 
-from .classification import classify_tx
+from .jobs import (
+    epoch_end_ts,
+    epoch_start_ts,
+    fetch_actions,
+    fetch_trades,
+    write_actions,
+    write_trades,
+)
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
 from .report import render_report, run_report
@@ -56,9 +51,6 @@ if TYPE_CHECKING:
     from buchfink.datatypes import Asset  # noqa: F401
 
 logger = logging.getLogger(__name__)
-
-epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
-epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 
 
 def _get_accounts(
@@ -189,6 +181,7 @@ def list_(buchfink_db: BuchfinkDB, keyword, account_type, output):
 @buchfink.command()
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--exclude', '-x', type=str, default=None, help='Exclude by keyword in account name')
+@click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
 @click.option('--external', '-e', type=str, multiple=True, help='Use adhoc / external account')
 @click.option('--total', is_flag=True, help='Only show totals')
 @click.option('--denominate-asset', '-d', type=str, help='Denominate in this asset')
@@ -207,6 +200,7 @@ def balances(
     minimum_balance,
     fetch,
     total,
+    account_type,
     exclude,
     external,
     denominate_asset,
@@ -220,7 +214,9 @@ def balances(
 
     buchfink_db.perform_assets_updates()
 
-    accounts = _get_accounts(buchfink_db, external=external, keyword=keyword, exclude=exclude)
+    accounts = _get_accounts(
+        buchfink_db, external=external, keyword=keyword, exclude=exclude, account_type=account_type
+    )
 
     for account in track(accounts, 'Fetching balances'):
         if keyword is not None and keyword not in account.name:
@@ -321,20 +317,20 @@ def balances(
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--exclude', '-x', type=str, default=None, help='Exclude by keyword in account name')
 @click.option('--type', '-t', 'account_type', type=str, default=None, help='Filter by account type')
-@click.option('--actions', 'fetch_actions', is_flag=True, help='Fetch actions only')
+@click.option('--actions', 'fetch_actions_', is_flag=True, help='Fetch actions only')
 @click.option('--balances', 'fetch_balances', is_flag=True, help='Fetch balances only')
 @click.option('--nfts', 'fetch_nfts', is_flag=True, help='Fetch NFT balances only')
-@click.option('--trades', 'fetch_trades', is_flag=True, help='Fetch trades only')
+@click.option('--trades', 'fetch_trades_', is_flag=True, help='Fetch trades only')
 @click.option('--progress/--no-progress', default=True, help='Show progress bar')
 @with_buchfink_db
 def fetch_(
     buchfink_db: BuchfinkDB,
     keyword,
     account_type,
-    fetch_actions,
+    fetch_actions_,
     exclude,
     fetch_balances,
-    fetch_trades,
+    fetch_trades_,
     fetch_nfts,
     external,
     progress,
@@ -342,7 +338,7 @@ def fetch_(
     "Fetch events and balances"
 
     buchfink_db.perform_assets_updates()
-    fetch_limited = fetch_actions or fetch_balances or fetch_trades or fetch_nfts
+    fetch_limited = fetch_actions_ or fetch_balances or fetch_trades_ or fetch_nfts
     error_occured = False
 
     accounts = _get_accounts(
@@ -351,170 +347,33 @@ def fetch_(
 
     for account in track(accounts, description='Fetching data', disable=not progress):
         name = account.name
-        trades = []  # type: List[Trade]
-        actions = []  # type: List[HistoryEvent]
         fetch_config = account.config.fetch or FetchConfig()
 
         fetch_actions_for_this_account = (
-            not fetch_limited or fetch_actions
+            not fetch_limited or fetch_actions_
         ) and fetch_config.actions
 
         fetch_balances_for_this_account = (
             not fetch_limited or fetch_balances
         ) and fetch_config.balances
 
-        fetch_trades_for_this_account = (not fetch_limited or fetch_trades) and fetch_config.trades
+        fetch_trades_for_this_account = (not fetch_limited or fetch_trades_) and fetch_config.trades
 
         fetch_nfts_for_this_account = (not fetch_limited or fetch_nfts) and fetch_config.trades
 
-        if account.account_type == 'ethereum':
-            if fetch_actions_for_this_account:
-                logger.info('Analyzing ethereum transactions for %s', name)
-                txs_and_receipts = buchfink_db.get_eth_transactions(account, with_receipts=True)
-
-                for txn, receipt in txs_and_receipts:
-                    if receipt is None:
-                        raise ValueError('Could not get receipt')
-
-                    additional_actions = classify_tx(account, txn, receipt)
-                    for act in additional_actions:
-                        logger.debug('Found action: %s', act)
-                    actions.extend(additional_actions)
-
-                for tx_tuple in txs_and_receipts:
-                    tx, receipt = tx_tuple
-                    if receipt is None:
-                        logger.warning('No receipt for %s', tx.tx_hash)
-                        continue
-                    # pylint: disable=protected-access
-                    buchfink_db._active_eth_address = account.address
-                    buchfink_db.evm_tx_decoder.base.tracked_accounts = (
-                        buchfink_db.get_blockchain_accounts()
-                    )
-                    try:
-                        ev: Tuple[
-                            List[EvmEvent], bool
-                        ] = buchfink_db.evm_tx_decoder._get_or_decode_transaction_events(
-                            tx, receipt, ignore_cache=False
-                        )
-                        events, _ = ev
-
-                    except (IOError, CannotHandleRequest) as e:
-                        logger.warning(
-                            'Exception while decoding events for tx %s: %s', tx.tx_hash.hex(), e
-                        )
-                        continue
-
-                    for event in events:
-                        if (
-                            event.event_subtype == HistoryEventSubType.FEE
-                            and event.counterparty == 'gas'
-                        ):
-                            actions.append(event)
-                        elif event.event_subtype == HistoryEventSubType.APPROVE:
-                            pass
-                        elif event.event_type == HistoryEventType.TRADE:
-                            if event.asset.is_nft() or 'eip155:1/erc721:' in event.asset.identifier:
-                                # For now we will ignore NFT events
-                                continue
-                            actions.append(event)
-                        else:
-                            logger.warning(
-                                'Ignoring event %s (summary=%s, event_identifier=0x%s, '
-                                'sequence_index=%s)',
-                                event.event_type,
-                                event,
-                                event.event_identifier,
-                                event.sequence_index,
-                            )
-
-                    buchfink_db._active_eth_address = None
-
-        elif account.account_type == 'exchange':
-            if fetch_trades_for_this_account:
-                logger.info('Fetching exhange trades for %s', name)
-
-                exchange = buchfink_db.get_exchange(name)
-
-                api_key_is_valid, error = exchange.validate_api_key()
-
-                if not api_key_is_valid:
-                    logger.critical(
-                        'Skipping exchange %s because API key is not valid (%s)',
-                        account.name,
-                        error,
-                    )
-
-                else:
-                    trades, _ = exchange.query_online_trade_history(
-                        start_ts=epoch_start_ts, end_ts=epoch_end_ts
-                    )
-
-        else:
-            logger.debug('No way to retrieve trades for %s, yet', name)
-
-        annotations_path = buchfink_db.annotations_directory / (name + '.yaml')
-
         if fetch_actions_for_this_account:
-            if os.path.exists(annotations_path):
-                annotated = buchfink_db.get_actions_from_file(annotations_path)
-            else:
-                annotated = []
-
-            logger.info(
-                'Fetched %d action(s) (%d annotated) from %s',
-                len(actions) + len(annotated),
-                len(annotated),
-                name,
-            )
-
-            actions.extend(annotated)
-
-            if actions:
-                with open(buchfink_db.actions_directory / (name + '.yaml'), 'w') as yaml_file:
-                    yaml.dump(
-                        {'actions': serialize_events(actions)},
-                        stream=yaml_file,
-                        sort_keys=False,
-                        width=-1,
-                    )
+            try:
+                fetch_actions(buchfink_db, account)
+            except (IOError, CannotHandleRequest, WrongAssetType):
+                logger.exception('Exception during fetch_actions for %s', name)
+                error_occured = True
 
         if fetch_trades_for_this_account:
-            if os.path.exists(annotations_path):
-                annotated = buchfink_db.get_trades_from_file(annotations_path)
-            else:
-                annotated = []
-
-            logger.info(
-                'Fetched %d trades(s) (%d annotated) from %s',
-                len(trades) + len(annotated),
-                len(annotated),
-                name,
-            )
-
-            trades.extend(annotated)
-
-            existing = set()
-            unique_trades = []
-            for trade in trades:
-                if (trade.location, trade.link) not in existing:
-                    existing.add((trade.location, trade.link))
-                    unique_trades.append(trade)
-                else:
-                    logger.warning('Removing duplicate trade: %s', trade)
-
-            trades_path = buchfink_db.trades_directory / (name + '.yaml')
-            if trades:
-                with open(trades_path, 'w') as yaml_file:
-                    yaml.dump(
-                        {'trades': serialize_trades(unique_trades)},
-                        stream=yaml_file,
-                        sort_keys=False,
-                        width=-1,
-                    )
-            elif os.path.exists(trades_path):
-                # If we have no trades, make sure that the according yaml does not exist
-                os.unlink(trades_path)
+            try:
+                fetch_trades(buchfink_db, account)
+            except (IOError, CannotHandleRequest, WrongAssetType):
+                logger.exception('Exception during fetch_trades for %s', name)
+                error_occured = True
 
         if fetch_balances_for_this_account:
             try:
@@ -522,29 +381,29 @@ def fetch_(
             except (IOError, CannotHandleRequest, WrongAssetType):
                 logger.exception('Exception during fetch_balances for %s', name)
                 error_occured = True
-                continue
             logger.info('Fetched balances from %s', name)
 
         if fetch_nfts_for_this_account:
             try:
                 nfts = buchfink_db.query_nfts(account)
+                if nfts:
+                    try:
+                        with open(
+                            buchfink_db.balances_directory / (name + '.yaml'), 'r'
+                        ) as yaml_file:
+                            contents = yaml.load(yaml_file, Loader=yaml.SafeLoader)
+                            if contents is None:
+                                contents = {}
+                    except FileNotFoundError:
+                        contents = {}
+
+                    with open(buchfink_db.balances_directory / (name + '.yaml'), 'w') as yaml_file:
+                        contents['nfts'] = serialize_nfts(nfts)
+                        yaml.dump(contents, stream=yaml_file, sort_keys=False, width=-1)
+
             except IOError:
                 logger.exception('Exception during query_nfts')
                 error_occured = True
-                continue
-
-            if nfts:
-                try:
-                    with open(buchfink_db.balances_directory / (name + '.yaml'), 'r') as yaml_file:
-                        contents = yaml.load(yaml_file, Loader=yaml.SafeLoader)
-                        if contents is None:
-                            contents = {}
-                except FileNotFoundError:
-                    contents = {}
-
-                with open(buchfink_db.balances_directory / (name + '.yaml'), 'w') as yaml_file:
-                    contents['nfts'] = serialize_nfts(nfts)
-                    yaml.dump(contents, stream=yaml_file, sort_keys=False, width=-1)
 
     if error_occured:
         print('One or more errors occured')
@@ -632,24 +491,12 @@ def format_(buchfink_db: BuchfinkDB, keyword: Optional[str], account_type: Optio
         actions_path = buchfink_db.actions_directory / (name + '.yaml')
         if os.path.exists(actions_path):
             actions = buchfink_db.get_actions_from_file(actions_path)
-            with open(actions_path, 'w') as yaml_file:
-                yaml.dump(
-                    {'actions': serialize_events(actions)},
-                    stream=yaml_file,
-                    sort_keys=False,
-                    width=-1,
-                )
+            write_actions(buchfink_db, account, actions)
 
         trades_path = buchfink_db.trades_directory / (name + '.yaml')
         if os.path.exists(trades_path):
             trades = buchfink_db.get_trades_from_file(trades_path)
-            with open(trades_path, 'w') as yaml_file:
-                yaml.dump(
-                    {'trades': serialize_trades(trades)},
-                    stream=yaml_file,
-                    sort_keys=False,
-                    width=-1,
-                )
+            write_trades(buchfink_db, account, trades)
 
         balances_path = buchfink_db.balances_directory / (name + '.yaml')
         if os.path.exists(balances_path):

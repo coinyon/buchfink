@@ -97,7 +97,6 @@ from buchfink.models import (
     Config,
     ExchangeAccountConfig,
     HistoricalPriceConfig,
-    ManualAccountConfig,
     ReportConfig,
 )
 from buchfink.models.account import accounts_from_config
@@ -473,14 +472,6 @@ class BuchfinkDB(DBHandler):
         else:
             account = account_name
 
-        if account.account_type == 'file':
-            if not isinstance(account.config, ManualAccountConfig):
-                # TODO: this check should already be enforced by type system
-                raise ValueError('Invalid account config')
-
-            trades_file = os.path.join(self.data_directory, account.config.file)
-            return self.get_trades_from_file(trades_file)
-
         trades_file = os.path.join(self.data_directory, 'trades', account.name + '.yaml')
 
         if os.path.exists(trades_file):
@@ -516,19 +507,9 @@ class BuchfinkDB(DBHandler):
         else:
             account = account_name
 
-        if account.account_type == 'file':
-            if not isinstance(account.config, ManualAccountConfig):
-                # TODO: this check should already be enforced by type system
-                raise ValueError('Invalid account config')
-
-            actions_file = self.data_directory / account.config.file
-            if actions_file.exists():
-                return self.get_actions_from_file(actions_file, include_trades=False)
-
-        else:
-            actions_file = self.data_directory / f'actions/{account.name}.yaml'
-            if actions_file.exists():
-                return self.get_actions_from_file(actions_file)
+        actions_file = self.data_directory / f'actions/{account.name}.yaml'
+        if actions_file.exists():
+            return self.get_actions_from_file(actions_file)
 
         return []
 
@@ -542,7 +523,7 @@ class BuchfinkDB(DBHandler):
                 accs['btc'] = accs.get('btc', []) + [account.address]
             elif account.account_type == 'bitcoincash':
                 accs['bch'] = accs.get('bch', []) + [account.address]
-            elif account.account_type in ('file', 'exchange'):
+            elif account.account_type in ('generic', 'exchange'):
                 pass
             else:
                 raise ValueError(
@@ -624,7 +605,7 @@ class BuchfinkDB(DBHandler):
 
         return exchange
 
-    def query_balances(self, account) -> BalanceSheet:
+    def query_balances(self, account: Account) -> BalanceSheet:
         if account.account_type == 'exchange':
             exchange = self.get_exchange(account.name)
 
@@ -673,10 +654,8 @@ class BuchfinkDB(DBHandler):
             bch = Asset('BCH')
             return BalanceSheet(assets={bch: reduce(operator.add, manager.balances.bch.values())})
 
-        if account.account_type == 'file':
-            return self.get_balances_from_file(
-                os.path.join(self.data_directory, account.config.file)
-            )
+        if account.account_type == 'generic':
+            return BalanceSheet(assets={}, liabilities={})
 
         logger.warning(
             'Returning empty BalanceSheet because account type "%s" is not supported yet.',

@@ -41,9 +41,8 @@ class BitcoinCashAccountConfig(BaseModel):
     tags: List[str] = []
 
 
-class ManualAccountConfig(BaseModel):
+class GenericAccountConfig(BaseModel):
     name: str
-    file: str
     fetch: Optional[FetchConfig] = None
     tags: List[str] = []
 
@@ -53,7 +52,7 @@ AccountConfig = Union[
     EthereumAccountConfig,
     BitcoinAccountConfig,
     BitcoinCashAccountConfig,
-    ManualAccountConfig,
+    GenericAccountConfig,
 ]
 
 

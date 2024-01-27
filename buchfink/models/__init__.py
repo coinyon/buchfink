@@ -5,6 +5,6 @@ from .config import (
     ExchangeAccountConfig,  # noqa: F401
     FetchConfig,  # noqa: F401
     HistoricalPriceConfig,  # noqa: F401
-    ManualAccountConfig,  # noqa: F401
+    GenericAccountConfig,  # noqa: F401
     ReportConfig,  # noqa: F401
 )
