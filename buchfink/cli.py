@@ -19,6 +19,7 @@ import yaml
 from rich.progress import track
 from rotkehlchen.constants import ZERO
 from rotkehlchen.errors.asset import WrongAssetType
+from rotkehlchen.errors.misc import RemoteError
 from rotkehlchen.history.price import PriceHistorian
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
@@ -401,7 +402,7 @@ def fetch_(
                         contents['nfts'] = serialize_nfts(nfts)
                         yaml.dump(contents, stream=yaml_file, sort_keys=False, width=-1)
 
-            except IOError:
+            except (IOError, CannotHandleRequest, RemoteError):
                 logger.exception('Exception during query_nfts')
                 error_occured = True
 
