@@ -426,7 +426,7 @@ def run(buchfink_db: BuchfinkDB, name, from_date, to_date, external):
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
-        accounts = buchfink_db.get_all_accounts()
+        accounts = _get_accounts(buchfink_db)
 
     result = run_report(
         buchfink_db,
@@ -735,11 +735,7 @@ def report_(
     if external:
         accounts = [account_from_string(ext, buchfink_db) for ext in external]
     else:
-        accounts = [
-            account
-            for account in buchfink_db.get_all_accounts()
-            if keyword is None or keyword in account.name
-        ]
+        accounts = _get_accounts(buchfink_db, keyword=keyword)
 
     if year:
         reports = [
