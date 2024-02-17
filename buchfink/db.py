@@ -170,7 +170,7 @@ class BuchfinkDB(DBHandler):
         self.last_write_ts: Optional[Timestamp] = None
 
         self.msg_aggregator = MessagesAggregator()
-        self.cryptocompare = Cryptocompare(self.cache_directory / 'cryptocompare', self)
+        self.cryptocompare = Cryptocompare(self)
         self.coingecko = Coingecko()
         self.defillama = Defillama()
         self.historian = PriceHistorian(
