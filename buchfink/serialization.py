@@ -689,9 +689,9 @@ def deserialize_evm_token(token_data: AssetConfig) -> EvmToken:
 def serialize_nft(nft: Nfts) -> Dict[str, Any]:
     obj = nft.serialize()
     return {
-        'id': obj['token_identifier'],
-        'collection_name': obj['collection']['name'],
         'name': obj['name'],
+        'collection_name': obj['collection']['name'],
+        'id': obj['token_identifier'],
     }
 
 
