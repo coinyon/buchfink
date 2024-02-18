@@ -1,24 +1,36 @@
 import logging
 import os.path
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
+import pydantic
 import yaml
+from rotkehlchen.utils.misc import ts_now
 from web3.exceptions import CannotHandleRequest
+
+from buchfink.serialization import deserialize_timestamp, serialize_timestamp
 
 from .classification import classify_tx
 from .datatypes import (
     EvmEvent,
-    # HistoryEvent,
     HistoryBaseEntry,
     HistoryEventSubType,
     HistoryEventType,
     Timestamp,
-    Trade,
+    Trade
 )
 from .db import BuchfinkDB
 from .models import Account
 from .serialization import serialize_events, serialize_trades
+
+
+class ActionsMetadata(pydantic.BaseModel):
+    fetch_timestamp: Timestamp
+
+
+class TradesMetadata(pydantic.BaseModel):
+    fetch_timestamp: Timestamp
+
 
 # TOOD
 epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
@@ -27,30 +39,76 @@ epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 logger = logging.getLogger(__name__)
 
 
-def write_trades(buchfink_db: BuchfinkDB, account: Account, trades: List[Trade]):
+def _get_trades_metadata(buchfink_db: BuchfinkDB, account: Account) -> Optional[TradesMetadata]:
     trades_path = buchfink_db.trades_directory / (account.name + '.yaml')
-    if not trades:
+    if os.path.exists(trades_path):
+        with open(trades_path, 'r') as yaml_file:
+            contents = yaml.safe_load(yaml_file)
+            if 'metadata' in contents and 'fetch_timestamp' in contents['metadata']:
+                return TradesMetadata(
+                    fetch_timestamp=deserialize_timestamp(contents['metadata']['fetch_timestamp'])
+                )
+    return None
+
+
+def write_trades(
+    buchfink_db: BuchfinkDB,
+    account: Account,
+    trades: List[Trade],
+    metadata: Optional[TradesMetadata] = None,
+):
+    trades_path = buchfink_db.trades_directory / (account.name + '.yaml')
+    if not trades and not metadata:
         if os.path.exists(trades_path):
             os.unlink(trades_path)
         return
     with open(trades_path, 'w') as yaml_file:
+        contents: dict = {'trades': serialize_trades(trades)}
+        if metadata:
+            contents['metadata'] = {
+                'fetch_timestamp': serialize_timestamp(metadata.fetch_timestamp)
+            }
         yaml.dump(
-            {'trades': serialize_trades(trades)},
+            contents,
             stream=yaml_file,
             sort_keys=False,
             width=-1,
         )
 
 
-def write_actions(buchfink_db: BuchfinkDB, account: Account, actions: List[HistoryBaseEntry]):
+def _get_actions_metadata(buchfink_db: BuchfinkDB, account: Account) -> Optional[ActionsMetadata]:
     actions_path = buchfink_db.actions_directory / (account.name + '.yaml')
-    if not actions:
+    if os.path.exists(actions_path):
+        with open(actions_path, 'r') as yaml_file:
+            contents = yaml.safe_load(yaml_file)
+            if 'metadata' in contents and 'fetch_timestamp' in contents['metadata']:
+                return ActionsMetadata(
+                    fetch_timestamp=deserialize_timestamp(contents['metadata']['fetch_timestamp'])
+                )
+    return None
+
+
+def write_actions(
+    buchfink_db: BuchfinkDB,
+    account: Account,
+    actions: List[HistoryBaseEntry],
+    metadata: Optional[ActionsMetadata] = None,
+):
+    actions_path = buchfink_db.actions_directory / (account.name + '.yaml')
+    if not actions and not metadata:
         if os.path.exists(actions_path):
             os.unlink(actions_path)
         return
+
     with open(actions_path, 'w') as yaml_file:
+        contents: dict = {'actions': serialize_events(actions)}
+        if metadata:
+            contents['metadata'] = {
+                'fetch_timestamp': serialize_timestamp(metadata.fetch_timestamp)
+            }
+
         yaml.dump(
-            {'actions': serialize_events(actions)},
+            contents,
             stream=yaml_file,
             sort_keys=False,
             width=-1,
@@ -60,10 +118,24 @@ def write_actions(buchfink_db: BuchfinkDB, account: Account, actions: List[Histo
 def fetch_actions(buchfink_db: BuchfinkDB, account: Account):
     name = account.name
     actions = []
+    existing_actions = []
+
+    now = ts_now()
+    metadata = _get_actions_metadata(buchfink_db, account)
+
+    if metadata and metadata.fetch_timestamp:
+        existing_actions = buchfink_db.get_actions_from_file(
+            buchfink_db.actions_directory / (name + '.yaml')
+        )
+        actions.extend(existing_actions)
 
     if account.account_type == 'ethereum':
         logger.info('Analyzing ethereum transactions for %s', name)
-        txs_and_receipts = buchfink_db.get_eth_transactions(account, with_receipts=True)
+
+        start_ts = metadata.fetch_timestamp if metadata else epoch_start_ts
+        txs_and_receipts = buchfink_db.get_eth_transactions(
+            account, with_receipts=True, start_ts=start_ts, end_ts=now
+        )
 
         for txn, receipt in txs_and_receipts:
             if receipt is None:
@@ -79,6 +151,7 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account):
             if receipt is None:
                 logger.warning('No receipt for %s', tx.tx_hash)
                 continue
+
             # pylint: disable=protected-access
             buchfink_db._active_eth_address = account.address
             buchfink_db.evm_tx_decoder.base.tracked_accounts = buchfink_db.get_blockchain_accounts()
@@ -125,28 +198,43 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account):
     else:
         logger.debug('No way to retrieve actions for %s, yet', name)
 
-    annotations_path = buchfink_db.annotations_directory / (name + '.yaml')
+    annotated_actions = []
+    if not existing_actions:
+        # We would need to respect timestamps here...
+        annotations_path = buchfink_db.annotations_directory / (name + '.yaml')
 
-    if os.path.exists(annotations_path):
-        annotated = buchfink_db.get_actions_from_file(annotations_path, include_trades=False)
-    else:
-        annotated = []
+        if os.path.exists(annotations_path):
+            annotated_actions = buchfink_db.get_actions_from_file(
+                annotations_path, include_trades=False
+            )
+
+        actions.extend(annotated_actions)
 
     logger.info(
-        'Fetched %d action(s) (%d annotated) from %s',
-        len(actions) + len(annotated),
-        len(annotated),
+        'Fetched %d action(s) (%d existing, %d annotated) from %s',
+        len(actions),
+        len(existing_actions),
+        len(annotated_actions),
         name,
     )
 
-    actions.extend(annotated)
-
-    write_actions(buchfink_db, account, actions)
+    write_actions(buchfink_db, account, actions, metadata=ActionsMetadata(fetch_timestamp=now))
 
 
 def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
     trades: List[Trade] = []
+    existing_trades: List[Trade] = []
+    annotated: List[Trade] = []
     name = account.name
+
+    now = ts_now()
+    metadata = _get_trades_metadata(buchfink_db, account)
+
+    if metadata and metadata.fetch_timestamp:
+        existing_trades = buchfink_db.get_trades_from_file(
+            buchfink_db.trades_directory / (name + '.yaml')
+        )
+        trades.extend(existing_trades)
 
     if account.account_type == 'exchange':
         logger.info('Fetching exhange trades for %s', name)
@@ -154,6 +242,7 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
         exchange = buchfink_db.get_exchange(name)
 
         api_key_is_valid, error = exchange.validate_api_key()
+        start_ts = metadata.fetch_timestamp if metadata else epoch_start_ts
 
         if not api_key_is_valid:
             logger.critical(
@@ -163,24 +252,24 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
             )
 
         else:
-            trades, _ = exchange.query_online_trade_history(
-                start_ts=epoch_start_ts, end_ts=epoch_end_ts
-            )
+            fetched_trades, _ = exchange.query_online_trade_history(start_ts=start_ts, end_ts=now)
+            trades.extend(fetched_trades)
+
     annotations_path = buchfink_db.annotations_directory / (name + '.yaml')
 
-    if os.path.exists(annotations_path):
-        annotated = buchfink_db.get_trades_from_file(annotations_path)
-    else:
-        annotated = []
+    if not existing_trades:
+        if os.path.exists(annotations_path):
+            annotated = buchfink_db.get_trades_from_file(annotations_path)
+
+    trades.extend(annotated)
 
     logger.info(
-        'Fetched %d trades(s) (%d annotated) from %s',
-        len(trades) + len(annotated),
+        'Fetched %d trades(s) (%d existing, %d annotated) from %s',
+        len(trades),
+        len(existing_trades),
         len(annotated),
         name,
     )
-
-    trades.extend(annotated)
 
     existing = set()
     unique_trades = []
@@ -191,4 +280,4 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
         else:
             logger.warning('Removing duplicate trade: %s', trade)
 
-    write_trades(buchfink_db, account, unique_trades)
+    write_trades(buchfink_db, account, unique_trades, metadata=TradesMetadata(fetch_timestamp=now))

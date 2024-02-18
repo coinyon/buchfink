@@ -368,17 +368,31 @@ class BuchfinkDB(DBHandler):
                 pass
 
     def get_eth_transactions(
-        self, account: Account, with_receipts: bool = False
+        self,
+        account: Account,
+        with_receipts: bool = False,
+        start_ts: Optional[Timestamp] = None,
+        end_ts: Optional[Timestamp] = None,
     ) -> List[Tuple[EvmTransaction, Optional[EvmTxReceipt]]]:
         assert account.account_type == 'ethereum'
         address = cast(ChecksumEvmAddress, account.address)
 
-        now = ts_now()
+        if end_ts is None:
+            end_ts = ts_now()
+        if start_ts is None:
+            start_ts = Timestamp(0)
 
         self.sync_accounts([account])
 
+        logger.info(
+            'Fetching ethereum transactions for %s (start_ts=%s, end_ts=%s)',
+            address,
+            start_ts,
+            end_ts,
+        )
+
         self.eth_transactions.single_address_query_transactions(
-            address, start_ts=Timestamp(0), end_ts=now
+            address, start_ts=start_ts, end_ts=end_ts
         )
 
         dbevmtx = DBEvmTx(self)
@@ -386,7 +400,9 @@ class BuchfinkDB(DBHandler):
             txs, txs_total_count = dbevmtx.get_evm_transactions_and_limit_info(
                 cursor=cursor,
                 filter_=EvmTransactionsFilterQuery.make(
-                    accounts=[EvmAccount(address, ChainID.ETHEREUM)]
+                    accounts=[EvmAccount(address, ChainID.ETHEREUM)],
+                    from_ts=start_ts,
+                    to_ts=end_ts,
                 ),
                 has_premium=False,
             )
@@ -396,7 +412,10 @@ class BuchfinkDB(DBHandler):
         for txn in txs:
             receipt = None
             if with_receipts:
-                receipt = self.eth_transactions.get_or_query_transaction_receipt(txn.tx_hash)
+                receipt = self.eth_transactions.get_or_query_transaction_receipt(
+                    txn.tx_hash,
+                )
+
             result.append((txn, receipt))
 
         return result
