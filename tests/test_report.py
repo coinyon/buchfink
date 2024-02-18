@@ -4,8 +4,8 @@ import shutil
 import pytest
 
 from buchfink.db import BuchfinkDB
-from buchfink.jobs import fetch_actions, fetch_trades
 from buchfink.report import render_report, run_report
+from buchfink.tasks import fetch_actions, fetch_trades
 
 
 def test_bullrun_config(tmp_path):

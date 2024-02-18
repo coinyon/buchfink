@@ -1,6 +1,5 @@
 import logging
 import os.path
-from datetime import datetime
 from typing import List, Optional, Tuple
 
 import pydantic
@@ -17,7 +16,7 @@ from .datatypes import (
     HistoryEventSubType,
     HistoryEventType,
     Timestamp,
-    Trade
+    Trade,
 )
 from .db import BuchfinkDB
 from .models import Account
@@ -31,10 +30,6 @@ class ActionsMetadata(pydantic.BaseModel):
 class TradesMetadata(pydantic.BaseModel):
     fetch_timestamp: Timestamp
 
-
-# TOOD
-epoch_start_ts = Timestamp(int(datetime(2011, 1, 1).timestamp()))
-epoch_end_ts = Timestamp(int(datetime(2031, 1, 1).timestamp()))
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +127,9 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account):
     if account.account_type == 'ethereum':
         logger.info('Analyzing ethereum transactions for %s', name)
 
-        start_ts = metadata.fetch_timestamp if metadata else epoch_start_ts
+        start_ts = metadata.fetch_timestamp if metadata else None
+        if start_ts is None:
+            start_ts = Timestamp(0)
         txs_and_receipts = buchfink_db.get_eth_transactions(
             account, with_receipts=True, start_ts=start_ts, end_ts=now
         )
@@ -242,7 +239,9 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
         exchange = buchfink_db.get_exchange(name)
 
         api_key_is_valid, error = exchange.validate_api_key()
-        start_ts = metadata.fetch_timestamp if metadata else epoch_start_ts
+        start_ts = metadata.fetch_timestamp if metadata else None
+        if start_ts is None:
+            start_ts = Timestamp(0)
 
         if not api_key_is_valid:
             logger.critical(

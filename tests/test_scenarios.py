@@ -4,9 +4,9 @@ import shutil
 import pytest
 
 from buchfink.db import BuchfinkDB
-from buchfink.jobs import fetch_actions, fetch_trades
 from buchfink.models import Account
 from buchfink.report import run_report
+from buchfink.tasks import fetch_actions, fetch_trades
 
 
 def _fetch(buchfink_db: BuchfinkDB, account: Account) -> None:

@@ -21,10 +21,11 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.errors.asset import WrongAssetType
 from rotkehlchen.errors.misc import RemoteError
 from rotkehlchen.history.price import PriceHistorian
+from rotkehlchen.utils.misc import ts_now
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
-from buchfink.datatypes import AssetType, FVal, HistoryBaseEntry, HistoryEvent, Trade
+from buchfink.datatypes import AssetType, FVal, HistoryBaseEntry, HistoryEvent, Timestamp, Trade
 from buchfink.db import BuchfinkDB
 from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
@@ -34,17 +35,10 @@ from buchfink.serialization import (
     serialize_timestamp,
 )
 
-from .jobs import (
-    epoch_end_ts,
-    epoch_start_ts,
-    fetch_actions,
-    fetch_trades,
-    write_actions,
-    write_trades,
-)
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
 from .report import render_report, run_report
+from .tasks import fetch_actions, fetch_trades, write_actions, write_trades
 
 if TYPE_CHECKING:
     from typing import Dict  # noqa: F401
@@ -801,6 +795,8 @@ def allowances(buchfink_db):
     accountant = buchfink_db.get_accountant()
     # currency = buchfink_db.get_main_currency()
     # currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
+    epoch_start_ts = Timestamp(0)
+    epoch_end_ts = ts_now()
 
     accountant.process_history(epoch_start_ts, epoch_end_ts, all_trades, [], [], [], [], [])
     # total_usd = FVal(0)
@@ -949,6 +945,22 @@ def explore(buchfink_db: BuchfinkDB, keyword, external):
 
         if account.account_type == 'ethereum':
             webbrowser.open('https://etherscan.io/address/{0}'.format(account.address))
+
+
+@buchfink.command('historical-prices')
+def historical_prices(buchfink_db: BuchfinkDB):
+    "Show historical prices for an asset"
+
+    for asset in buchfink_db.globaldb.get_historical_price_range():
+        if asset.asset_type == AssetType.EVM_TOKEN:
+            continue
+
+        print(asset.symbol)
+        print('------------------')
+        for price in buchfink_db.globaldb.get_historical_prices(asset):
+            print(price.timestamp, price.price)
+
+        print()
 
 
 if __name__ == '__main__':
