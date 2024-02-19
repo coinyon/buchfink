@@ -317,6 +317,7 @@ def balances(
 @click.option('--nfts', 'fetch_nfts', is_flag=True, help='Fetch NFT balances only')
 @click.option('--trades', 'fetch_trades_', is_flag=True, help='Fetch trades only')
 @click.option('--progress/--no-progress', default=True, help='Show progress bar')
+@click.option('--full', is_flag=True, help='Fetch everything regardless of last fetch time')
 @with_buchfink_db
 def fetch_(
     buchfink_db: BuchfinkDB,
@@ -329,6 +330,7 @@ def fetch_(
     fetch_nfts,
     external,
     progress,
+    full,
 ):
     "Fetch events and balances"
 
@@ -358,14 +360,14 @@ def fetch_(
 
         if fetch_actions_for_this_account:
             try:
-                fetch_actions(buchfink_db, account)
+                fetch_actions(buchfink_db, account, ignore_fetch_timestamp=full)
             except (IOError, CannotHandleRequest, WrongAssetType):
                 logger.exception('Exception during fetch_actions for %s', name)
                 error_occured = True
 
         if fetch_trades_for_this_account:
             try:
-                fetch_trades(buchfink_db, account)
+                fetch_trades(buchfink_db, account, ignore_fetch_timestamp=full)
             except (IOError, CannotHandleRequest, WrongAssetType):
                 logger.exception('Exception during fetch_trades for %s', name)
                 error_occured = True

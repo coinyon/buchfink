@@ -110,26 +110,25 @@ def write_actions(
         )
 
 
-def fetch_actions(buchfink_db: BuchfinkDB, account: Account):
+def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timestamp: bool = False):
     name = account.name
     actions = []
     existing_actions = []
 
     now = ts_now()
+    start_ts = Timestamp(0)
     metadata = _get_actions_metadata(buchfink_db, account)
 
-    if metadata and metadata.fetch_timestamp:
+    if metadata and metadata.fetch_timestamp and not ignore_fetch_timestamp:
         existing_actions = buchfink_db.get_actions_from_file(
             buchfink_db.actions_directory / (name + '.yaml')
         )
         actions.extend(existing_actions)
+        start_ts = metadata.fetch_timestamp
 
     if account.account_type == 'ethereum':
         logger.info('Analyzing ethereum transactions for %s', name)
 
-        start_ts = metadata.fetch_timestamp if metadata else None
-        if start_ts is None:
-            start_ts = Timestamp(0)
         txs_and_receipts = buchfink_db.get_eth_transactions(
             account, with_receipts=True, start_ts=start_ts, end_ts=now
         )
@@ -218,20 +217,22 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account):
     write_actions(buchfink_db, account, actions, metadata=ActionsMetadata(fetch_timestamp=now))
 
 
-def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
+def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timestamp: bool = False):
     trades: List[Trade] = []
     existing_trades: List[Trade] = []
     annotated: List[Trade] = []
     name = account.name
 
+    start_ts = Timestamp(0)
     now = ts_now()
     metadata = _get_trades_metadata(buchfink_db, account)
 
-    if metadata and metadata.fetch_timestamp:
+    if metadata and metadata.fetch_timestamp and not ignore_fetch_timestamp:
         existing_trades = buchfink_db.get_trades_from_file(
             buchfink_db.trades_directory / (name + '.yaml')
         )
         trades.extend(existing_trades)
+        start_ts = metadata.fetch_timestamp
 
     if account.account_type == 'exchange':
         logger.info('Fetching exhange trades for %s', name)
@@ -239,9 +240,6 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account):
         exchange = buchfink_db.get_exchange(name)
 
         api_key_is_valid, error = exchange.validate_api_key()
-        start_ts = metadata.fetch_timestamp if metadata else None
-        if start_ts is None:
-            start_ts = Timestamp(0)
 
         if not api_key_is_valid:
             logger.critical(
