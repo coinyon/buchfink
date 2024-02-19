@@ -249,7 +249,14 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timesta
             )
 
         else:
-            fetched_trades, _ = exchange.query_online_trade_history(start_ts=start_ts, end_ts=now)
+            logger.info('Fetching trades for %s (start_ts=%s, end_ts=%s)', name, start_ts, now)
+
+            exchange.query_online_trade_history(start_ts=start_ts, end_ts=now)
+
+            fetched_trades = exchange.query_trade_history(
+                start_ts=start_ts, end_ts=now, only_cache=True
+            )
+
             trades.extend(fetched_trades)
 
     annotations_path = buchfink_db.annotations_directory / (name + '.yaml')
