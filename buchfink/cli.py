@@ -214,13 +214,11 @@ def balances(
     )
 
     for account in track(accounts, 'Fetching balances'):
-        if keyword is not None and keyword not in account.name:
-            continue
-
         if fetch:
             buchfink_db.fetch_balances(account)
 
         sheet = buchfink_db.get_balances(account)
+        print(f'Balances for {account.name}:', sheet)
 
         for asset, balance in sheet.assets.items():
             amount = balance.amount
@@ -240,7 +238,7 @@ def balances(
         currency = buchfink_db.get_main_currency()
 
     currency_in_usd = FVal(buchfink_db.inquirer.find_usd_price(currency))
-    logger.debug('Denominating in %s: %s USD', currency, currency_in_usd)
+    logger.debug('Denominating in %s (= %s USD)', currency, currency_in_usd)
     table = []
     assets = [obj[0] for obj in sorted(assets_usd_sum.items(), key=itemgetter(1), reverse=True)]
     balance_in_currency_sum = 0
