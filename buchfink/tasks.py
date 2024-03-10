@@ -186,7 +186,29 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
             buchfink_db._active_eth_address = None
 
     elif account.account_type == 'exchange':
-        pass
+        logger.info('Fetching exhange actions for %s', name)
+
+        exchange = buchfink_db.get_exchange(name)
+
+        api_key_is_valid, error = exchange.validate_api_key()
+
+        if not api_key_is_valid:
+            logger.critical(
+                'Skipping exchange %s because API key is not valid (%s)',
+                account.name,
+                error,
+            )
+
+        else:
+            logger.info('Fetching actions for %s (start_ts=%s, end_ts=%s)', name, start_ts, now)
+
+            exchange.query_online_income_loss_expense(start_ts=start_ts, end_ts=now)
+
+            fetched_actions = exchange.query_income_loss_expense(
+                start_ts=start_ts, end_ts=now, only_cache=True
+            )
+
+            actions.extend(fetched_actions)
 
     elif account.account_type == 'generic':
         pass
