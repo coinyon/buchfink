@@ -453,7 +453,13 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.RECEIVE
         and event.event_subtype == HistoryEventSubType.NONE
     ):
-        ser_event['gift'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        if event.location == Location.COINBASE:
+            # For coinbase, we assume RECEIVE/NONE is income
+            # This is a hack, but we don't have a better way to distinguish
+            # TBH this should be handled in the event collector
+            ser_event['income'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        else:
+            ser_event['gift'] = serialize_amount(FVal(event.balance.amount), event.asset)
         del ser_event['asset']
         del ser_event['balance']
         del ser_event['event_type']
