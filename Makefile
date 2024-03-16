@@ -1,7 +1,7 @@
 all: format lint typecheck test-local-x
 
 lint:
-	ruff buchfink tests
+	ruff check buchfink tests
 	pylint buchfink
 	pycodestyle buchfink tests/*.py
 

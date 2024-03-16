@@ -1,4 +1,5 @@
-'Buchfink cli app integration tests'
+"Buchfink cli app integration tests"
+
 import logging
 import os
 import os.path

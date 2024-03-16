@@ -152,10 +152,10 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
             buchfink_db._active_eth_address = account.address
             buchfink_db.evm_tx_decoder.base.tracked_accounts = buchfink_db.get_blockchain_accounts()
             try:
-                ev: Tuple[
-                    List[EvmEvent], bool
-                ] = buchfink_db.evm_tx_decoder._get_or_decode_transaction_events(
-                    tx, receipt, ignore_cache=False
+                ev: Tuple[List[EvmEvent], bool] = (
+                    buchfink_db.evm_tx_decoder._get_or_decode_transaction_events(
+                        tx, receipt, ignore_cache=False
+                    )
                 )
                 events, _ = ev
 
