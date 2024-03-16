@@ -1,4 +1,4 @@
-all: format lint typecheck test-local
+all: format lint typecheck test-local-x
 
 lint:
 	ruff buchfink tests
@@ -14,12 +14,11 @@ test:
 test-local:
 	py.test -m 'not blockchain_data'
 
+test-local-x:
+	py.test -m 'not blockchain_data' -x
+
 test-remote:
 	py.test -m 'blockchain_data'
-
-fast-lint-test:
-	ruff buchfink tests
-	py.test -m 'not blockchain_data' -x
 
 format:
 	ruff format buchfink tests
