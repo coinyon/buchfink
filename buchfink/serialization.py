@@ -23,19 +23,21 @@ from buchfink.datatypes import (
     HistoryEventType,
     Nfts,
     Timestamp,
+    TimestampMS,
     Trade,
     TradeType,
 )
 from buchfink.exceptions import UnknownAsset
 from buchfink.models.config import AssetConfig
+from rotkehlchen.utils.misc import ts_ms_to_sec
 
 
-def serialize_timestamp(timestamp: int) -> str:
+def serialize_timestamp(timestamp: Timestamp) -> str:
     return datetime.fromtimestamp(timestamp, tz=timezone.utc).isoformat()
 
 
-def serialize_timestamp_ms(timestamp_ms: int) -> str:
-    return datetime.fromtimestamp(timestamp_ms / 1000, tz=timezone.utc).isoformat()
+def serialize_timestamp_ms(timestamp_ms: TimestampMS) -> str:
+    return datetime.fromtimestamp(ts_ms_to_sec(timestamp_ms), tz=timezone.utc).isoformat()
 
 
 def deserialize_timestamp(timestamp: str) -> Timestamp:

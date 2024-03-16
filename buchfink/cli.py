@@ -27,13 +27,13 @@ from web3.exceptions import CannotHandleRequest
 
 from buchfink.datatypes import AssetType, FVal, HistoryBaseEntry, HistoryEvent, Timestamp, Trade
 from buchfink.db import BuchfinkDB
-from buchfink.exceptions import NoPriceForGivenTimestamp
 from buchfink.serialization import (
     deserialize_asset,
     deserialize_timestamp,
     serialize_nfts,
     serialize_timestamp,
 )
+from rotkehlchen.utils.misc import ts_ms_to_sec
 
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string
@@ -508,17 +508,8 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
 
     events: List[Tuple[Union[HistoryBaseEntry, Trade], Account]] = []
 
-    accounts = buchfink_db.get_all_accounts()
-
     filter_asset = buchfink_db.get_asset_by_symbol(asset) if asset is not None else None
-
-    # TODO: This should move to BuchfinkDB.get_accounts()
-    if keyword is not None:
-        if keyword.startswith('/') and keyword.endswith('/'):
-            keyword_re = re.compile(keyword[1:-1])
-            accounts = [acc for acc in accounts if keyword_re.search(acc.name)]
-        else:
-            accounts = [acc for acc in accounts if keyword in acc.name]
+    accounts = _get_accounts(buchfink_db, keyword=keyword)
 
     for account in accounts:
         events.extend(
@@ -533,9 +524,10 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
             if filter_asset is None or filter_asset in (event.asset,)
         )
 
-    def get_timestamp(event):
+    def get_timestamp(event) -> Timestamp:
         if isinstance(event, HistoryBaseEntry):
-            return event.timestamp / 1000
+            return ts_ms_to_sec(event.timestamp)
+        print(type(event))
         return event.timestamp
 
     events = sorted(events, key=lambda ev_acc: get_timestamp(ev_acc[0]))
@@ -543,7 +535,13 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
     if events:
         table = []
         for event, account in events:
-            print(event, account)
+            # try:
+            #     asset_currency = historian.query_historical_price(
+            #         from_asset=action.asset, to_asset=currency, timestamp=action.timestamp
+            #     )
+            # except NoPriceForGivenTimestamp:
+            #     asset_currency = FVal('0.0')
+
             if isinstance(event, Trade):
                 trade: Trade = event
                 table.append(
@@ -561,11 +559,11 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
             elif isinstance(event, HistoryEvent):
                 table.append(
                     [
-                        serialize_timestamp(event.timestamp),
-                        str(event.action_type),
-                        str(event.amount),
+                        serialize_timestamp(ts_ms_to_sec(event.timestamp)),
+                        str(event.event_subtype),
+                        '?',
                         str(event.asset.symbol_or_name()),
-                        str(event.amount),
+                        '?',
                         str(event.asset.symbol_or_name()),
                         str(''),
                         str(account.name),
@@ -575,7 +573,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                 print(event.timestamp)
                 table.append(
                     [
-                        serialize_timestamp(int(event.timestamp / 1000)),
+                        serialize_timestamp(ts_ms_to_sec(event.timestamp)),
                         str(event.event_subtype),
                         str(event.balance.amount),
                         str(event.asset.symbol_or_name()),
@@ -599,76 +597,6 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     'Base Asset',
                     'Rate',
                     'Account',
-                ],
-            )
-        )
-
-
-@buchfink.command('actions')
-@click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
-# @click.option('--type', '-t', 'action_type', type=str, default=None, help='Filter by action type')
-@click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
-@with_buchfink_db
-def actions_(buchfink_db: BuchfinkDB, keyword, asset):
-    "Show actions"
-
-    actions: List[Tuple[HistoryBaseEntry, Account]] = []
-    for account in buchfink_db.get_all_accounts():
-        if keyword is not None and keyword not in account.name:
-            continue
-
-        actions.extend(
-            (action, account)
-            for action in buchfink_db.get_local_ledger_actions_for_account(account.name)
-        )
-
-    if asset is not None:
-        the_asset = buchfink_db.get_asset_by_symbol(asset)
-        actions = [action for action in actions if the_asset in (action[0].asset,)]
-
-    # if action_type is not None:
-    #     actions = [
-    #         action
-    #         for action in actions
-    #         if action[0].action_type == deserialize_ledger_action_type(action_type)
-    #     ]
-
-    actions = sorted(actions, key=lambda action_account: action_account[0].timestamp)
-
-    historian = PriceHistorian()
-
-    currency = buchfink_db.get_main_currency()
-
-    if actions:
-        table = []
-        for action, account in actions:
-            try:
-                asset_currency = historian.query_historical_price(
-                    from_asset=action.asset, to_asset=currency, timestamp=action.timestamp
-                )
-            except NoPriceForGivenTimestamp:
-                asset_currency = FVal('0.0')
-
-            table.append(
-                [
-                    serialize_timestamp(action.timestamp),
-                    str(action.action_type),
-                    str(action.amount),
-                    str(action.asset.symbol),
-                    str(account.name),
-                    str(asset_currency * action.amount),
-                ]
-            )
-        print(
-            tabulate(
-                table,
-                headers=[
-                    'Time',
-                    'Type',
-                    'Amount',
-                    'Asset',
-                    'Account',
-                    'Amount ' + str(currency.symbol),
                 ],
             )
         )
