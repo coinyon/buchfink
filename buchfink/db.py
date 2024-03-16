@@ -35,6 +35,8 @@ from rotkehlchen.chain.optimism.manager import OptimismManager
 from rotkehlchen.chain.optimism.node_inquirer import OptimismInquirer
 from rotkehlchen.chain.polygon_pos.manager import PolygonPOSManager
 from rotkehlchen.chain.polygon_pos.node_inquirer import PolygonPOSInquirer
+from rotkehlchen.chain.scroll.manager import ScrollManager
+from rotkehlchen.chain.scroll.node_inquirer import ScrollInquirer
 from rotkehlchen.chain.substrate.manager import SubstrateManager
 from rotkehlchen.constants.misc import DEFAULT_SQL_VM_INSTRUCTIONS_CB
 from rotkehlchen.data_migrations.manager import DataMigrationManager
@@ -244,6 +246,11 @@ class BuchfinkDB(DBHandler):
             database=self,
         )
         self.polygon_pos_manager = PolygonPOSManager(self.polygon_pos_inquirer)
+        self.scroll_inquirer = ScrollInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+        )
+        self.scroll_manager = ScrollManager(self.scroll_inquirer)
         self.arbitrum_one_inquirer = ArbitrumOneInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
@@ -579,6 +586,7 @@ class BuchfinkDB(DBHandler):
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
             polygon_pos_manager=self.polygon_pos_manager,
+            scroll_manager=self.scroll_manager,
             premium=None,
             eth_modules=eth_modules,
         )
