@@ -30,6 +30,7 @@ from buchfink.db import BuchfinkDB
 from buchfink.serialization import (
     deserialize_asset,
     deserialize_timestamp,
+    serialize_decimal,
     serialize_nfts,
     serialize_timestamp,
 )
@@ -526,7 +527,6 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
     def get_timestamp(event) -> Timestamp:
         if isinstance(event, HistoryBaseEntry):
             return ts_ms_to_sec(event.timestamp)
-        print(type(event))
         return event.timestamp
 
     events = sorted(events, key=lambda ev_acc: get_timestamp(ev_acc[0]))
@@ -547,11 +547,11 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     [
                         serialize_timestamp(trade.timestamp),
                         str(trade.trade_type),
-                        str(trade.amount),
+                        serialize_decimal(trade.amount.num),
                         str(trade.base_asset.symbol),
-                        str(trade.amount * trade.rate),
+                        serialize_decimal((trade.amount * trade.rate).num),
                         str(trade.quote_asset.symbol),
-                        str(trade.rate),
+                        serialize_decimal(trade.rate.num),
                         str(account.name),
                     ]
                 )
@@ -560,10 +560,10 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     [
                         serialize_timestamp(ts_ms_to_sec(event.timestamp)),
                         str(event.event_subtype),
-                        '?',
+                        str(event.balance.amount.num),
                         str(event.asset.symbol_or_name()),
-                        '?',
-                        str(event.asset.symbol_or_name()),
+                        '',
+                        '',
                         str(''),
                         str(account.name),
                     ]
@@ -574,9 +574,9 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     [
                         serialize_timestamp(ts_ms_to_sec(event.timestamp)),
                         str(event.event_subtype),
-                        str(event.balance.amount),
+                        serialize_decimal(event.balance.amount.num),
                         str(event.asset.symbol_or_name()),
-                        str(event.balance.amount),
+                        serialize_decimal(event.balance.amount.num),
                         str(event.asset.symbol_or_name()),
                         str(''),
                         str(account.name),
