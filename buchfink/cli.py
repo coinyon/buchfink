@@ -21,7 +21,7 @@ from rotkehlchen.constants import ZERO
 from rotkehlchen.errors.asset import WrongAssetType
 from rotkehlchen.errors.misc import RemoteError
 from rotkehlchen.history.price import PriceHistorian
-from rotkehlchen.utils.misc import ts_now
+from rotkehlchen.utils.misc import ts_ms_to_sec, ts_now
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
@@ -33,7 +33,6 @@ from buchfink.serialization import (
     serialize_nfts,
     serialize_timestamp,
 )
-from rotkehlchen.utils.misc import ts_ms_to_sec
 
 from .models import Account, FetchConfig, ReportConfig
 from .models.account import account_from_string

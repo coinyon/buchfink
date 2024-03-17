@@ -9,6 +9,7 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.types import EvmTokenKind, Location, deserialize_evm_tx_hash
+from rotkehlchen.utils.misc import ts_ms_to_sec
 
 from buchfink.datatypes import (
     Asset,
@@ -29,7 +30,6 @@ from buchfink.datatypes import (
 )
 from buchfink.exceptions import UnknownAsset
 from buchfink.models.config import AssetConfig
-from rotkehlchen.utils.misc import ts_ms_to_sec
 
 
 def serialize_timestamp(timestamp: Timestamp) -> str:

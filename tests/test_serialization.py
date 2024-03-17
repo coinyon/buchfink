@@ -321,7 +321,7 @@ def test_serialize_and_deserialize_gift(buchfink_db):
     event = HistoryEvent(
         identifier=None,
         sequence_index=0,
-        location=Location.COINBASE,
+        location=Location.KRAKEN,
         event_type=HistoryEventType.RECEIVE,
         event_subtype=HistoryEventSubType.NONE,
         balance=Balance(FVal(amount), 0),
