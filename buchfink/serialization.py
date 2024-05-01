@@ -171,8 +171,8 @@ def deserialize_trade(trade_dict) -> Trade:
 
     try:
         rate = quote_amount / amount
-    except InvalidOperation:
-        raise ValueError('Invalid trade: ' + str(trade_dict))
+    except InvalidOperation as exc:
+        raise ValueError('Invalid trade: ' + str(trade_dict)) from exc
 
     return Trade(
         dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
