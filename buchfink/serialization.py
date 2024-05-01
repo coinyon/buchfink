@@ -169,6 +169,11 @@ def deserialize_trade(trade_dict) -> Trade:
     else:
         fee, fee_currency = FVal('0'), quote_asset
 
+    try:
+        rate = quote_amount / amount
+    except InvalidOperation:
+        raise ValueError('Invalid trade: ' + str(trade_dict))
+
     return Trade(
         dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
         Location.deserialize(trade_dict.get('location') or 'external'),
@@ -176,7 +181,7 @@ def deserialize_trade(trade_dict) -> Trade:
         quote_asset,
         trade_type,
         amount,
-        quote_amount / amount,
+        rate,
         fee,
         fee_currency,
         str(trade_dict.get('link', '')),
