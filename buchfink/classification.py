@@ -42,6 +42,7 @@ CLAIMED_5 = '0x528937b330082d892a98d4e428ab2dcca7844b51d227a1c0ae67f0b5261acbd9'
 CLAIMED_6 = '0xb94bf7f9302edf52a596286915a69b4b0685574cffdedd0712e3c62f2550f0ba'
 CLAIM = '0x34fcbac0073d7c3d388e51312faf357774904998eeb8fca628b9e6f65ee1cbf7'
 CLAIM_2 = '0x47cee97cb7acd717b3c0aa1435d004cd5b3c8c57d70dbceb4e4458bbd60e39d4'
+CLAIM_3 = '0xc1405953cccdad6b442e266c84d66ad671e2534c6584f8e6ef92802f7ad294d5'
 TOKEN_CLAIMED = '0x4831bdd9dcf3048a28319ce81d3cab7a15366bcf449bc7803a539107440809cc'
 TRANSFER = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
 REWARD_PAID = '0xe2403640ba68fed3a2f88b7557551d1993f84b99bb10ff833f0cf8db0c5e0486'
@@ -75,6 +76,7 @@ ADDR_YFI_GOVERNANCE = '0xba37b002abafdd8e89a1995da52740bbc013d992'
 ADDR_CREAM_REWARDS = (
     '0x224061756c150e5048a1e4a3e6e066db35037462',
     '0x3ba3c0e8a9e5f4a01ce8e086b3d8e8a603a2129e',
+    '0x24e45B60E13b6F96e983BB01Ea1326fa5169CCD5',
 )
 ADDR_BALANCER_REWARDS = '0x6d19b2bF3A36A61530909Ae65445a906D98A2Fa8'
 ADDR_POOL_AIRDROP = '0xBE1a33519F586A4c8AA37525163Df8d67997016f'
@@ -409,7 +411,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     balance=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('CREAM', chain_id=ChainID.ETHEREUM),
-                    notes='rewards from cream incentives',
+                    notes='rewards from CREAM incentives',
                     event_identifier=txn.tx_hash.hex(),
                 )
             ]
@@ -915,6 +917,24 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
 
         elif event.topics[0] == CLAIM_2:
             logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
+
+        if event.topics[0] == CLAIM_3 and any(same_addr(event.address, addr) for addr in ADDR_CREAM_REWARDS):
+            amount = hexstr_to_int(event.data[(2+192):])
+            asset = symbol_to_asset_or_token('CREAM', chain_id=ChainID.ETHEREUM)
+            actions += [
+                HistoryEvent(
+                    identifier=None,
+                    sequence_index=0,
+                    location='',
+                    event_type=HistoryEventType.RECEIVE,
+                    event_subtype=HistoryEventSubType.REWARD,
+                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    timestamp=ts_sec_to_ms(txn.timestamp),
+                    asset=asset,
+                    notes='rewards from CREAM incentives',
+                    event_identifier=txn.tx_hash.hex(),
+                )
+            ]
 
         if event.topics[0] == HARVEST and same_addr(event.address, ADDR_BEVERAGE_BAR):
             amount = hexstr_to_int(event.data[2:])
