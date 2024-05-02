@@ -11,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 from rotkehlchen.accounting.structures.processed_event import ProcessedAccountingEvent
 from rotkehlchen.db.filtering import ReportDataFilterQuery
 from rotkehlchen.db.reports import DBAccountingReports
+from rotkehlchen.user_messages import MessagesAggregator
 
 from buchfink.datatypes import (
     Asset,
@@ -130,8 +131,21 @@ def run_report(
         return act.get_timestamp()
 
     all_events = sorted(all_trades + all_actions, key=timestamp)
-    accountant = buchfink_db.get_accountant()
+    msg_aggregator = MessagesAggregator()
+    accountant = buchfink_db.get_accountant(msg_aggregator=msg_aggregator)
     report_id = accountant.process_history(start_ts, end_ts, all_events)
+
+    for msg in msg_aggregator.consume_warnings():
+        logger.warning(msg)
+
+    for msg in msg_aggregator.consume_errors():
+        logger.error(msg)
+
+    for pot in accountant.pots:
+        for missing_price in pot.cost_basis.missing_prices:
+            logger.error('Missing price: %s', missing_price)
+        for missing_acquisition in pot.cost_basis.missing_acquisitions:
+            logger.error('Missing acquisition: %s', missing_acquisition)
 
     root_logger.removeHandler(file_handler)
     root_logger.removeHandler(error_handler)

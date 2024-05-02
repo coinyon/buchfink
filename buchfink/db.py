@@ -447,7 +447,7 @@ class BuchfinkDB(DBHandler):
 
         return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
 
-    def get_accountant(self) -> Accountant:
+    def get_accountant(self, msg_aggregator: Optional[MessagesAggregator] = None) -> Accountant:
         # ethereum_accounting_aggregator = EthereumAccountingAggregator(
         #     node_inquirer=self.ethereum_inquirer,
         #     msg_aggregator=self.msg_aggregator,
@@ -462,7 +462,7 @@ class BuchfinkDB(DBHandler):
 
         return Accountant(
             db=self,
-            msg_aggregator=self.msg_aggregator,
+            msg_aggregator=self.msg_aggregator if msg_aggregator is None else msg_aggregator,
             chains_aggregator=chains_aggregator,
             premium=None,
         )
