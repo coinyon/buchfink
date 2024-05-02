@@ -605,6 +605,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
 @click.option('--external', '-e', type=str, multiple=True, help='Use adhoc / external account')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--report', type=str, default=None, help='Filter by keyword in report name')
+@click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
 @click.option(
     '--render-only',
     is_flag=True,
@@ -623,12 +624,15 @@ def report_(
     keyword,
     external,
     report,
+    asset,
     year,
     render_only,
     progress: bool,
     vcs_check: bool,
 ):
     "Generate reports for all active report configs and output overview table"
+
+    limit_assets = [buchfink_db.get_asset_by_symbol(asset)] if asset is not None else None
 
     if not render_only:
         buchfink_db.perform_assets_updates()
@@ -686,7 +690,7 @@ def report_(
     for _report in track(reports, description='Generating reports', disable=not progress):
         name = str(_report.name)
         if not render_only:
-            results[name] = run_report(buchfink_db, accounts, _report)
+            results[name] = run_report(buchfink_db, accounts, _report, limit_assets=limit_assets)
         if _report.template:
             render_report(buchfink_db, _report)
 

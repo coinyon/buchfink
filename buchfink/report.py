@@ -4,7 +4,7 @@ import os.path
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Literal, Union
+from typing import List, Literal, Optional, Union
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
@@ -29,7 +29,12 @@ from .models import Account, ReportConfig
 logger = logging.getLogger(__name__)
 
 
-def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: ReportConfig):
+def run_report(
+    buchfink_db: BuchfinkDB,
+    accounts: List[Account],
+    report_config: ReportConfig,
+    limit_assets: Optional[List[Asset]] = None,
+):
     name = report_config.name
     start_ts = Timestamp(int(report_config.from_dt.timestamp()))
     end_ts = Timestamp(int(report_config.to_dt.timestamp()))
@@ -72,6 +77,11 @@ def run_report(buchfink_db: BuchfinkDB, accounts: List[Account], report_config: 
 
         all_trades.extend(buchfink_db.get_local_trades_for_account(account))
         all_actions.extend(buchfink_db.get_local_ledger_actions_for_account(account))
+
+    if limit_assets:
+        logger.info('Limiting report to assets: %s', limit_assets)
+        all_trades = [t for t in all_trades if t.base_asset in limit_assets or t.quote_asset in limit_assets]
+        all_actions = [a for a in all_actions if a.asset in limit_assets]
 
     logger.info(
         'Collected %d trades / %d actions from %d account(s)',
