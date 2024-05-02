@@ -5,7 +5,9 @@ from operator import itemgetter
 from typing import Any, Dict, List, Tuple
 
 import dateutil.parser
+from rotkehlchen.accounting.types import MissingPrice
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
+from rotkehlchen.constants import ZERO
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
 from rotkehlchen.types import EvmTokenKind, Location, deserialize_evm_tx_hash
@@ -710,3 +712,12 @@ def serialize_nft(nft: Nfts) -> Dict[str, Any]:
 
 def serialize_nfts(nfts: List[Nfts]) -> List[Dict[str, Any]]:
     return [serialize_nft(nft) for nft in sorted(nfts, key=lambda nft: nft.token_identifier)]
+
+
+def deserialize_missing_price(missing_price: MissingPrice) -> dict:
+    return {
+        'from': serialize_asset(missing_price.from_asset),
+        'to': serialize_asset(missing_price.to_asset),
+        'at': serialize_timestamp(missing_price.time),
+        'price': serialize_fval(ZERO),
+    }

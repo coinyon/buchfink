@@ -23,7 +23,7 @@ from buchfink.datatypes import (
     Trade,
 )
 from buchfink.db import BuchfinkDB
-from buchfink.serialization import deserialize_fval, serialize_fval
+from buchfink.serialization import deserialize_fval, deserialize_missing_price, serialize_fval
 
 from .models import Account, ReportConfig
 
@@ -143,14 +143,22 @@ def run_report(
     for msg in msg_aggregator.consume_errors():
         logger.error(msg)
 
+    serialized_missing_prices = []
     for pot in accountant.pots:
         for missing_price in pot.cost_basis.missing_prices:
             logger.error('Missing price: %s', missing_price)
+            serialized_missing_prices.append(deserialize_missing_price(missing_price))
         for missing_acquisition in pot.cost_basis.missing_acquisitions:
             logger.error('Missing acquisition: %s', missing_acquisition)
 
     root_logger.removeHandler(file_handler)
     root_logger.removeHandler(error_handler)
+
+    if serialized_missing_prices:
+        logger.info(
+            'Missing prices template:\n\n%s',
+            yaml.dump({'prices': serialized_missing_prices}, sort_keys=False, indent=2),
+        )
 
     accountant.export(buchfink_db.reports_directory / Path(name))
 
