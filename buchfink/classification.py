@@ -918,8 +918,10 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
         elif event.topics[0] == CLAIM_2:
             logger.warning('Unknown Claim event for tx %s at %s', txn.tx_hash.hex(), tx_time)
 
-        if event.topics[0] == CLAIM_3 and any(same_addr(event.address, addr) for addr in ADDR_CREAM_REWARDS):
-            amount = hexstr_to_int(event.data[(2+192):])
+        if event.topics[0] == CLAIM_3 and any(
+            same_addr(event.address, addr) for addr in ADDR_CREAM_REWARDS
+        ):
+            amount = hexstr_to_int(event.data[(2 + 192) :])
             asset = symbol_to_asset_or_token('CREAM', chain_id=ChainID.ETHEREUM)
             actions += [
                 HistoryEvent(

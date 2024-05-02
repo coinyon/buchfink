@@ -81,7 +81,9 @@ def run_report(
 
     if limit_assets:
         logger.info('Limiting report to assets: %s', limit_assets)
-        all_trades = [t for t in all_trades if t.base_asset in limit_assets or t.quote_asset in limit_assets]
+        all_trades = [
+            t for t in all_trades if t.base_asset in limit_assets or t.quote_asset in limit_assets
+        ]
         all_actions = [a for a in all_actions if a.asset in limit_assets]
 
     logger.info(
