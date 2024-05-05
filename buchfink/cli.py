@@ -618,6 +618,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
 @click.option(
     '--vcs-check/--no-vcs-check', default=True, help='Check if we are in a clean VCS state'
 )
+@click.option('--template', type=str, default=None, help='Render using this template')
 @with_buchfink_db
 def report_(
     buchfink_db: BuchfinkDB,
@@ -626,6 +627,7 @@ def report_(
     report,
     asset,
     year,
+    template,
     render_only,
     progress: bool,
     vcs_check: bool,
@@ -666,8 +668,8 @@ def report_(
         reports = [
             ReportConfig(
                 name=f'adhoc-{_year}',
-                title=str(year),
-                template=None,
+                title=str(_year),
+                template=template,
                 from_dt=datetime(_year, 1, 1),
                 to_dt=datetime(_year + 1, 1, 1),
             )
