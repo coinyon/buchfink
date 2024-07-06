@@ -49,7 +49,6 @@ from rotkehlchen.exchanges.binance import Binance
 from rotkehlchen.exchanges.bitcoinde import Bitcoinde
 from rotkehlchen.exchanges.bitmex import Bitmex
 from rotkehlchen.exchanges.coinbase import Coinbase
-from rotkehlchen.exchanges.coinbasepro import Coinbasepro
 from rotkehlchen.exchanges.exchange import ExchangeInterface
 from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.iconomi import Iconomi
@@ -621,8 +620,6 @@ class BuchfinkDB(DBHandler):
             exchange = Binance(**exchange_opts)
         elif account_config.exchange == 'coinbase':
             exchange = Coinbase(**exchange_opts)
-        elif account_config.exchange == 'coinbasepro':
-            exchange = Coinbasepro(**exchange_opts, passphrase=str(account_config.passphrase))
         elif account_config.exchange == 'gemini':
             exchange = Gemini(**exchange_opts)
         elif account_config.exchange == 'bitmex':

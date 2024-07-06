@@ -47,7 +47,6 @@ exchanges that Rotki supports, namely:
   * bitmex
   * bittrex
   * coinbase
-  * coinbasepro
   * gemini
   * iconomi
   * kraken

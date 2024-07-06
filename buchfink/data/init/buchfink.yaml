@@ -9,7 +9,6 @@ accounts:
   #  * gemini
   #  * bitmex
   #  * bittrex
-  #  * coinbasepro
   - name: kraken1
     exchange: kraken
     api_key: ...
