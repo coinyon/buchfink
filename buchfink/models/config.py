@@ -76,6 +76,7 @@ class ExternalServicesConfig(BaseModel):
     loopring: Optional[str] = None
     beaconchain: Optional[str] = None
     opensea: Optional[str] = None
+    blockscout: Optional[str] = None
 
 
 class RpcNode(BaseModel):

@@ -7,6 +7,6 @@ pyqrcode
 python-dateutil
 PyYAML>=5.0
 rich
-rotkehlchen @ git+https://github.com/rotki/rotki.git@5b1c283760137858a5dee83fcd95cc37ec55809d#egg=rotkehlchen
+rotkehlchen @ git+https://github.com/rotki/rotki.git@0843b2e4561041fb7737c5727fcbce66eb2408f7#egg=rotkehlchen
 tabulate
 typing_extensions

@@ -68,6 +68,7 @@ from rotkehlchen.inquirer import Inquirer
 from rotkehlchen.logging import TRACE, add_logging_level
 from rotkehlchen.types import (
     SPAM_PROTOCOL,
+    ApiKey,
     ChainID,
     ChecksumEvmAddress,
     ExternalService,
@@ -76,7 +77,7 @@ from rotkehlchen.types import (
     Location,
     Price,
     SupportedBlockchain,
-    Timestamp,
+    Timestamp
 )
 from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
@@ -91,7 +92,7 @@ from buchfink.datatypes import (
     EvmTxReceipt,
     HistoryBaseEntry,
     Nfts,
-    Trade,
+    Trade
 )
 from buchfink.exceptions import InputError, UnknownAsset
 from buchfink.models import (
@@ -99,7 +100,7 @@ from buchfink.models import (
     Config,
     ExchangeAccountConfig,
     HistoricalPriceConfig,
-    ReportConfig,
+    ReportConfig
 )
 from buchfink.models.account import accounts_from_config
 from buchfink.serialization import (
@@ -109,7 +110,7 @@ from buchfink.serialization import (
     deserialize_evm_token,
     deserialize_identifier,
     deserialize_trade,
-    serialize_balances,
+    serialize_balances
 )
 
 if TYPE_CHECKING:
@@ -172,12 +173,6 @@ class BuchfinkDB(DBHandler):
         self.last_write_ts: Optional[Timestamp] = None
 
         self.msg_aggregator = MessagesAggregator()
-        self.cryptocompare = Cryptocompare(self)
-        self.coingecko = Coingecko()
-        self.defillama = Defillama()
-        self.historian = PriceHistorian(
-            self.cache_directory / 'history', self.cryptocompare, self.coingecko, self.defillama
-        )
 
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
@@ -191,6 +186,10 @@ class BuchfinkDB(DBHandler):
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
         self.data_updater = RotkiDataUpdater(msg_aggregator=self.msg_aggregator, user_db=self)
+
+        self.cryptocompare = Cryptocompare(self)
+        self.coingecko = Coingecko()
+        self.defillama = Defillama()
 
         self.inquirer = Inquirer(
             data_dir=self.cache_directory / 'inquirer',
@@ -300,13 +299,23 @@ class BuchfinkDB(DBHandler):
             # msg_aggregator=self.msg_aggregator,
         )
 
+        self.uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_inquirer)
+        self.uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_inquirer)
+        self.historian = PriceHistorian(
+            self.cache_directory / 'history',
+            self.cryptocompare,
+            self.coingecko,
+            self.defillama,
+            self.uniswap_v2_oracle,
+            self.uniswap_v3_oracle,
+        )
+
+
         # if rpc_nodes:
         #     self.ethereum_manager.connect_to_multiple_nodes(rpc_nodes)
 
         self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
-        uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_inquirer)
-        uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_inquirer)
-        Inquirer().add_defi_oracles(uniswap_v2=uniswap_v2_oracle, uniswap_v3=uniswap_v3_oracle)
+        Inquirer().add_defi_oracles(uniswap_v2=self.uniswap_v2_oracle, uniswap_v3=self.uniswap_v3_oracle)
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
@@ -440,11 +449,11 @@ class BuchfinkDB(DBHandler):
         if not self.config.settings.external_services:
             return None
 
-        api_key = self.config.settings.external_services.dict()[short_name]
+        api_key: Optional[str] = getattr(self.config.settings.external_services, short_name)
         if not api_key:
             return None
 
-        return ExternalServiceApiCredentials(service=service_name, api_key=api_key)
+        return ExternalServiceApiCredentials(service=service_name, api_key=ApiKey(api_key))
 
     def get_accountant(self, msg_aggregator: Optional[MessagesAggregator] = None) -> Accountant:
         # ethereum_accounting_aggregator = EthereumAccountingAggregator(
