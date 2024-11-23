@@ -2,11 +2,11 @@ coloredlogs
 jinja2
 pandas
 pickledb
-pydantic<2
+pydantic
 pyqrcode
 python-dateutil
 PyYAML>=5.0
 rich
-rotkehlchen @ git+https://github.com/rotki/rotki.git@0843b2e4561041fb7737c5727fcbce66eb2408f7#egg=rotkehlchen
+rotkehlchen @ git+https://github.com/rotki/rotki.git@abbe76dcea2b4a5fe0fb848741a01e554ee4b5bd#egg=rotkehlchen
 tabulate
 typing_extensions

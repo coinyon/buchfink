@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class FetchConfig(BaseModel):
@@ -58,16 +58,13 @@ AccountConfig = Union[
 
 class ReportConfigFromConfigFile(BaseModel):
     name: str
-    from_: str
+    from_: str = Field(alias='from')
     to: str
-    title: Optional[str]
-    template: Optional[str]
+    title: Optional[str] = None
+    template: Optional[str] = None
     limit_accounts: List[str] = []
     exclude_accounts: List[str] = []
     active: bool = True
-
-    class Config:
-        fields = {'from_': 'from'}
 
 
 class ExternalServicesConfig(BaseModel):
@@ -77,6 +74,7 @@ class ExternalServicesConfig(BaseModel):
     beaconchain: Optional[str] = None
     opensea: Optional[str] = None
     blockscout: Optional[str] = None
+    coingecko: Optional[str] = None
 
 
 class RpcNode(BaseModel):
@@ -108,13 +106,10 @@ class AssetConfig(BaseModel):
 
 
 class HistoricalPriceConfig(BaseModel):
-    from_: str
+    from_: str = Field(alias='from')
     to: str
     at: datetime
     price: Optional[float]
-
-    class Config:
-        fields = {'from_': 'from'}
 
 
 class Config(BaseModel):

@@ -5,8 +5,7 @@ from typing import List
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.types import ChainID
 from rotkehlchen.utils.misc import (
-    hex_or_bytes_to_address,
-    hex_or_bytes_to_str,
+    bytes_to_address,
     hexstr_to_int,
     ts_sec_to_ms,
 )
@@ -116,6 +115,12 @@ ADDR_UMA = '0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828'
 ADDR_ENS = '0xC18360217D8F7Ab5e7c516566761Ea12Ce7F9D72'
 ADDR_XDAI_EASYSTAKING = '0xecbCd6D7264e3c9eAc24C7130Ed3cd2B38F5A7AD'
 ADDR_HEDRON = '0x3819f64f282bf135d62168C1e513280dAF905e06'
+
+
+def hex_or_bytes_to_str(value: bytes | str) -> str:
+    if isinstance(value, bytes):
+        return value.hex()
+    return value.removeprefix('0x')
 
 
 def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) -> List[HistoryEvent]:
@@ -632,7 +637,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_PIEDAO_DOUGH):
             if addr_in(
-                hex_or_bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES
+                bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES
             ) and hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
                 actions += [

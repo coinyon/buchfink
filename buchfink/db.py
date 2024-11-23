@@ -77,7 +77,7 @@ from rotkehlchen.types import (
     Location,
     Price,
     SupportedBlockchain,
-    Timestamp
+    Timestamp,
 )
 from rotkehlchen.user_messages import MessagesAggregator
 from rotkehlchen.utils.misc import ts_now
@@ -92,7 +92,7 @@ from buchfink.datatypes import (
     EvmTxReceipt,
     HistoryBaseEntry,
     Nfts,
-    Trade
+    Trade,
 )
 from buchfink.exceptions import InputError, UnknownAsset
 from buchfink.models import (
@@ -100,7 +100,7 @@ from buchfink.models import (
     Config,
     ExchangeAccountConfig,
     HistoricalPriceConfig,
-    ReportConfig
+    ReportConfig,
 )
 from buchfink.models.account import accounts_from_config
 from buchfink.serialization import (
@@ -110,7 +110,7 @@ from buchfink.serialization import (
     deserialize_evm_token,
     deserialize_identifier,
     deserialize_trade,
-    serialize_balances
+    serialize_balances,
 )
 
 if TYPE_CHECKING:
@@ -180,16 +180,25 @@ class BuchfinkDB(DBHandler):
         self.etherscan = EthereumEtherscan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
         self.globaldb = GlobalDBHandler(
-            data_dir=self.cache_directory, sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB
+            data_dir=self.cache_directory,
+            sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB,
+            msg_aggregator=self.msg_aggregator,
         )
-        self.asset_resolver = AssetResolver()
+        self.asset_resolver = AssetResolver(
+            globaldb=self.globaldb,
+            constant_assets=set(),
+        )
         self.assets_updater = AssetsUpdater(self.msg_aggregator)
 
         self.data_updater = RotkiDataUpdater(msg_aggregator=self.msg_aggregator, user_db=self)
 
         self.cryptocompare = Cryptocompare(self)
-        self.coingecko = Coingecko()
-        self.defillama = Defillama()
+        self.coingecko = Coingecko(
+            database=self,
+        )
+        self.defillama = Defillama(
+            database=self,
+        )
 
         self.inquirer = Inquirer(
             data_dir=self.cache_directory / 'inquirer',
@@ -310,12 +319,13 @@ class BuchfinkDB(DBHandler):
             self.uniswap_v3_oracle,
         )
 
-
         # if rpc_nodes:
         #     self.ethereum_manager.connect_to_multiple_nodes(rpc_nodes)
 
         self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
-        Inquirer().add_defi_oracles(uniswap_v2=self.uniswap_v2_oracle, uniswap_v3=self.uniswap_v3_oracle)
+        Inquirer().add_defi_oracles(
+            uniswap_v2=self.uniswap_v2_oracle, uniswap_v3=self.uniswap_v3_oracle
+        )
         self.inquirer.set_oracles_order(self.get_settings().current_price_oracles)
         self.historian.set_oracles_order(self.get_settings().historical_price_oracles)
         self.beaconchain = BeaconChain(database=self, msg_aggregator=self.msg_aggregator)
