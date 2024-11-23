@@ -75,6 +75,7 @@ class ExternalServicesConfig(BaseModel):
     opensea: Optional[str] = None
     blockscout: Optional[str] = None
     coingecko: Optional[str] = None
+    defillama: Optional[str] = None
 
 
 class RpcNode(BaseModel):
@@ -100,7 +101,7 @@ class AssetConfig(BaseModel):
     address: Optional[str]
     symbol: Optional[str]
     decimals: Optional[int]
-    chain_id: Optional[int]
+    chain_id: Optional[int] = None
     coingecko: Optional[str] = None
     cryptocompare: Optional[str] = None
 
