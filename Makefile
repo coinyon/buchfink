@@ -18,7 +18,7 @@ test-local-x:
 	py.test -m 'not blockchain_data' -x
 
 test-local-ff:
-	py.test -m 'not blockchain_data' --maxfail=5 --ff
+	py.test -m 'not blockchain_data' --maxfail=5 --ff -v
 
 test-remote:
 	py.test -m 'blockchain_data'
