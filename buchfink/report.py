@@ -81,10 +81,22 @@ def run_report(
 
     if limit_assets:
         logger.info('Limiting report to assets: %s', limit_assets)
+
+        relevant_tx_hashes = {
+            action.tx_hash
+            for action in all_actions
+            if action.asset in limit_assets
+            if isinstance(action, EvmEvent)
+        }
         all_trades = [
             t for t in all_trades if t.base_asset in limit_assets or t.quote_asset in limit_assets
         ]
-        all_actions = [a for a in all_actions if a.asset in limit_assets]
+        all_actions = [
+            a
+            for a in all_actions
+            if a.asset in limit_assets
+            or (isinstance(a, EvmEvent) and a.tx_hash in relevant_tx_hashes)
+        ]
 
     logger.info(
         'Collected %d trades / %d actions from %d account(s)',
@@ -133,6 +145,11 @@ def run_report(
         return act.get_timestamp()
 
     all_events = sorted(all_trades + all_actions, key=timestamp)
+    print(folder / 'events.yaml')
+    with (folder / 'events.yaml').open('w') as events_file:
+        yaml.dump([event.serialize() for event in all_events], stream=events_file)
+
+    # raise ValueError('Not implemented')
     msg_aggregator = MessagesAggregator()
     accountant = buchfink_db.get_accountant(msg_aggregator=msg_aggregator)
     report_id = accountant.process_history(start_ts, end_ts, all_events)
@@ -148,6 +165,7 @@ def run_report(
         for missing_price in pot.cost_basis.missing_prices:
             logger.error('Missing price: %s', missing_price)
             serialized_missing_prices.append(deserialize_missing_price(missing_price))
+
         for missing_acquisition in pot.cost_basis.missing_acquisitions:
             logger.error('Missing acquisition: %s', missing_acquisition)
 
@@ -163,7 +181,7 @@ def run_report(
     accountant.export(buchfink_db.reports_directory / Path(name))
 
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
-    results, _ = dbpnl.get_reports(report_id=report_id, with_limit=False)
+    results, _ = dbpnl.get_reports(report_id=report_id, limit=0)
     report_data = results[0]
 
     def get_total_pnl_from_overview(pnl_overview):
@@ -272,7 +290,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
     report_data = dbpnl.get_report_data(
         filter_=ReportDataFilterQuery.make(report_id=report_id),
-        with_limit=False,
+        limit=0,
     )
     events = report_data[0]
 

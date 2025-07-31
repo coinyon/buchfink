@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, 
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
-from rotkehlchen.accounting.structures.types import ActionType
+
+# from rotkehlchen.accounting.structures.types import ActionType  # ActionType removed
 from rotkehlchen.assets.resolver import AssetResolver
 from rotkehlchen.assets.spam_assets import update_spam_assets
 from rotkehlchen.assets.utils import get_or_create_evm_token
@@ -19,8 +20,10 @@ from rotkehlchen.chain.arbitrum_one.node_inquirer import ArbitrumOneInquirer
 from rotkehlchen.chain.avalanche.manager import AvalancheManager
 from rotkehlchen.chain.base.manager import BaseManager
 from rotkehlchen.chain.base.node_inquirer import BaseInquirer
+from rotkehlchen.chain.binance_sc.manager import BinanceSCManager
+from rotkehlchen.chain.binance_sc.node_inquirer import BinanceSCInquirer
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
-from rotkehlchen.chain.ethereum.etherscan import EthereumEtherscan
+from rotkehlchen.externalapis.etherscan import Etherscan as EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
 from rotkehlchen.chain.ethereum.node_inquirer import EthereumInquirer
 from rotkehlchen.chain.ethereum.oracles.uniswap import UniswapV2Oracle, UniswapV3Oracle
@@ -54,13 +57,14 @@ from rotkehlchen.exchanges.gemini import Gemini
 from rotkehlchen.exchanges.iconomi import Iconomi
 from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
+from rotkehlchen.externalapis.alchemy import Alchemy
 from rotkehlchen.externalapis.beaconchain.service import BeaconChain
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.defillama import Defillama
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
-from rotkehlchen.globaldb.updates import AssetsUpdater
+from rotkehlchen.globaldb.asset_updates.manager import AssetsUpdater
 from rotkehlchen.greenlets.manager import GreenletManager
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
@@ -182,13 +186,14 @@ class BuchfinkDB(DBHandler):
         self.globaldb = GlobalDBHandler(
             data_dir=self.cache_directory,
             sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB,
+            perform_assets_updates=True,
             msg_aggregator=self.msg_aggregator,
         )
         self.asset_resolver = AssetResolver(
             globaldb=self.globaldb,
             constant_assets=set(),
         )
-        self.assets_updater = AssetsUpdater(self.msg_aggregator)
+        self.assets_updater = AssetsUpdater(self.msg_aggregator, self.globaldb)
 
         self.data_updater = RotkiDataUpdater(msg_aggregator=self.msg_aggregator, user_db=self)
 
@@ -199,14 +204,18 @@ class BuchfinkDB(DBHandler):
         self.defillama = Defillama(
             database=self,
         )
+        self.alchemy = Alchemy(
+            database=self,
+        )
 
         self.inquirer = Inquirer(
             data_dir=self.cache_directory / 'inquirer',
             cryptocompare=self.cryptocompare,
             coingecko=self.coingecko,
+            defillama=self.defillama,
+            alchemy=self.alchemy,
             manualcurrent=ManualCurrentOracle(),
             msg_aggregator=self.msg_aggregator,
-            defillama=self.defillama,
         )
         # Initialize EVM Contracts common abis
         EvmContracts.initialize_common_abis()
@@ -241,22 +250,25 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.ethereum_inquirer = EthereumInquirer(
-            greenlet_manager=self.greenlet_manager, database=self
+            greenlet_manager=self.greenlet_manager, database=self, etherscan=self.etherscan
         )
         self.ethereum_manager = EthereumManager(self.ethereum_inquirer)
         self.optimism_inquirer = OptimismInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
+            etherscan=self.etherscan,
         )
         self.optimism_manager = OptimismManager(self.optimism_inquirer)
         self.polygon_pos_inquirer = PolygonPOSInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
+            etherscan=self.etherscan,
         )
         self.polygon_pos_manager = PolygonPOSManager(self.polygon_pos_inquirer)
         self.scroll_inquirer = ScrollInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
+            etherscan=self.etherscan,
         )
         self.zksync_lite_manager = ZksyncLiteManager(
             ethereum_inquirer=self.ethereum_inquirer,
@@ -266,18 +278,27 @@ class BuchfinkDB(DBHandler):
         self.arbitrum_one_inquirer = ArbitrumOneInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
+            etherscan=self.etherscan,
         )
         self.arbitrum_one_manager = ArbitrumOneManager(self.arbitrum_one_inquirer)
         self.base_inquirer = BaseInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
+            etherscan=self.etherscan,
         )
         self.base_manager = BaseManager(self.base_inquirer)
         self.gnosis_inquirer = GnosisInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
+            etherscan=self.etherscan,
         )
         self.gnosis_manager = GnosisManager(self.gnosis_inquirer)
+        self.binance_sc_inquirer = BinanceSCInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+            etherscan=self.etherscan,
+        )
+        self.binance_sc_manager = BinanceSCManager(self.binance_sc_inquirer)
         self.kusama_manager = SubstrateManager(
             chain=SupportedBlockchain.KUSAMA,
             msg_aggregator=self.msg_aggregator,
@@ -305,24 +326,36 @@ class BuchfinkDB(DBHandler):
             database=self,
             ethereum_inquirer=self.ethereum_inquirer,
             transactions=self.eth_transactions,
-            # msg_aggregator=self.msg_aggregator,
-        )
-
-        self.uniswap_v2_oracle = UniswapV2Oracle(self.ethereum_inquirer)
-        self.uniswap_v3_oracle = UniswapV3Oracle(self.ethereum_inquirer)
-        self.historian = PriceHistorian(
-            self.cache_directory / 'history',
-            self.cryptocompare,
-            self.coingecko,
-            self.defillama,
-            self.uniswap_v2_oracle,
-            self.uniswap_v3_oracle,
         )
 
         # if rpc_nodes:
         #     self.ethereum_manager.connect_to_multiple_nodes(rpc_nodes)
 
-        self.inquirer.inject_evm_managers([(ChainID.ETHEREUM, self.ethereum_manager)])
+        self.inquirer.inject_evm_managers(
+            [
+                (ChainID.ETHEREUM, self.ethereum_manager),
+                (ChainID.OPTIMISM, self.optimism_manager),
+                (ChainID.POLYGON_POS, self.polygon_pos_manager),
+                (ChainID.ARBITRUM_ONE, self.arbitrum_one_manager),
+                (ChainID.BASE, self.base_manager),
+                (ChainID.GNOSIS, self.gnosis_manager),
+                (ChainID.SCROLL, self.scroll_manager),
+                (ChainID.BINANCE_SC, self.binance_sc_manager),
+            ]
+        )
+
+        # Create Uniswap oracles after EVM managers are injected
+        self.uniswap_v2_oracle = UniswapV2Oracle()
+        self.uniswap_v3_oracle = UniswapV3Oracle()
+        self.historian = PriceHistorian(
+            data_directory=self.cache_directory / 'history',
+            cryptocompare=self.cryptocompare,
+            coingecko=self.coingecko,
+            defillama=self.defillama,
+            alchemy=self.alchemy,
+            uniswapv2=self.uniswap_v2_oracle,
+            uniswapv3=self.uniswap_v3_oracle,
+        )
         Inquirer().add_defi_oracles(
             uniswap_v2=self.uniswap_v2_oracle, uniswap_v3=self.uniswap_v3_oracle
         )
@@ -427,7 +460,7 @@ class BuchfinkDB(DBHandler):
 
         dbevmtx = DBEvmTx(self)
         with self.conn.read_ctx() as cursor:
-            txs, txs_total_count = dbevmtx.get_evm_transactions_and_limit_info(
+            txs = dbevmtx.get_evm_transactions(
                 cursor=cursor,
                 filter_=EvmTransactionsFilterQuery.make(
                     accounts=[EvmAccount(address, ChainID.ETHEREUM)],
@@ -436,7 +469,6 @@ class BuchfinkDB(DBHandler):
                 ),
                 has_premium=False,
             )
-            assert len(txs) == txs_total_count
 
         result = []
         for txn in txs:
@@ -606,11 +638,14 @@ class BuchfinkDB(DBHandler):
             zksync_lite_manager=self.zksync_lite_manager,
             base_manager=self.base_manager,
             gnosis_manager=self.gnosis_manager,
+            scroll_manager=self.scroll_manager,
+            binance_sc_manager=self.binance_sc_manager,
+            bitcoin_manager=None,  # Not used in buchfink
+            bitcoin_cash_manager=None,  # Not used in buchfink
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
             polygon_pos_manager=self.polygon_pos_manager,
-            scroll_manager=self.scroll_manager,
             premium=None,
             eth_modules=eth_modules,
         )
@@ -740,8 +775,8 @@ class BuchfinkDB(DBHandler):
         with open(path, 'r') as account_f:
             account = yaml.load(account_f, Loader=yaml.SafeLoader)
 
-        assets = {}  # type: Dict[Asset, Balance]
-        liabilities = {}  # type: Dict[Asset, Balance]
+        assets: Dict[Asset, Balance] = {}
+        liabilities: Dict[Asset, Balance] = {}
 
         if 'assets' in account:
             for balance in account['assets']:
@@ -807,8 +842,8 @@ class BuchfinkDB(DBHandler):
     def get_ignored_action_ids(
         self,
         cursor,
-        action_type: Optional[ActionType],
-    ) -> Dict[ActionType, List[str]]:
+        action_type=None,  # pylint: disable=unused-argument
+    ):
         return {}
 
     # def add_asset_identifiers(self, asset_identifiers: List[str]) -> None:

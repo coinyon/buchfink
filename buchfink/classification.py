@@ -151,7 +151,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984'
@@ -170,7 +170,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'
@@ -189,7 +189,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x0cec1a9154ff802e7934fc916ed7ca50bde6844e'
@@ -208,7 +208,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x7b35ce522cb72e4077baeb96cb923a5529764a00'
@@ -234,7 +234,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=token,
                         notes='Badger rewards for staking',
@@ -254,7 +254,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x7f3edcdd180dbe4819bd98fee8929b5cedb3adeb'
@@ -273,7 +273,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('BAL', chain_id=ChainID.ETHEREUM),
                     notes='Balancer rewards for providing liquidity',
@@ -290,7 +290,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('ROOK', chain_id=ChainID.ETHEREUM),
                     notes='Rook rewards for providing liquidity',
@@ -310,7 +310,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0xDe30da39c46104798bB5aA3fe8B9e0e1F348163F'
@@ -337,7 +337,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0xc770EEfAd204B5180dF6a14Ee197D99d808ee52d'
@@ -359,7 +359,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('SUSHI', chain_id=ChainID.ETHEREUM),
                     notes='SUSHI rewards vesting',
@@ -379,7 +379,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('INDEX', chain_id=ChainID.ETHEREUM),
                     notes='rewards for providing liquidity',
@@ -396,7 +396,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('yDAI+yUSDC+yUSDT+yTUSD'),
                     notes='rewards from yearn governance',
@@ -413,7 +413,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token('CREAM', chain_id=ChainID.ETHEREUM),
                     notes='rewards from CREAM incentives',
@@ -430,7 +430,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x09a3ecafa817268f77be1283176b946c4ff2e608'
@@ -453,7 +453,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token('SWRV', chain_id=ChainID.ETHEREUM),
                         notes='Swerve rewards for pooling liquidity',
@@ -474,7 +474,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.SPEND,
                         event_subtype=HistoryEventSubType.NONE,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token('ETH'),
                         notes='Fei Genesis Commit',
@@ -497,7 +497,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.AIRDROP,
-                        balance=Balance(FVal(amount_fei) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount_fei) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token(
                             'eip155:1/erc20:0x956F47F50A910163D8BF957Cf5846D573E7f87CA'
@@ -513,7 +513,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.AIRDROP,
-                        balance=Balance(FVal(amount_tribe) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount_tribe) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token(
                             'eip155:1/erc20:0xc7283b66Eb1EB5FB86327f08e1B5816b0720212B'
@@ -538,7 +538,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token('DODO', chain_id=ChainID.ETHEREUM),
                         notes='Claim DODO rewards',
@@ -558,7 +558,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token('SUSHI', chain_id=ChainID.ETHEREUM),
                         notes='Claim SUSHI rewards for staking LP',
@@ -581,7 +581,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.AIRDROP,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='TORN airdrop',
@@ -605,7 +605,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.NONE,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='DAI mint',
@@ -627,7 +627,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='UMA TVL option settlement',
@@ -636,9 +636,9 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                 ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_PIEDAO_DOUGH):
-            if addr_in(
-                bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES
-            ) and hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
+            if addr_in(bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES) and hexstr_to_int(
+                event.topics[2]
+            ) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
                 actions += [
                     HistoryEvent(
@@ -647,7 +647,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token('DOUGH'),
                         notes='rewards for providing liquidity',
@@ -665,7 +665,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(payout) / FVal(1e8), 0),
+                        amount=Balance(FVal(payout) / FVal(1e8), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=symbol_to_asset_or_token('eip155:1/erc20:' + ADDR_HEX),
                         notes='HEX Payout for staking',
@@ -686,7 +686,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.AIRDROP,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='dYdX retroactive airdrop',
@@ -717,7 +717,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                             location='',
                             event_type=HistoryEventType.RECEIVE,
                             event_subtype=HistoryEventSubType.AIRDROP,
-                            balance=Balance(FVal(amount) / FVal(1e8), 0),
+                            amount=Balance(FVal(amount) / FVal(1e8), 0),
                             timestamp=ts_sec_to_ms(txn.timestamp),
                             asset=asset,
                             notes='HEDRON airdrop mint',
@@ -738,7 +738,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.AIRDROP,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='Blackpool airdrop',
@@ -759,7 +759,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='XTK Rewards for LP staking',
@@ -781,7 +781,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.REWARD,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='STAKE rewards for easystaking',
@@ -803,7 +803,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                         location='',
                         event_type=HistoryEventType.RECEIVE,
                         event_subtype=HistoryEventSubType.NONE,
-                        balance=Balance(FVal(amount) / FVal(1e18), 0),
+                        amount=Balance(FVal(amount) / FVal(1e18), 0),
                         timestamp=ts_sec_to_ms(txn.timestamp),
                         asset=asset,
                         notes='Compound DAI mint',
@@ -837,7 +837,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                             location='',
                             event_type=HistoryEventType.RECEIVE,
                             event_subtype=HistoryEventSubType.NONE,
-                            balance=Balance(FVal(amount) / FVal(1e8), 0),
+                            amount=Balance(FVal(amount) / FVal(1e8), 0),
                             timestamp=ts_sec_to_ms(txn.timestamp),
                             asset=asset,
                             notes='XFLOBBYEXIT HEX mint',
@@ -854,7 +854,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x44709a920fCcF795fbC57BAA433cc3dd53C44DbE'
@@ -873,7 +873,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x03E173Ad8d1581A4802d3B532AcE27a62c5B81dc'
@@ -895,7 +895,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_ENS}'),
                     notes='ENS retroactive airdrop',
@@ -912,7 +912,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.AIRDROP,
-                    balance=Balance(FVal(amount) / FVal(1e12), 0),
+                    amount=Balance(FVal(amount) / FVal(1e12), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(f'eip155:1/erc20:{ADDR_PLSD}'),
                     notes='PLSD airdrop',
@@ -935,7 +935,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=asset,
                     notes='rewards from CREAM incentives',
@@ -952,7 +952,7 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    balance=Balance(FVal(amount) / FVal(1e18), 0),
+                    amount=Balance(FVal(amount) / FVal(1e18), 0),
                     timestamp=ts_sec_to_ms(txn.timestamp),
                     asset=symbol_to_asset_or_token(
                         'eip155:1/erc20:0x9257fb8fab616867cEe67C3289547403617B1938'

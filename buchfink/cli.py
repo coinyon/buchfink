@@ -896,5 +896,14 @@ def historical_prices(buchfink_db: BuchfinkDB):
         print()
 
 
+@buchfink.command('update')
+@with_buchfink_db
+def update(buchfink_db: BuchfinkDB):
+    "Update assets and prices"
+
+    buchfink_db.perform_assets_updates()
+    buchfink_db.sync_manual_prices()
+
+
 if __name__ == '__main__':
     buchfink(obj={})  # pylint: disable=unexpected-keyword-arg,no-value-for-parameter

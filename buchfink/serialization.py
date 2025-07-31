@@ -1,4 +1,5 @@
 import re
+import logging
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 from operator import itemgetter
@@ -10,7 +11,7 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants import ZERO
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
-from rotkehlchen.types import EvmTokenKind, Location, deserialize_evm_tx_hash
+from rotkehlchen.types import TokenKind, Location, deserialize_evm_tx_hash
 from rotkehlchen.utils.misc import ts_ms_to_sec
 
 from buchfink.datatypes import (
@@ -32,6 +33,9 @@ from buchfink.datatypes import (
 )
 from buchfink.exceptions import UnknownAsset
 from buchfink.models.config import AssetConfig
+
+
+logger = logging.getLogger(__name__)
 
 
 def serialize_timestamp(timestamp: Timestamp) -> str:
@@ -72,7 +76,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.REWARD,
             asset=asset,
-            balance=Balance(amount, 0),
+            amount=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
         )
 
@@ -86,7 +90,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.AIRDROP,
             asset=asset,
-            balance=Balance(amount, 0),
+            amount=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
         )
 
@@ -100,7 +104,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.SPEND,
             event_subtype=HistoryEventSubType.LIQUIDATE,
             asset=asset,
-            balance=Balance(amount, 0),
+            amount=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
         )
 
@@ -114,7 +118,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
-            balance=Balance(amount, 0),
+            amount=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
         )
 
@@ -128,7 +132,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.SPEND,
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
-            balance=Balance(amount, 0),
+            amount=Balance(amount, 0),
             notes=str(action_dict.get('notes', '')),
         )
 
@@ -252,7 +256,7 @@ def serialize_balance(balance: Balance, asset: Asset) -> dict:
 
 def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
     def _is_nft(asset):
-        return isinstance(asset, EvmToken) and asset.token_kind == EvmTokenKind.ERC721
+        return isinstance(asset, EvmToken) and asset.token_kind == TokenKind.ERC721
 
     ser_balances = {}
     if balances.assets:
@@ -279,7 +283,11 @@ def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
 def deserialize_balance(balance: Dict[str, Any], buchfink_db) -> Tuple[Balance, Asset]:
     amount = FVal(balance['amount'])
     asset = buchfink_db.get_asset_by_symbol(balance['asset'])
-    usd_value = amount * FVal(buchfink_db.inquirer.find_usd_price(asset))
+    try:
+        usd_value = amount * FVal(buchfink_db.inquirer.find_usd_price(asset))
+    except (ValueError, TypeError, KeyError) as e:
+        usd_value = FVal(0)
+        logger.exception('Could not find USD price for %s: %s', asset, e)
     return Balance(amount, usd_value), asset
 
 
@@ -604,7 +612,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             event_type=event_type,
             event_subtype=event_subtype,
             asset=asset,
-            balance=Balance(amount, 0),
+            amount=Balance(amount, 0),
             location_label=None,
             notes=event_dict.get('notes'),
             counterparty=event_dict.get('counterparty'),
@@ -623,7 +631,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
     #     event_type=HistoryEventType.SPEND,
     #     event_subtype=HistoryEventSubType.FEE,
     #     asset=asset,
-    #     balance=Balance(amount, 0),
+    #     amount=Balance(amount, 0),
     #     location_label=None,
     #     notes=event_dict.get('notes'),
     #     counterparty=event_dict.get('counterparty'),
@@ -696,7 +704,7 @@ def deserialize_evm_token(token_data: AssetConfig) -> EvmToken:
         decimals=token_data.decimals,
         coingecko=token_data.coingecko,
         chain_id=ChainID(token_data.chain_id) if token_data.chain_id else ChainID.ETHEREUM,
-        token_kind=EvmTokenKind.ERC20,
+        token_kind=TokenKind.ERC20,
     )
     return token
 
