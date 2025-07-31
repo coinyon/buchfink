@@ -25,7 +25,13 @@ from rotkehlchen.utils.misc import ts_ms_to_sec, ts_now
 from tabulate import tabulate
 from web3.exceptions import CannotHandleRequest
 
-from buchfink.datatypes import AssetType, FVal, HistoryBaseEntry, HistoryEvent, Timestamp, Trade
+from buchfink.datatypes import (
+    AssetType,
+    FVal,
+    HistoryBaseEntry,
+    HistoryEvent,
+    Timestamp,
+)
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import (
     deserialize_asset,
@@ -506,7 +512,7 @@ def format_(buchfink_db: BuchfinkDB, keyword: Optional[str], account_type: Optio
 def events_(buchfink_db: BuchfinkDB, keyword, asset):
     "List events"
 
-    events: List[Tuple[Union[HistoryBaseEntry, Trade], Account]] = []
+    events: List[Tuple[Union[HistoryBaseEntry, HistoryEvent], Account]] = []
 
     filter_asset = buchfink_db.get_asset_by_symbol(asset) if asset is not None else None
     accounts = _get_accounts(buchfink_db, keyword=keyword)
@@ -541,8 +547,8 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
             # except NoPriceForGivenTimestamp:
             #     asset_currency = FVal('0.0')
 
-            if isinstance(event, Trade):
-                trade: Trade = event
+            if isinstance(event, HistoryEvent):
+                trade: HistoryEvent = event
                 table.append(
                     [
                         serialize_timestamp(trade.timestamp),
@@ -560,7 +566,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     [
                         serialize_timestamp(ts_ms_to_sec(event.timestamp)),
                         str(event.event_subtype),
-                        str(event.balance.amount.num),
+                        str(event.amount.num),
                         str(event.asset.symbol_or_name()),
                         '',
                         '',
@@ -574,9 +580,9 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                     [
                         serialize_timestamp(ts_ms_to_sec(event.timestamp)),
                         str(event.event_subtype),
-                        serialize_decimal(event.balance.amount.num),
+                        serialize_decimal(event.amount.num),
                         str(event.asset.symbol_or_name()),
-                        serialize_decimal(event.balance.amount.num),
+                        serialize_decimal(event.amount.num),
                         str(event.asset.symbol_or_name()),
                         str(''),
                         str(account.name),

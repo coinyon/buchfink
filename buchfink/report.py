@@ -20,7 +20,7 @@ from buchfink.datatypes import (
     HistoryBaseEntry,
     HistoryEventSubType,
     Timestamp,
-    Trade,
+    HistoryEvent,
 )
 from buchfink.db import BuchfinkDB
 from buchfink.serialization import deserialize_fval, deserialize_missing_price, serialize_fval
@@ -40,7 +40,7 @@ def run_report(
     start_ts = Timestamp(int(report_config.from_dt.timestamp()))
     end_ts = Timestamp(int(report_config.to_dt.timestamp()))
     num_matched_accounts = 0
-    all_trades: List[Trade] = []
+    all_trades: List[HistoryEvent] = []
     all_actions: List[HistoryBaseEntry] = []
 
     root_logger = logging.getLogger('')
@@ -88,9 +88,7 @@ def run_report(
             if action.asset in limit_assets
             if isinstance(action, EvmEvent)
         }
-        all_trades = [
-            t for t in all_trades if t.base_asset in limit_assets or t.quote_asset in limit_assets
-        ]
+        all_trades = [t for t in all_trades if t.asset in limit_assets]
         all_actions = [
             a
             for a in all_actions
@@ -118,27 +116,27 @@ def run_report(
     for action in all_actions:
         if not isinstance(action, HistoryBaseEntry):
             # Must be LedgerAction then
-            if not action.link:
+            if not action.event_identifier:
                 continue
-            if action.link in action_ids:
+            if action.event_identifier in action_ids:
                 raise ValueError(
                     (
                         'Action with identifier "{}" is also present as an event '
                         'This might be an unidentified duplicate. Please check your '
                         'events and trades for duplicates.'
-                    ).format(action.link)
+                    ).format(action.event_identifier)
                 )
 
     for trade in all_trades:
-        if trade.link in action_ids:
-            if not trade.link:
+        if trade.event_identifier in action_ids:
+            if not trade.event_identifier:
                 continue
             raise ValueError(
                 (
-                    'Trade with identifier "{}" is also present as an event '
+                    'HistoryEvent with identifier "{}" is also present as an event '
                     'This might be an unidentified duplicate. Please check your '
                     'events and trades for duplicates.'
-                ).format(trade.link)
+                ).format(trade.event_identifier)
             )
 
     def timestamp(act):

@@ -96,7 +96,7 @@ from buchfink.datatypes import (
     EvmTxReceipt,
     HistoryBaseEntry,
     Nfts,
-    Trade,
+    HistoryEvent,
 )
 from buchfink.exceptions import InputError, UnknownAsset
 from buchfink.models import (
@@ -394,7 +394,7 @@ class BuchfinkDB(DBHandler):
             yield ReportConfig.from_config(report)
 
     def get_settings(self, cursor=None, have_premium: bool = False) -> DBSettings:
-        clean_settings = self.config.settings.dict().copy()
+        clean_settings = self.config.settings.model_dump().copy()
 
         clean_settings.pop('external_services', None)
         clean_settings.pop('rpc_nodes', None)
@@ -522,7 +522,7 @@ class BuchfinkDB(DBHandler):
             return BlockchainAccounts(eth=[self._active_eth_address])
         return BlockchainAccounts()
 
-    def get_trades_from_file(self, trades_file) -> List[Trade]:
+    def get_trades_from_file(self, trades_file) -> List[HistoryEvent]:
         def safe_deserialize_trade(trade):
             try:
                 return deserialize_trade(trade)
@@ -547,7 +547,7 @@ class BuchfinkDB(DBHandler):
             if ser_trade is not None
         ]
 
-    def get_local_trades_for_account(self, account_name: Union[str, Account]) -> List[Trade]:
+    def get_local_trades_for_account(self, account_name: Union[str, Account]) -> List[HistoryEvent]:
         if isinstance(account_name, str):
             account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
         else:
@@ -563,7 +563,7 @@ class BuchfinkDB(DBHandler):
     def get_actions_from_file(self, actions_file, include_trades=True) -> List[HistoryBaseEntry]:
         def safe_deserialize_event(action):
             if 'buy' in action or 'sell' in action:
-                # it is a Trade
+                # it is a HistoryEvent
                 if not include_trades:
                     return None
                 return deserialize_trade(action)

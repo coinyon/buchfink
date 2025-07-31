@@ -5,7 +5,6 @@ from decimal import Decimal, InvalidOperation
 from operator import itemgetter
 from typing import Any, Dict, List, Tuple
 
-import dateutil.parser
 from rotkehlchen.accounting.types import MissingPrice
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants import ZERO
@@ -28,8 +27,7 @@ from buchfink.datatypes import (
     Nfts,
     Timestamp,
     TimestampMS,
-    Trade,
-    TradeType,
+    EventDirection,
 )
 from buchfink.exceptions import UnknownAsset
 from buchfink.models.config import AssetConfig
@@ -76,8 +74,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.REWARD,
             asset=asset,
-            amount=Balance(amount, 0),
-            notes=str(action_dict.get('notes', '')),
+            amount=amount,
+            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
         )
 
     if 'airdrop' in action_dict:
@@ -90,8 +88,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.AIRDROP,
             asset=asset,
-            amount=Balance(amount, 0),
-            notes=str(action_dict.get('notes', '')),
+            amount=amount,
+            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
         )
 
     if 'loss' in action_dict:
@@ -101,11 +99,11 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
-            event_type=HistoryEventType.SPEND,
+            event_type=HistoryEventType.LOSS,
             event_subtype=HistoryEventSubType.LIQUIDATE,
             asset=asset,
-            amount=Balance(amount, 0),
-            notes=str(action_dict.get('notes', '')),
+            amount=amount,
+            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
         )
 
     if 'gift' in action_dict:
@@ -118,8 +116,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
-            amount=Balance(amount, 0),
-            notes=str(action_dict.get('notes', '')),
+            amount=amount,
+            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
         )
 
     if 'spend' in action_dict:
@@ -132,33 +130,43 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_type=HistoryEventType.SPEND,
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
-            amount=Balance(amount, 0),
-            notes=str(action_dict.get('notes', '')),
+            amount=amount,
+            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
         )
 
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 
-def deserialize_trade(trade_dict) -> Trade:
+def deserialize_trade(trade_dict) -> HistoryEvent:
     if 'pair' in trade_dict:
-        return Trade(
-            trade_dict['timestamp'],
-            Location.deserialize(trade_dict.get('location') or 'external'),
-            trade_dict['pair'],
-            deserialize_tradetype(trade_dict['trade_type']),
-            deserialize_fval(trade_dict['amount']),
-            deserialize_fval(trade_dict['rate']),
-            deserialize_fval(trade_dict['fee']),
-            deserialize_asset(trade_dict['fee_currency']),
-            str(trade_dict['link']),
+        # Legacy format with pair - convert to HistoryEvent
+        trade_type = deserialize_tradetype(trade_dict['trade_type'])
+        return HistoryEvent(
+            event_identifier=str(trade_dict.get('link', '')),
+            sequence_index=0,
+            timestamp=ts_ms_to_sec(deserialize_timestamp_ms(trade_dict['timestamp'])),
+            location=Location.deserialize(trade_dict.get('location') or 'external'),
+            event_type=HistoryEventType.TRADE,
+            event_subtype=HistoryEventSubType.SPEND
+            if trade_type == EventDirection.OUT
+            else HistoryEventSubType.RECEIVE,
+            asset=deserialize_asset(trade_dict['pair'].split('/')[0]),  # base asset from pair
+            amount=deserialize_fval(trade_dict['amount']),
+            notes=f"Legacy trade {trade_dict['pair']}",
         )
 
     if 'buy' in trade_dict:
-        trade_type = TradeType.BUY
+        trade_type = EventDirection.IN
         amount, base_asset = deserialize_amount(trade_dict['buy'])
     elif 'sell' in trade_dict:
-        trade_type = TradeType.SELL
+        trade_type = EventDirection.OUT
         amount, base_asset = deserialize_amount(trade_dict['sell'])
+    elif 'trade_receive' in trade_dict:
+        # New event format - return deserialize_event instead
+        return deserialize_event(trade_dict)
+    elif 'trade_spend' in trade_dict:
+        # New event format - return deserialize_event instead
+        return deserialize_event(trade_dict)
     else:
         raise ValueError('Invalid trade: ' + str(trade_dict))
 
@@ -170,27 +178,21 @@ def deserialize_trade(trade_dict) -> Trade:
     if quote_asset is None:
         raise ValueError('No quote asset provided')
 
-    if 'fee' in trade_dict:
-        fee, fee_currency = deserialize_amount(trade_dict['fee'])
-    else:
-        fee, fee_currency = FVal('0'), quote_asset
+    # Fee information is not stored in HistoryEvent - would need separate fee event
+    # Rate can be calculated from quote_amount / amount if needed
 
-    try:
-        rate = quote_amount / amount
-    except InvalidOperation as exc:
-        raise ValueError('Invalid trade: ' + str(trade_dict)) from exc
-
-    return Trade(
-        dateutil.parser.isoparse(trade_dict['timestamp']).timestamp(),
-        Location.deserialize(trade_dict.get('location') or 'external'),
-        base_asset,
-        quote_asset,
-        trade_type,
-        amount,
-        rate,
-        fee,
-        fee_currency,
-        str(trade_dict.get('link', '')),
+    return HistoryEvent(
+        event_identifier=str(trade_dict.get('link', '')),
+        sequence_index=0,
+        timestamp=ts_ms_to_sec(deserialize_timestamp_ms(trade_dict['timestamp'])),
+        location=Location.deserialize(trade_dict.get('location') or 'external'),
+        event_type=HistoryEventType.TRADE,
+        event_subtype=HistoryEventSubType.SPEND
+        if trade_type == EventDirection.OUT
+        else HistoryEventSubType.RECEIVE,
+        asset=base_asset,
+        amount=amount,
+        notes=f'Trade {amount} {base_asset} for {quote_amount} {quote_asset}',
     )
 
 
@@ -303,35 +305,14 @@ def deserialize_amount(amount: str) -> Tuple[FVal, Asset]:
     return fval, asset
 
 
-def serialize_trade(trade: Trade) -> dict:
-    ser_trade = trade.serialize()
-    ser_trade = {
-        'timestamp': serialize_timestamp(trade.timestamp),
-        'for': serialize_amount(trade.rate * trade.amount, trade.quote_asset),
-    }
+def serialize_trade(trade: HistoryEvent) -> dict:
+    """Legacy function for backwards compatibility.
 
-    ser_trade['link'] = trade.link
-
-    if trade.fee and trade.fee > 0:
-        ser_trade['fee'] = serialize_amount(trade.fee, trade.fee_currency)
-
-    if trade.trade_type == TradeType.BUY:
-        ser_trade['buy'] = serialize_amount(trade.amount, trade.base_asset)
-    elif trade.trade_type == TradeType.SELL:
-        ser_trade['sell'] = serialize_amount(trade.amount, trade.base_asset)
-    else:
-        raise ValueError('Do not know how to serialize ' + str(trade.trade_type))
-
-    if trade.location:
-        ser_trade['location'] = str(trade.location)
-
-    if not ser_trade['link']:
-        del ser_trade['link']
-
-    # TODO: This should probably be implemented in the actual yaml writer
-    preferred_order = ['buy', 'sell', 'for', 'fee', 'location', 'link', 'timestamp']
-
-    return {key: ser_trade[key] for key in sorted(ser_trade.keys(), key=preferred_order.index)}
+    HistoryEvent should use serialize_event instead.
+    """
+    # For now, just return serialize_event output since HistoryEvent
+    # doesn't have trade-specific properties
+    return serialize_event(trade)
 
 
 def serialize_ledger_action(action):
@@ -390,9 +371,9 @@ def serialize_ledger_action(action):
     # return ser_action
 
 
-def serialize_trades(trades: List[Trade]) -> List[dict]:
+def serialize_trades(trades: List[HistoryEvent]) -> List[dict]:
     def trade_sort_key(trade):
-        return (trade.timestamp, trade.link)
+        return (trade.timestamp, trade.event_identifier)
 
     return [serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)]
 
@@ -420,19 +401,17 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.SPEND
         and event.event_subtype == HistoryEventSubType.FEE
     ):
-        ser_event['spend_fee'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['spend_fee'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
     elif (
-        event.event_type == HistoryEventType.SPEND
+        event.event_type == HistoryEventType.LOSS
         and event.event_subtype == HistoryEventSubType.LIQUIDATE
     ):
-        ser_event['loss'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['loss'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -440,9 +419,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.TRADE
         and event.event_subtype == HistoryEventSubType.SPEND
     ):
-        ser_event['trade_spend'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['trade_spend'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -450,9 +428,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.SPEND
         and event.event_subtype == HistoryEventSubType.NONE
     ):
-        ser_event['spend'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['spend'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -460,9 +437,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.TRADE
         and event.event_subtype == HistoryEventSubType.RECEIVE
     ):
-        ser_event['trade_receive'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['trade_receive'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -474,11 +450,10 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
             # For coinbase, we assume RECEIVE/NONE is income
             # This is a hack, but we don't have a better way to distinguish
             # TBH this should be handled in the event collector
-            ser_event['income'] = serialize_amount(FVal(event.balance.amount), event.asset)
+            ser_event['income'] = serialize_amount(event.amount, event.asset)
         else:
-            ser_event['gift'] = serialize_amount(FVal(event.balance.amount), event.asset)
+            ser_event['gift'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -486,9 +461,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.RECEIVE
         and event.event_subtype == HistoryEventSubType.REWARD
     ):
-        ser_event['income'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['income'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -496,9 +470,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type == HistoryEventType.RECEIVE
         and event.event_subtype == HistoryEventSubType.AIRDROP
     ):
-        ser_event['airdrop'] = serialize_amount(FVal(event.balance.amount), event.asset)
+        ser_event['airdrop'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
-        del ser_event['balance']
         del ser_event['event_type']
         del ser_event['event_subtype']
 
@@ -533,8 +506,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if 'address' in ser_event and not ser_event['address']:
         del ser_event['address']
 
-    if 'notes' in ser_event and not ser_event['notes']:
-        del ser_event['notes']
+    if 'user_notes' in ser_event and not ser_event['user_notes']:
+        del ser_event['user_notes']
 
     if not is_evm_event and 'sequence_index' in ser_event and not ser_event['sequence_index']:
         del ser_event['sequence_index']
@@ -557,11 +530,17 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         'sequence_index',
         'timestamp',
         'extra_data',
-        'notes',
+        'user_notes',
     ]
 
     def sort_dict_keys(d: dict) -> dict:
-        return {key: d[key] for key in sorted(d.keys(), key=preferred_order.index)}
+        def get_order_index(key):
+            try:
+                return preferred_order.index(key)
+            except ValueError:
+                return len(preferred_order)  # Put unknown keys at the end
+
+        return {key: d[key] for key in sorted(d.keys(), key=get_order_index)}
 
     return sort_dict_keys(ser_event)
 
@@ -587,14 +566,16 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
         event_subtype = HistoryEventSubType.FEE
     elif 'trade_spend' in event_dict:
         amount, asset = deserialize_amount(event_dict['trade_spend'])
-        is_evm_event = True
         event_type = HistoryEventType.TRADE
         event_subtype = HistoryEventSubType.SPEND
+        # Only set is_evm_event if we have sequence_index
+        is_evm_event = 'sequence_index' in event_dict
     elif 'trade_receive' in event_dict:
         amount, asset = deserialize_amount(event_dict['trade_receive'])
-        is_evm_event = True
         event_type = HistoryEventType.TRADE
         event_subtype = HistoryEventSubType.RECEIVE
+        # Only set is_evm_event if we have sequence_index
+        is_evm_event = 'sequence_index' in event_dict
 
     if is_evm_event:
         if 'sequence_index' not in event_dict:
@@ -607,19 +588,33 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
                 else event_dict['link']
             ),
             sequence_index=event_dict['sequence_index'],
-            timestamp=deserialize_timestamp_ms(event_dict['timestamp']),
+            timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
             location=Location.ETHEREUM,
             event_type=event_type,
             event_subtype=event_subtype,
             asset=asset,
-            amount=Balance(amount, 0),
+            amount=amount,
             location_label=None,
-            notes=event_dict.get('notes'),
+            notes=event_dict.get('user_notes'),
             counterparty=event_dict.get('counterparty'),
             product=event_dict.get('product'),
             address=event_dict.get('address'),
             identifier=None,
             extra_data=None,
+        )
+
+    # If we have trade event info but it's not an EVM event, create a HistoryEvent
+    if event_type == HistoryEventType.TRADE and event_subtype is not None:
+        return HistoryEvent(
+            event_identifier=str(event_dict.get('link', '')),
+            sequence_index=0,  # Default for non-EVM events
+            timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
+            location=Location.EXTERNAL,  # Default location
+            event_type=event_type,
+            event_subtype=event_subtype,
+            asset=asset,
+            amount=amount,
+            notes=event_dict.get('user_notes'),
         )
 
     return deserialize_ledger_action(event_dict)
@@ -640,12 +635,12 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
     # )
 
 
-def deserialize_tradetype(trade_type: str) -> TradeType:
+def deserialize_tradetype(trade_type: str) -> EventDirection:
     if trade_type == 'sell':
-        return TradeType.SELL
+        return EventDirection.OUT
 
     if trade_type == 'buy':
-        return TradeType.BUY
+        return EventDirection.IN
 
     raise ValueError(trade_type)
 

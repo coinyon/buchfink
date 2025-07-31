@@ -16,7 +16,7 @@ from .datatypes import (
     HistoryEventSubType,
     HistoryEventType,
     Timestamp,
-    Trade,
+    HistoryEvent,
 )
 from .db import BuchfinkDB
 from .models import Account
@@ -49,7 +49,7 @@ def _get_trades_metadata(buchfink_db: BuchfinkDB, account: Account) -> Optional[
 def write_trades(
     buchfink_db: BuchfinkDB,
     account: Account,
-    trades: List[Trade],
+    trades: List[HistoryEvent],
     metadata: Optional[TradesMetadata] = None,
 ):
     trades_path = buchfink_db.trades_directory / (account.name + '.yaml')
@@ -240,9 +240,9 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
 
 
 def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timestamp: bool = False):
-    trades: List[Trade] = []
-    existing_trades: List[Trade] = []
-    annotated: List[Trade] = []
+    trades: List[HistoryEvent] = []
+    existing_trades: List[HistoryEvent] = []
+    annotated: List[HistoryEvent] = []
     name = account.name
 
     start_ts = Timestamp(0)
@@ -300,8 +300,8 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timesta
     existing = set()
     unique_trades = []
     for trade in trades:
-        if (trade.location, trade.link) not in existing:
-            existing.add((trade.location, trade.link))
+        if (trade.location, trade.event_identifier) not in existing:
+            existing.add((trade.location, trade.event_identifier))
             unique_trades.append(trade)
         else:
             logger.warning('Removing duplicate trade: %s', trade)
