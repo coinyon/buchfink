@@ -2,6 +2,8 @@ import re
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+from functools import reduce
+import operator
 from operator import itemgetter
 from typing import Any, Dict, List, Tuple
 
@@ -67,10 +69,10 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'income' in action_dict:
         amount, asset = deserialize_amount(action_dict['income'])
         return HistoryEvent(
-            location=Location.EXTERNAL,
-            event_identifier=str(action_dict.get('link', '')),
+            group_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            location=Location.EXTERNAL,
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.REWARD,
             asset=asset,
@@ -81,10 +83,10 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'airdrop' in action_dict:
         amount, asset = deserialize_amount(action_dict['airdrop'])
         return HistoryEvent(
-            location=Location.EXTERNAL,
-            event_identifier=str(action_dict.get('link', '')),
+            group_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            location=Location.EXTERNAL,
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.AIRDROP,
             asset=asset,
@@ -95,10 +97,10 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'loss' in action_dict:
         amount, asset = deserialize_amount(action_dict['loss'])
         return HistoryEvent(
-            location=Location.EXTERNAL,
-            event_identifier=str(action_dict.get('link', '')),
+            group_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            location=Location.EXTERNAL,
             event_type=HistoryEventType.LOSS,
             event_subtype=HistoryEventSubType.LIQUIDATE,
             asset=asset,
@@ -109,10 +111,10 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'gift' in action_dict:
         amount, asset = deserialize_amount(action_dict['gift'])
         return HistoryEvent(
-            location=Location.EXTERNAL,
-            event_identifier=str(action_dict.get('link', '')),
+            group_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            location=Location.EXTERNAL,
             event_type=HistoryEventType.RECEIVE,
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
@@ -123,10 +125,10 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'spend' in action_dict:
         amount, asset = deserialize_amount(action_dict['spend'])
         return HistoryEvent(
-            location=Location.EXTERNAL,
-            event_identifier=str(action_dict.get('link', '')),
+            group_identifier=str(action_dict.get('link', '')),
             sequence_index=0,
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            location=Location.EXTERNAL,
             event_type=HistoryEventType.SPEND,
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
@@ -142,7 +144,7 @@ def deserialize_trade(trade_dict) -> HistoryEvent:
         # Legacy format with pair - convert to HistoryEvent
         trade_type = deserialize_tradetype(trade_dict['trade_type'])
         return HistoryEvent(
-            event_identifier=str(trade_dict.get('link', '')),
+            group_identifier=str(trade_dict.get('link', '')),
             sequence_index=0,
             timestamp=ts_ms_to_sec(deserialize_timestamp_ms(trade_dict['timestamp'])),
             location=Location.deserialize(trade_dict.get('location') or 'external'),
@@ -182,7 +184,7 @@ def deserialize_trade(trade_dict) -> HistoryEvent:
     # Rate can be calculated from quote_amount / amount if needed
 
     return HistoryEvent(
-        event_identifier=str(trade_dict.get('link', '')),
+        group_identifier=str(trade_dict.get('link', '')),
         sequence_index=0,
         timestamp=ts_ms_to_sec(deserialize_timestamp_ms(trade_dict['timestamp'])),
         location=Location.deserialize(trade_dict.get('location') or 'external'),
@@ -260,22 +262,29 @@ def serialize_balances(balances: BalanceSheet, skip_nfts=True) -> dict:
     def _is_nft(asset):
         return isinstance(asset, EvmToken) and asset.token_kind == TokenKind.ERC721
 
+    def _sum_balances(balance_dict: dict[str, Balance]) -> Balance:
+        """Sum all Balance objects across all labels/locations for an asset."""
+        assert isinstance(balance_dict, dict), f'Expected dict, got {type(balance_dict)}'
+        return reduce(operator.add, balance_dict.values(), Balance())
+
     ser_balances = {}
     if balances.assets:
         ser_balances['assets'] = sorted(
             [
-                serialize_balance(bal, asset)
-                for asset, bal in balances.assets.items()
-                if bal.amount.num >= QUANT_DECIMAL and (skip_nfts is False or not _is_nft(asset))
+                serialize_balance(total_bal, asset)
+                for asset, bal_dict in balances.assets.items()
+                if (total_bal := _sum_balances(bal_dict)).amount.num >= QUANT_DECIMAL
+                and (skip_nfts is False or not _is_nft(asset))
             ],
             key=itemgetter('asset'),
         )
     if balances.liabilities:
         ser_balances['liabilities'] = sorted(
             [
-                serialize_balance(bal, asset)
-                for asset, bal in balances.liabilities.items()
-                if bal.amount > 0 and (skip_nfts is False or not _is_nft(asset))
+                serialize_balance(total_bal, asset)
+                for asset, bal_dict in balances.liabilities.items()
+                if (total_bal := _sum_balances(bal_dict)).amount > 0
+                and (skip_nfts is False or not _is_nft(asset))
             ],
             key=itemgetter('asset'),
         )
@@ -373,7 +382,7 @@ def serialize_ledger_action(action):
 
 def serialize_trades(trades: List[HistoryEvent]) -> List[dict]:
     def trade_sort_key(trade):
-        return (trade.timestamp, trade.event_identifier)
+        return (trade.timestamp, trade.group_identifier)
 
     return [serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)]
 
@@ -582,7 +591,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             raise ValueError('Missing sequence_index in event: {}'.format(event_dict))
 
         return EvmEvent(
-            tx_hash=deserialize_evm_tx_hash(
+            tx_ref=deserialize_evm_tx_hash(
                 event_dict['link'][2:]
                 if event_dict['link'].startswith('0x')
                 else event_dict['link']
@@ -596,17 +605,16 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             amount=amount,
             location_label=None,
             notes=event_dict.get('user_notes'),
-            counterparty=event_dict.get('counterparty'),
-            product=event_dict.get('product'),
-            address=event_dict.get('address'),
             identifier=None,
+            counterparty=event_dict.get('counterparty'),
+            address=event_dict.get('address'),
             extra_data=None,
         )
 
     # If we have trade event info but it's not an EVM event, create a HistoryEvent
     if event_type == HistoryEventType.TRADE and event_subtype is not None:
         return HistoryEvent(
-            event_identifier=str(event_dict.get('link', '')),
+            group_identifier=str(event_dict.get('link', '')),
             sequence_index=0,  # Default for non-EVM events
             timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
             location=Location.EXTERNAL,  # Default location

@@ -159,3 +159,48 @@ def test_ethereum_gas_report_cli():
         # assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
         assert os.path.exists(os.path.join(d, 'reports/all/report.log'))
         assert os.path.exists(os.path.join(d, 'reports/all/errors.log'))
+
+
+def test_balances_command():
+    """Test the balances CLI command with pre-existing balance files"""
+    runner = CliRunner()
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
+        # Copy test scenario with balance files
+        shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'balances_test'),
+            d,
+            dirs_exist_ok=True,
+        )
+
+        # Test list command to verify accounts are loaded
+        result = runner.invoke(buchfink, ['list'])
+        logger.debug('output of %s: %s', 'list', result.output)
+        assert result.exit_code == 0
+        assert 'account1' in result.output
+        assert 'account2' in result.output
+
+        # Test balances command for single account
+        result = runner.invoke(buchfink, ['balances', '-k', 'account1'])
+        logger.debug('output of %s: %s', 'balances -k account1', result.output)
+        if result.exception:
+            logger.exception(result.exception)
+            raise result.exception
+        assert result.exit_code == 0
+        assert 'account1' in result.output
+        assert 'ETH' in result.output
+        assert 'BTC' in result.output
+        assert 'USDC' in result.output
+        assert 'DAI' in result.output
+
+        # Test balances command with --total flag for all accounts
+        result = runner.invoke(buchfink, ['balances', '--total'])
+        logger.debug('output of %s: %s', 'balances --total', result.output)
+        if result.exception:
+            logger.exception(result.exception)
+            raise result.exception
+        assert result.exit_code == 0
+        # Should show both accounts
+        assert 'account1' in result.output or 'account2' in result.output
+        # Should show total summary
+        assert 'Total' in result.output or 'ETH' in result.output

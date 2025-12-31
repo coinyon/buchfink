@@ -4,6 +4,8 @@ from typing import List, Optional, Tuple
 
 import pydantic
 import yaml
+from rotkehlchen.db.filtering import HistoryEventFilterQuery
+from rotkehlchen.db.history_events import DBHistoryEvents
 from rotkehlchen.utils.misc import ts_now
 from web3.exceptions import CannotHandleRequest
 
@@ -179,7 +181,7 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
                         'sequence_index=%s)',
                         event.event_type,
                         event,
-                        event.event_identifier,
+                        event.group_identifier,
                         event.sequence_index,
                     )
 
@@ -202,11 +204,8 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
         else:
             logger.info('Fetching actions for %s (start_ts=%s, end_ts=%s)', name, start_ts, now)
 
-            exchange.query_online_income_loss_expense(start_ts=start_ts, end_ts=now)
-
-            fetched_actions = exchange.query_income_loss_expense(
-                start_ts=start_ts, end_ts=now, only_cache=True
-            )
+            # query_online_history_events returns (events, end_ts)
+            fetched_actions, _ = exchange.query_online_history_events(start_ts=start_ts, end_ts=now)
 
             actions.extend(fetched_actions)
 
@@ -273,11 +272,26 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timesta
         else:
             logger.info('Fetching trades for %s (start_ts=%s, end_ts=%s)', name, start_ts, now)
 
-            exchange.query_online_trade_history(start_ts=start_ts, end_ts=now)
+            # Trades are now part of unified history events
+            # query_history_events() fetches all events (including trades) and saves to DB
+            exchange.query_history_events()
 
-            fetched_trades = exchange.query_trade_history(
-                start_ts=start_ts, end_ts=now, only_cache=True
-            )
+            # Now we need to read trade events from the DB
+            # Trade events have event_type == HistoryEventType.TRADE
+            db_events = DBHistoryEvents(buchfink_db)
+            with buchfink_db.conn.read_ctx() as cursor:
+                # Filter for trade events from this exchange in the time range
+                filter_query = HistoryEventFilterQuery.make(
+                    location=exchange.location,
+                    from_ts=start_ts,
+                    to_ts=now,
+                    event_types=[HistoryEventType.TRADE],
+                )
+                fetched_trades = db_events.get_history_events(
+                    cursor=cursor,
+                    filter_query=filter_query,
+                    entries_limit=None,
+                )
 
             trades.extend(fetched_trades)
 
@@ -300,8 +314,8 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timesta
     existing = set()
     unique_trades = []
     for trade in trades:
-        if (trade.location, trade.event_identifier) not in existing:
-            existing.add((trade.location, trade.event_identifier))
+        if (trade.location, trade.group_identifier) not in existing:
+            existing.add((trade.location, trade.group_identifier))
             unique_trades.append(trade)
         else:
             logger.warning('Removing duplicate trade: %s', trade)

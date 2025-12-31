@@ -226,17 +226,21 @@ def balances(
         sheet = buchfink_db.get_balances(account)
         print(f'Balances for {account.name}:', sheet)
 
-        for asset, balance in sheet.assets.items():
-            amount = balance.amount
-            assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
-            assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance.usd_value
+        # BalanceSheet.assets is now: Dict[Asset, Dict[str, Balance]]
+        # Need to sum across all locations/labels for each asset
+        for asset, balance_dict in sheet.assets.items():
+            for _location_label, balance in balance_dict.items():
+                amount = balance.amount
+                assets_sum[asset] = assets_sum.get(asset, FVal(0)) + amount
+                assets_usd_sum[asset] = assets_usd_sum.get(asset, FVal(0)) + balance.value
 
-        for liability, balance in sheet.liabilities.items():
-            amount = balance.amount
-            liabilities_sum[liability] = liabilities_sum.get(liability, FVal(0)) + amount
-            liabilities_usd_sum[liability] = (
-                liabilities_usd_sum.get(liability, FVal(0)) + balance.usd_value
-            )
+        for liability, balance_dict in sheet.liabilities.items():
+            for _location_label, balance in balance_dict.items():
+                amount = balance.amount
+                liabilities_sum[liability] = liabilities_sum.get(liability, FVal(0)) + amount
+                liabilities_usd_sum[liability] = (
+                    liabilities_usd_sum.get(liability, FVal(0)) + balance.value
+                )
 
     if denominate_asset is not None:
         currency = buchfink_db.get_asset_by_symbol(denominate_asset)

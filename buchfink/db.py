@@ -3,9 +3,10 @@ import operator
 import os
 import os.path
 import sys
+from collections import defaultdict
 from functools import reduce
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple, Union, cast
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
@@ -59,9 +60,11 @@ from rotkehlchen.exchanges.kraken import Kraken
 from rotkehlchen.exchanges.poloniex import Poloniex
 from rotkehlchen.externalapis.alchemy import Alchemy
 from rotkehlchen.externalapis.beaconchain.service import BeaconChain
+from rotkehlchen.externalapis.blockscout import Blockscout
 from rotkehlchen.externalapis.coingecko import Coingecko
 from rotkehlchen.externalapis.cryptocompare import Cryptocompare
 from rotkehlchen.externalapis.defillama import Defillama
+from rotkehlchen.externalapis.routescan import Routescan
 from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
 from rotkehlchen.globaldb.asset_updates.manager import AssetsUpdater
@@ -88,6 +91,7 @@ from rotkehlchen.utils.misc import ts_now
 
 from buchfink.datatypes import (
     Asset,
+    Balance,
     BalanceSheet,
     BlockchainAccountData,
     BlockchainAccounts,
@@ -118,7 +122,7 @@ from buchfink.serialization import (
 )
 
 if TYPE_CHECKING:
-    from .datatypes import Balance  # noqa: F401
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +186,8 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.etherscan = EthereumEtherscan(database=self, msg_aggregator=self.msg_aggregator)
+        self.blockscout = Blockscout(database=self, msg_aggregator=self.msg_aggregator)
+        self.routescan = Routescan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
         self.globaldb = GlobalDBHandler(
             data_dir=self.cache_directory,
@@ -250,25 +256,35 @@ class BuchfinkDB(DBHandler):
 
         # Initialize blockchain querying modules
         self.ethereum_inquirer = EthereumInquirer(
-            greenlet_manager=self.greenlet_manager, database=self, etherscan=self.etherscan
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+            etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.ethereum_manager = EthereumManager(self.ethereum_inquirer)
         self.optimism_inquirer = OptimismInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.optimism_manager = OptimismManager(self.optimism_inquirer)
         self.polygon_pos_inquirer = PolygonPOSInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.polygon_pos_manager = PolygonPOSManager(self.polygon_pos_inquirer)
         self.scroll_inquirer = ScrollInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.zksync_lite_manager = ZksyncLiteManager(
             ethereum_inquirer=self.ethereum_inquirer,
@@ -279,24 +295,32 @@ class BuchfinkDB(DBHandler):
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.arbitrum_one_manager = ArbitrumOneManager(self.arbitrum_one_inquirer)
         self.base_inquirer = BaseInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.base_manager = BaseManager(self.base_inquirer)
         self.gnosis_inquirer = GnosisInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.gnosis_manager = GnosisManager(self.gnosis_inquirer)
         self.binance_sc_inquirer = BinanceSCInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
             etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
         )
         self.binance_sc_manager = BinanceSCManager(self.binance_sc_inquirer)
         self.kusama_manager = SubstrateManager(
@@ -460,14 +484,13 @@ class BuchfinkDB(DBHandler):
 
         dbevmtx = DBEvmTx(self)
         with self.conn.read_ctx() as cursor:
-            txs = dbevmtx.get_evm_transactions(
+            txs = dbevmtx.get_transactions(
                 cursor=cursor,
                 filter_=EvmTransactionsFilterQuery.make(
                     accounts=[EvmAccount(address, ChainID.ETHEREUM)],
                     from_ts=start_ts,
                     to_ts=end_ts,
                 ),
-                has_premium=False,
             )
 
         result = []
@@ -642,6 +665,7 @@ class BuchfinkDB(DBHandler):
             binance_sc_manager=self.binance_sc_manager,
             bitcoin_manager=None,  # Not used in buchfink
             bitcoin_cash_manager=None,  # Not used in buchfink
+            solana_manager=None,  # Not used in buchfink
             msg_aggregator=self.msg_aggregator,
             btc_derivation_gap_limit=self.get_settings().btc_derivation_gap_limit,
             greenlet_manager=self.greenlet_manager,
@@ -704,7 +728,14 @@ class BuchfinkDB(DBHandler):
                 logger.info(
                     'Fetched balances for %d assets from %s', len(balances.keys()), account.name
                 )
-                return BalanceSheet(assets=balances, liabilities={})
+                # exchange.query_balances() returns old flat structure: Dict[Asset, Balance]
+                # Need to convert to new nested structure: Dict[Asset, Dict[str, Balance]]
+                nested_assets: defaultdict[Asset, defaultdict[str, Balance]] = defaultdict(
+                    lambda: defaultdict(Balance)
+                )
+                for asset, balance in balances.items():
+                    nested_assets[asset][''] = balance
+                return BalanceSheet(assets=nested_assets, liabilities={})
 
             raise RuntimeError(error)
 
@@ -724,19 +755,29 @@ class BuchfinkDB(DBHandler):
             manager.query_balances(blockchain=SupportedBlockchain.ETHEREUM)
             self._active_eth_address = None
 
-            return reduce(operator.add, manager.balances.eth.values())
+            return reduce(operator.add, manager.balances.eth.values(), BalanceSheet())
 
         if account.account_type == 'bitcoin':
             manager = self.get_chains_aggregator([account])
             manager.query_balances(blockchain=SupportedBlockchain.BITCOIN)
             btc = Asset('BTC')
-            return BalanceSheet(assets={btc: reduce(operator.add, manager.balances.btc.values())})
+            # BalanceSheet now uses nested structure: Asset -> location -> Balance
+            total_balance = reduce(operator.add, manager.balances.btc.values(), Balance())
+            btc_assets: defaultdict[Asset, defaultdict[str, Balance]] = defaultdict(
+                lambda: defaultdict(Balance), {btc: defaultdict(Balance, {'': total_balance})}
+            )
+            return BalanceSheet(assets=btc_assets)
 
         if account.account_type == 'bitcoincash':
             manager = self.get_chains_aggregator([account])
             manager.query_balances(blockchain=SupportedBlockchain.BITCOIN_CASH)
             bch = Asset('BCH')
-            return BalanceSheet(assets={bch: reduce(operator.add, manager.balances.bch.values())})
+            # BalanceSheet now uses nested structure: Asset -> location -> Balance
+            total_balance = reduce(operator.add, manager.balances.bch.values(), Balance())
+            bch_assets: defaultdict[Asset, defaultdict[str, Balance]] = defaultdict(
+                lambda: defaultdict(Balance), {bch: defaultdict(Balance, {'': total_balance})}
+            )
+            return BalanceSheet(assets=bch_assets)
 
         if account.account_type == 'generic':
             return BalanceSheet(assets={}, liabilities={})
@@ -775,8 +816,13 @@ class BuchfinkDB(DBHandler):
         with open(path, 'r') as account_f:
             account = yaml.load(account_f, Loader=yaml.SafeLoader)
 
-        assets: Dict[Asset, Balance] = {}
-        liabilities: Dict[Asset, Balance] = {}
+        # BalanceSheet now uses nested defaultdicts: Asset -> location -> Balance
+        assets: defaultdict[Asset, defaultdict[str, Balance]] = defaultdict(
+            lambda: defaultdict(Balance)
+        )
+        liabilities: defaultdict[Asset, defaultdict[str, Balance]] = defaultdict(
+            lambda: defaultdict(Balance)
+        )
 
         if 'assets' in account:
             for balance in account['assets']:
@@ -785,10 +831,11 @@ class BuchfinkDB(DBHandler):
                 except UnknownAsset as e:
                     logger.warning(str(e))
                     continue
-                if asset in assets:
-                    assets[asset] += balance
+                # Use empty string as default location label for file-based balances
+                if '' in assets[asset]:
+                    assets[asset][''] += balance
                 else:
-                    assets[asset] = balance
+                    assets[asset][''] = balance
 
         if 'liabilities' in account:
             for balance in account['liabilities']:
@@ -797,10 +844,10 @@ class BuchfinkDB(DBHandler):
                 except UnknownAsset as e:
                     logger.warning(str(e))
                     continue
-                if asset in liabilities:
-                    liabilities[asset] += balance
+                if '' in liabilities[asset]:
+                    liabilities[asset][''] += balance
                 else:
-                    liabilities[asset] = balance
+                    liabilities[asset][''] = balance
 
         return BalanceSheet(assets=assets, liabilities=liabilities)
 

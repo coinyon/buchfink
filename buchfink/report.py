@@ -116,27 +116,27 @@ def run_report(
     for action in all_actions:
         if not isinstance(action, HistoryBaseEntry):
             # Must be LedgerAction then
-            if not action.event_identifier:
+            if not action.group_identifier:
                 continue
-            if action.event_identifier in action_ids:
+            if action.group_identifier in action_ids:
                 raise ValueError(
                     (
                         'Action with identifier "{}" is also present as an event '
                         'This might be an unidentified duplicate. Please check your '
                         'events and trades for duplicates.'
-                    ).format(action.event_identifier)
+                    ).format(action.group_identifier)
                 )
 
     for trade in all_trades:
-        if trade.event_identifier in action_ids:
-            if not trade.event_identifier:
+        if trade.group_identifier in action_ids:
+            if not trade.group_identifier:
                 continue
             raise ValueError(
                 (
                     'HistoryEvent with identifier "{}" is also present as an event '
                     'This might be an unidentified duplicate. Please check your '
                     'events and trades for duplicates.'
-                ).format(trade.event_identifier)
+                ).format(trade.group_identifier)
             )
 
     def timestamp(act):
