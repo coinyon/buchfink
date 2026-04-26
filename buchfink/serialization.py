@@ -853,7 +853,7 @@ def deserialize_asset(val: str) -> Asset:
 
     symbol, _identifier_outer, identifier = match.groups()
     if identifier:
-        asset = symbol_to_asset_or_token(identifier)
+        asset = Asset(identifier).resolve()
     elif symbol:
         try:
             asset = symbol_to_asset_or_token(symbol)
