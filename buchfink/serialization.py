@@ -138,6 +138,20 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
         )
 
+    if 'event_type' in action_dict and 'asset' in action_dict:
+        amount, asset = deserialize_amount(f"{action_dict['amount']} {action_dict['asset']}")
+        return HistoryEvent(
+            group_identifier=str(action_dict.get('group_identifier', action_dict.get('link', ''))),
+            sequence_index=action_dict.get('sequence_index', 0),
+            timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
+            location=Location.deserialize(action_dict.get('location') or 'external'),
+            event_type=HistoryEventType.deserialize(action_dict['event_type']),
+            event_subtype=HistoryEventSubType.deserialize(action_dict.get('event_subtype', 'none')),
+            asset=asset,
+            amount=amount,
+            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+        )
+
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 

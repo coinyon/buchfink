@@ -145,3 +145,26 @@ def test_ethereum_gas_report_tax(tmp_path):
         assert '## Events' in report_contents
         assert '0.0203' in report_contents
         assert '-20.35' in report_contents
+
+
+def test_staking_income(tmp_path):
+    shutil.copytree(
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'staking'),
+        os.path.join(tmp_path, 'buchfink'),
+    )
+    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+
+    buchfink_db.sync_manual_prices()
+    accounts = list(buchfink_db.get_all_accounts())
+    for acc in accounts:
+        fetch_actions(buchfink_db, acc)
+        fetch_trades(buchfink_db, acc)
+
+    ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)
+    assert len(ledger_actions) == 3
+
+    report_config = list(buchfink_db.get_all_reports())[0]
+    result = run_report(buchfink_db, accounts, report_config)
+
+    # 0.1 XTZ staking reward at price 1.0 USD/XTZ = 0.1 USD taxable income
+    assert float(result['overview']['transaction event']['taxable']) == pytest.approx(0.1, rel=0.01)

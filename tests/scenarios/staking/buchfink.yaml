@@ -1,0 +1,23 @@
+accounts:
+  - name: acc_staking
+
+reports:
+  - name: all
+    from: "2020-01-01"
+    to: "2030-01-01"
+
+prices:
+  - from: HEX
+    to: USD
+    at: '2020-02-15 19:51:26'
+    price: 0.01
+  - from: XTZ
+    to: USD
+    at: '2023-03-31 01:11:11'
+    price: 1.0
+
+settings:
+  main_currency: USD
+  taxfree_after_period: 31536000
+  include_gas_costs: True
+  include_crypto2crypto: True

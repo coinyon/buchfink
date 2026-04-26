@@ -1,3 +1,4 @@
+from datetime import timezone
 import logging
 import operator
 import os
@@ -1029,7 +1030,13 @@ class BuchfinkDB(DBHandler):
                 to_asset=self.get_asset_by_symbol(historical_price.to),
                 source=HistoricalPriceOracle.MANUAL,
                 price=Price(FVal(str(historical_price.price))),
-                timestamp=Timestamp(int(historical_price.at.timestamp())),
+                timestamp=Timestamp(
+                    int(
+                        historical_price.at.replace(
+                            tzinfo=historical_price.at.tzinfo or timezone.utc
+                        ).timestamp()
+                    )
+                ),
             )
 
         prices = [to_historical_price(historical_price) for historical_price in self.config.prices]

@@ -1,0 +1,20 @@
+actions:
+- timestamp: '2023-03-11T18:11:11+00:00'
+  user_notes: Stake 2.0 XTZ
+  event_type: staking
+  event_subtype: deposit asset
+  asset: XTZ
+  amount: '2.0'
+  group_identifier: f812e9ef-d914-484a-8a6c-863f2eda2496
+- income: 0.1 XTZ
+  timestamp: '2023-03-31T01:11:11+00:00'
+  user_notes: Receive 0.1 XTZ as staking reward
+  amount: '0.1'
+  group_identifier: ecd8e34b-e727-44e4-b92f-2f7b2668835c
+- timestamp: '2023-09-11T11:00:01+00:00'
+  user_notes: Unstake 2 XTZ
+  event_type: staking
+  event_subtype: remove asset
+  asset: XTZ
+  amount: 2
+  group_identifier: 30010c6f-913b-4ef6-8a60-aba7c4942cbf
