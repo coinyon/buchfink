@@ -25,7 +25,7 @@ def test_bullrun_full_taxes(tmp_path):
     _fetch(buchfink_db, accounts[0])
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
 
-    assert len(trades) == 2
+    assert len(trades) == 4
 
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
@@ -44,7 +44,7 @@ def test_bullrun_no_taxes(tmp_path):
     _fetch(buchfink_db, accounts[0])
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
 
-    assert len(trades) == 2
+    assert len(trades) == 4
 
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
@@ -64,7 +64,7 @@ def test_ledger_actions_income(tmp_path):
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)
     assert len(ledger_actions) == 1
-    assert len(trades) == 1
+    assert len(trades) == 2
 
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
@@ -84,7 +84,7 @@ def test_ledger_actions_airdrop(tmp_path):
 
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
 
-    assert len(trades) == 1
+    assert len(trades) == 2
 
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
@@ -105,7 +105,7 @@ def test_ledger_actions_gift(tmp_path):
     trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(accounts[0].name)
     assert len(ledger_actions) == 1
-    assert len(trades) == 1
+    assert len(trades) == 2
 
     report_config = list(buchfink_db.get_all_reports())[0]
     result = run_report(buchfink_db, accounts, report_config)
@@ -131,7 +131,7 @@ def test_ledger_actions_event_swap(tmp_path):
     report_config = list(buchfink_db.get_all_reports())[1]
     result = run_report(buchfink_db, accounts, report_config)
 
-    assert float(result['overview']['transaction event']['taxable']) == pytest.approx(100, rel=0.1)
+    assert float(result['overview']['trade']['taxable']) == pytest.approx(100, rel=0.1)
 
 
 def test_ledger_actions_mixed_swap_trade(tmp_path):
@@ -147,13 +147,13 @@ def test_ledger_actions_mixed_swap_trade(tmp_path):
     trades = buchfink_db.get_local_trades_for_account(account.name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(account.name)
     assert len(ledger_actions) == 2
-    assert len(trades) == 1
+    assert len(trades) == 2
 
     report_config = list(buchfink_db.get_all_reports())[1]
     result = run_report(buchfink_db, [account], report_config)
 
     assert float(result['overview']['trade']['taxable']) == pytest.approx(100, rel=0.1)
-    assert float(result['overview']['transaction event']['taxable']) == pytest.approx(0, rel=0.1)
+    assert 'transaction event' not in result['overview']
 
 
 def test_ledger_actions_mixed_same_link(tmp_path):
@@ -169,7 +169,7 @@ def test_ledger_actions_mixed_same_link(tmp_path):
     trades = buchfink_db.get_local_trades_for_account(account.name)
     ledger_actions = buchfink_db.get_local_ledger_actions_for_account(account.name)
     assert len(ledger_actions) == 2
-    assert len(trades) == 2
+    assert len(trades) == 4
 
     report_config = list(buchfink_db.get_all_reports())[1]
     with pytest.raises(ValueError, match=r'.*0x5.*'):

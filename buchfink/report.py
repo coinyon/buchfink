@@ -83,7 +83,7 @@ def run_report(
         logger.info('Limiting report to assets: %s', limit_assets)
 
         relevant_tx_hashes = {
-            action.tx_hash
+            action.tx_ref
             for action in all_actions
             if action.asset in limit_assets
             if isinstance(action, EvmEvent)
@@ -93,7 +93,7 @@ def run_report(
             a
             for a in all_actions
             if a.asset in limit_assets
-            or (isinstance(a, EvmEvent) and a.tx_hash in relevant_tx_hashes)
+            or (isinstance(a, EvmEvent) and a.tx_ref in relevant_tx_hashes)
         ]
 
     logger.info(
@@ -111,7 +111,9 @@ def run_report(
         if isinstance(action, EvmEvent):
             if action.event_subtype == HistoryEventSubType.FEE and action.counterparty == 'gas':
                 continue
-            action_ids.add(action.tx_hash.hex())
+            action_ids.add(action.tx_ref.hex())
+        elif action.group_identifier:
+            action_ids.add(action.group_identifier)
 
     for action in all_actions:
         if not isinstance(action, HistoryBaseEntry):
@@ -179,7 +181,7 @@ def run_report(
     accountant.export(buchfink_db.reports_directory / Path(name))
 
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
-    results, _ = dbpnl.get_reports(report_id=report_id, limit=0)
+    results, _ = dbpnl.get_reports(report_id=report_id, limit=1)
     report_data = results[0]
 
     def get_total_pnl_from_overview(pnl_overview):
@@ -288,7 +290,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     dbpnl = DBAccountingReports(accountant.csvexporter.database)
     report_data = dbpnl.get_report_data(
         filter_=ReportDataFilterQuery.make(report_id=report_id),
-        limit=0,
+        limit=50_000,
     )
     events = report_data[0]
 

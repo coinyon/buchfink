@@ -41,7 +41,7 @@ def _get_trades_metadata(buchfink_db: BuchfinkDB, account: Account) -> Optional[
     if os.path.exists(trades_path):
         with open(trades_path, 'r') as yaml_file:
             contents = yaml.safe_load(yaml_file)
-            if 'metadata' in contents and 'fetch_timestamp' in contents['metadata']:
+            if contents and 'metadata' in contents and 'fetch_timestamp' in contents['metadata']:
                 return TradesMetadata(
                     fetch_timestamp=deserialize_timestamp(contents['metadata']['fetch_timestamp'])
                 )
@@ -78,7 +78,7 @@ def _get_actions_metadata(buchfink_db: BuchfinkDB, account: Account) -> Optional
     if os.path.exists(actions_path):
         with open(actions_path, 'r') as yaml_file:
             contents = yaml.safe_load(yaml_file)
-            if 'metadata' in contents and 'fetch_timestamp' in contents['metadata']:
+            if contents and 'metadata' in contents and 'fetch_timestamp' in contents['metadata']:
                 return ActionsMetadata(
                     fetch_timestamp=deserialize_timestamp(contents['metadata']['fetch_timestamp'])
                 )
@@ -314,8 +314,9 @@ def fetch_trades(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timesta
     existing = set()
     unique_trades = []
     for trade in trades:
-        if (trade.location, trade.group_identifier) not in existing:
-            existing.add((trade.location, trade.group_identifier))
+        key = (trade.location, trade.group_identifier, trade.sequence_index)
+        if key not in existing:
+            existing.add(key)
             unique_trades.append(trade)
         else:
             logger.warning('Removing duplicate trade: %s', trade)

@@ -38,9 +38,9 @@ from buchfink.serialization import (
 
 
 @pytest.fixture
-def dummy_trade():
+def dummy_trade(buchfink_db):  # noqa: F841 - buchfink_db needed to init global asset DB
     return HistoryEvent(
-        event_identifier='LINK-123',
+        group_identifier='LINK-123',
         sequence_index=0,
         timestamp=ts_sec_to_ms(datetime(2020, 1, 3, tzinfo=timezone.utc).timestamp()),
         location=Location.COINBASE,
@@ -80,14 +80,8 @@ def test_trade_serialization_2(dummy_trade):
     assert serialize_decimal(Decimal('1234.23410')) == '1234.2341'
 
 
-def test_trade_deserialization_with_fee(tmp_path, dummy_trade):
-    shutil.copytree(
-        os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
-        os.path.join(tmp_path, 'buchfink'),
-    )
-
-    BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
-
+def test_trade_deserialization_with_fee(dummy_trade):
+    # buchfink_db is already initialized via the dummy_trade fixture
     ser_trade = serialize_trade(dummy_trade)
 
     # Remove fee if it exists (for backward compatibility testing)
@@ -184,11 +178,8 @@ def test_serialize_deserialize_balance_secondary(tmp_path):
 
 def test_serialize_balance_sheet(buchfink_db):
     A_HEX = buchfink_db.get_asset_by_symbol('HEX')
-    bs = BalanceSheet(
-        assets={
-            A_HEX: Balance(FVal('1500')),
-        }
-    )
+    bs = BalanceSheet()
+    bs.assets[A_HEX][''] = Balance(FVal('1500'))
 
     serialized = str(serialize_balances(bs))
     assert 'HEX' in serialized
@@ -230,8 +221,8 @@ def test_deserialize_asset_without_name(tmp_path):
         os.path.join(os.path.dirname(__file__), 'scenarios', 'mappings'),
         os.path.join(tmp_path, 'buchfink'),
     )
-    buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
-    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+    BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
+    A_WBTC = Asset('eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599')
 
     with pytest.raises(ValueError):
         # Missing ] at the end
@@ -245,13 +236,13 @@ def test_deserialize_asset_without_name(tmp_path):
 
 
 def test_serialize_and_deserialize_history_event(buchfink_db):
-    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+    A_WBTC = Asset('eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599')
     amount = 42
     ts = ts_sec_to_ms(
         deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
     )
     event = HistoryEvent(
-        event_identifier='0x123',
+        group_identifier='0x123',
         sequence_index=0,
         timestamp=TimestampMS(ts),
         location=Location.COINBASE,
@@ -275,11 +266,11 @@ def test_serialize_and_deserialize_history_event(buchfink_db):
 
 
 def test_serialize_and_deserialize_history_event_loss(buchfink_db):
-    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+    A_WBTC = Asset('eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599')
     amount = 42
     ts = deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
     event = HistoryEvent(
-        event_identifier='0x0',
+        group_identifier='0x0',
         sequence_index=0,
         timestamp=TimestampMS(ts * 1000),  # Convert to milliseconds
         location=Location.COINBASE,
@@ -313,13 +304,13 @@ def test_evm_token_on_polygon():
 
 
 def test_serialize_and_deserialize_gift(buchfink_db):
-    A_WBTC = buchfink_db.get_asset_by_symbol('WBTC')
+    A_WBTC = Asset('eip155:1/erc20:0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599')
     amount = 42
     ts = ts_sec_to_ms(
         deserialize_timestamp_from_date('2022-05-05T09:48:52Z', 'iso8601', 'coinbase')
     )
     event = HistoryEvent(
-        event_identifier='0x123',
+        group_identifier='0x123',
         sequence_index=0,
         timestamp=TimestampMS(ts),
         location=Location.KRAKEN,

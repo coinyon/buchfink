@@ -1,0 +1,10 @@
+# Balances for account2 - test data
+assets:
+  - asset: ETH
+    amount: 5.0
+  - asset: USDC[eip155:1/erc20:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48]
+    amount: 3000
+
+liabilities:
+  - asset: DAI[eip155:1/erc20:0x6B175474E89094C44Da98b954EedeAC495271d0F]
+    amount: 500

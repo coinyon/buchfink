@@ -3,6 +3,7 @@ from rotkehlchen.accounting.structures.balance import Balance, BalanceSheet, Bal
 from rotkehlchen.history.events.structures.base import HistoryBaseEntry  # noqa: F401, E501
 from rotkehlchen.history.events.structures.types import HistoryEventSubType, HistoryEventType  # noqa: F401, E501
 from rotkehlchen.history.events.structures.evm_event import EvmEvent  # noqa: F401
+from rotkehlchen.history.events.structures.asset_movement import AssetMovement  # noqa: F401
 from rotkehlchen.assets.asset import Asset, EvmToken  # noqa: F401
 from rotkehlchen.chain.ethereum.modules.nft.nfts import Nfts  # noqa: F401
 from rotkehlchen.chain.evm.structures import EvmTxReceipt  # noqa: F401

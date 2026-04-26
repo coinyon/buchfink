@@ -12,11 +12,13 @@ from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.constants import ZERO
 from rotkehlchen.constants.resolver import ChainID
 from rotkehlchen.serialization.deserialize import deserialize_evm_address
-from rotkehlchen.types import TokenKind, Location, deserialize_evm_tx_hash
+from rotkehlchen.history.events.structures.swap import SwapEvent, create_swap_events
+from rotkehlchen.types import AssetAmount, TokenKind, Location, deserialize_evm_tx_hash
 from rotkehlchen.utils.misc import ts_ms_to_sec
 
 from buchfink.datatypes import (
     Asset,
+    AssetMovement,
     Balance,
     BalanceSheet,
     EvmEvent,
@@ -139,23 +141,32 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
 
 
-def deserialize_trade(trade_dict) -> HistoryEvent:
+def deserialize_trade(trade_dict) -> List[SwapEvent]:
     if 'pair' in trade_dict:
-        # Legacy format with pair - convert to HistoryEvent
+        # Legacy format with pair - limited info, create a single spend event
         trade_type = deserialize_tradetype(trade_dict['trade_type'])
-        return HistoryEvent(
-            group_identifier=str(trade_dict.get('link', '')),
-            sequence_index=0,
-            timestamp=ts_ms_to_sec(deserialize_timestamp_ms(trade_dict['timestamp'])),
-            location=Location.deserialize(trade_dict.get('location') or 'external'),
-            event_type=HistoryEventType.TRADE,
-            event_subtype=HistoryEventSubType.SPEND
+        group_id = str(trade_dict.get('link', ''))
+        timestamp = TimestampMS(deserialize_timestamp_ms(trade_dict['timestamp']))
+        location = Location.deserialize(trade_dict.get('location') or 'external')
+        base_asset = deserialize_asset(trade_dict['pair'].split('/')[0])
+        amount = deserialize_fval(trade_dict['amount'])
+        notes = f"Legacy trade {trade_dict['pair']}"
+        subtype = (
+            HistoryEventSubType.SPEND
             if trade_type == EventDirection.OUT
-            else HistoryEventSubType.RECEIVE,
-            asset=deserialize_asset(trade_dict['pair'].split('/')[0]),  # base asset from pair
-            amount=deserialize_fval(trade_dict['amount']),
-            notes=f"Legacy trade {trade_dict['pair']}",
+            else HistoryEventSubType.RECEIVE
         )
+        return [
+            SwapEvent(
+                group_identifier=group_id,
+                timestamp=timestamp,
+                location=location,
+                event_subtype=subtype,
+                asset=base_asset,
+                amount=amount,
+                notes=notes,
+            )
+        ]
 
     if 'buy' in trade_dict:
         trade_type = EventDirection.IN
@@ -164,11 +175,37 @@ def deserialize_trade(trade_dict) -> HistoryEvent:
         trade_type = EventDirection.OUT
         amount, base_asset = deserialize_amount(trade_dict['sell'])
     elif 'trade_receive' in trade_dict:
-        # New event format - return deserialize_event instead
-        return deserialize_event(trade_dict)
+        recv_amount, recv_asset = deserialize_amount(trade_dict['trade_receive'])
+        return [
+            SwapEvent(
+                group_identifier=str(
+                    trade_dict.get('group_identifier', trade_dict.get('link', ''))
+                ),
+                sequence_index=trade_dict.get('sequence_index', 1),
+                timestamp=TimestampMS(deserialize_timestamp_ms(trade_dict['timestamp'])),
+                location=Location.deserialize(trade_dict.get('location') or 'external'),
+                event_subtype=HistoryEventSubType.RECEIVE,
+                asset=recv_asset,
+                amount=recv_amount,
+                notes=trade_dict.get('user_notes'),
+            )
+        ]
     elif 'trade_spend' in trade_dict:
-        # New event format - return deserialize_event instead
-        return deserialize_event(trade_dict)
+        spend_amount, spend_asset = deserialize_amount(trade_dict['trade_spend'])
+        return [
+            SwapEvent(
+                group_identifier=str(
+                    trade_dict.get('group_identifier', trade_dict.get('link', ''))
+                ),
+                sequence_index=trade_dict.get('sequence_index', 0),
+                timestamp=TimestampMS(deserialize_timestamp_ms(trade_dict['timestamp'])),
+                location=Location.deserialize(trade_dict.get('location') or 'external'),
+                event_subtype=HistoryEventSubType.SPEND,
+                asset=spend_asset,
+                amount=spend_amount,
+                notes=trade_dict.get('user_notes'),
+            )
+        ]
     else:
         raise ValueError('Invalid trade: ' + str(trade_dict))
 
@@ -180,21 +217,28 @@ def deserialize_trade(trade_dict) -> HistoryEvent:
     if quote_asset is None:
         raise ValueError('No quote asset provided')
 
-    # Fee information is not stored in HistoryEvent - would need separate fee event
-    # Rate can be calculated from quote_amount / amount if needed
+    group_id = str(trade_dict.get('link', ''))
+    timestamp = TimestampMS(deserialize_timestamp_ms(trade_dict['timestamp']))
+    location = Location.deserialize(trade_dict.get('location') or 'external')
+    notes = f'Trade {amount} {base_asset} for {quote_amount} {quote_asset}'
 
-    return HistoryEvent(
-        group_identifier=str(trade_dict.get('link', '')),
-        sequence_index=0,
-        timestamp=ts_ms_to_sec(deserialize_timestamp_ms(trade_dict['timestamp'])),
-        location=Location.deserialize(trade_dict.get('location') or 'external'),
-        event_type=HistoryEventType.TRADE,
-        event_subtype=HistoryEventSubType.SPEND
-        if trade_type == EventDirection.OUT
-        else HistoryEventSubType.RECEIVE,
-        asset=base_asset,
-        amount=amount,
-        notes=f'Trade {amount} {base_asset} for {quote_amount} {quote_asset}',
+    if trade_type == EventDirection.IN:
+        # buy: spend quote asset, receive base asset
+        spend = AssetAmount(asset=quote_asset, amount=quote_amount)
+        receive = AssetAmount(asset=base_asset, amount=amount)
+    else:
+        # sell: spend base asset, receive quote asset
+        spend = AssetAmount(asset=base_asset, amount=amount)
+        receive = AssetAmount(asset=quote_asset, amount=quote_amount)
+
+    return create_swap_events(
+        timestamp=timestamp,
+        location=location,
+        spend=spend,
+        receive=receive,
+        group_identifier=group_id,
+        spend_notes=notes,
+        receive_notes=notes,
     )
 
 
@@ -382,7 +426,7 @@ def serialize_ledger_action(action):
 
 def serialize_trades(trades: List[HistoryEvent]) -> List[dict]:
     def trade_sort_key(trade):
-        return (trade.timestamp, trade.group_identifier)
+        return (trade.timestamp, trade.group_identifier, trade.sequence_index)
 
     return [serialize_trade(trade) for trade in sorted(trades, key=trade_sort_key)]
 
@@ -402,8 +446,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     is_evm_event = isinstance(event, EvmEvent)
 
     if 'entry_type' in ser_event:
-        if ser_event['entry_type'] not in ('evm event', 'history event'):
-            raise ValueError('Do not know how to serialize entry type: ' + ser_event['entry_type'])
+        # Entry type is metadata that we don't need to preserve in YAML
+        # We handle serialization based on event_type and event_subtype instead
         del ser_event['entry_type']
 
     if (
@@ -452,6 +496,15 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         del ser_event['event_subtype']
 
     elif (
+        event.event_type == HistoryEventType.TRADE
+        and event.event_subtype == HistoryEventSubType.FEE
+    ):
+        ser_event['trade_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['asset']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
         event.event_type == HistoryEventType.RECEIVE
         and event.event_subtype == HistoryEventSubType.NONE
     ):
@@ -467,9 +520,8 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         del ser_event['event_subtype']
 
     elif (
-        event.event_type == HistoryEventType.RECEIVE
-        and event.event_subtype == HistoryEventSubType.REWARD
-    ):
+        event.event_type in (HistoryEventType.RECEIVE, HistoryEventType.STAKING)
+    ) and event.event_subtype == HistoryEventSubType.REWARD:
         ser_event['income'] = serialize_amount(event.amount, event.asset)
         del ser_event['asset']
         del ser_event['event_type']
@@ -484,6 +536,42 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         del ser_event['event_type']
         del ser_event['event_subtype']
 
+    elif (
+        event.event_type == HistoryEventType.DEPOSIT
+        and event.event_subtype == HistoryEventSubType.DEPOSIT_ASSET
+    ):
+        ser_event['deposit'] = serialize_amount(event.amount, event.asset)
+        del ser_event['asset']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.WITHDRAWAL
+        and event.event_subtype == HistoryEventSubType.REMOVE_ASSET
+    ):
+        ser_event['withdrawal'] = serialize_amount(event.amount, event.asset)
+        del ser_event['asset']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.DEPOSIT
+        and event.event_subtype == HistoryEventSubType.FEE
+    ):
+        ser_event['deposit_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['asset']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
+    elif (
+        event.event_type == HistoryEventType.WITHDRAWAL
+        and event.event_subtype == HistoryEventSubType.FEE
+    ):
+        ser_event['withdrawal_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['asset']
+        del ser_event['event_type']
+        del ser_event['event_subtype']
+
     if 'identifier' in ser_event:
         del ser_event['identifier']
 
@@ -494,14 +582,23 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         del ser_event['location_label']
 
     if is_evm_event:
-        if 'tx_hash' in ser_event:
-            ser_event['link'] = ser_event['tx_hash']
-            del ser_event['tx_hash']
+        if 'tx_ref' in ser_event:
+            ser_event['link'] = ser_event['tx_ref']
+            del ser_event['tx_ref']
+        if 'group_identifier' in ser_event:
+            del ser_event['group_identifier']
     else:
+        if 'group_identifier' in ser_event:
+            if ser_event['group_identifier'] and 'link' not in ser_event:
+                ser_event['link'] = ser_event['group_identifier']
+            del ser_event['group_identifier']
         if 'event_identifier' in ser_event:
-            if ser_event['event_identifier']:
+            if ser_event['event_identifier'] and 'link' not in ser_event:
                 ser_event['link'] = ser_event['event_identifier']
             del ser_event['event_identifier']
+
+    if 'entry_type' in ser_event:
+        del ser_event['entry_type']
 
     if 'extra_data' in ser_event and not ser_event['extra_data']:
         del ser_event['extra_data']
@@ -526,9 +623,14 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         'gift',
         'income',
         'airdrop',
+        'deposit',
+        'withdrawal',
+        'deposit_fee',
+        'withdrawal_fee',
         'spend_fee',
         'trade_spend',
         'trade_receive',
+        'trade_fee',
         'spend',
         'loss',
         # Regular event keys
@@ -557,17 +659,69 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
 def serialize_events(actions: List[HistoryBaseEntry]) -> List[dict]:
     return [
         serialize_event(action)
-        for action in sorted(actions, key=lambda action: (action.get_timestamp(),))
+        for action in sorted(
+            actions,
+            key=lambda action: (
+                action.get_timestamp(),
+                action.group_identifier,
+                action.sequence_index,
+            ),
+        )
     ]
 
 
-def deserialize_event(event_dict) -> HistoryBaseEntry:
+def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-many-return-statements
     is_evm_event = False
     event_type = None
     event_subtype = None
     amount = None
     asset = None
 
+    # Handle asset movement events first
+    if 'deposit' in event_dict:
+        amount, asset = deserialize_amount(event_dict['deposit'])
+        return AssetMovement(
+            timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
+            location=Location.EXTERNAL,  # Default location
+            event_subtype=HistoryEventSubType.RECEIVE,
+            asset=asset,
+            amount=amount,
+            notes=event_dict.get('user_notes'),
+            extra_data=event_dict.get('extra_data'),
+        )
+    if 'withdrawal' in event_dict:
+        amount, asset = deserialize_amount(event_dict['withdrawal'])
+        return AssetMovement(
+            timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
+            location=Location.EXTERNAL,  # Default location
+            event_subtype=HistoryEventSubType.SPEND,
+            asset=asset,
+            amount=amount,
+            notes=event_dict.get('user_notes'),
+            extra_data=event_dict.get('extra_data'),
+        )
+    if 'deposit_fee' in event_dict:
+        amount, asset = deserialize_amount(event_dict['deposit_fee'])
+        return AssetMovement(
+            timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
+            location=Location.EXTERNAL,  # Default location
+            event_subtype=HistoryEventSubType.FEE,
+            asset=asset,
+            amount=amount,
+            notes=event_dict.get('user_notes'),
+            extra_data=event_dict.get('extra_data'),
+        )
+    if 'withdrawal_fee' in event_dict:
+        amount, asset = deserialize_amount(event_dict['withdrawal_fee'])
+        return AssetMovement(
+            timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
+            location=Location.EXTERNAL,  # Default location
+            event_subtype=HistoryEventSubType.FEE,
+            asset=asset,
+            amount=amount,
+            notes=event_dict.get('user_notes'),
+            extra_data=event_dict.get('extra_data'),
+        )
     if 'spend_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['spend_fee'])
         is_evm_event = True
@@ -577,24 +731,27 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
         amount, asset = deserialize_amount(event_dict['trade_spend'])
         event_type = HistoryEventType.TRADE
         event_subtype = HistoryEventSubType.SPEND
-        # Only set is_evm_event if we have sequence_index
-        is_evm_event = 'sequence_index' in event_dict
     elif 'trade_receive' in event_dict:
         amount, asset = deserialize_amount(event_dict['trade_receive'])
         event_type = HistoryEventType.TRADE
         event_subtype = HistoryEventSubType.RECEIVE
-        # Only set is_evm_event if we have sequence_index
-        is_evm_event = 'sequence_index' in event_dict
+    elif 'trade_fee' in event_dict:
+        amount, asset = deserialize_amount(event_dict['trade_fee'])
+        event_type = HistoryEventType.TRADE
+        event_subtype = HistoryEventSubType.FEE
+
+    if not is_evm_event:
+        is_evm_event = event_dict.get('location', '') == 'ethereum'
 
     if is_evm_event:
         if 'sequence_index' not in event_dict:
             raise ValueError('Missing sequence_index in event: {}'.format(event_dict))
 
+        group_identifier = event_dict.get('group_identifier', event_dict.get('link', ''))
+
         return EvmEvent(
             tx_ref=deserialize_evm_tx_hash(
-                event_dict['link'][2:]
-                if event_dict['link'].startswith('0x')
-                else event_dict['link']
+                group_identifier[2:] if group_identifier.startswith('0x') else group_identifier
             ),
             sequence_index=event_dict['sequence_index'],
             timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
@@ -611,14 +768,13 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:
             extra_data=None,
         )
 
-    # If we have trade event info but it's not an EVM event, create a HistoryEvent
+    # If we have trade event info but it's not an EVM event, create a SwapEvent
     if event_type == HistoryEventType.TRADE and event_subtype is not None:
-        return HistoryEvent(
-            group_identifier=str(event_dict.get('link', '')),
-            sequence_index=0,  # Default for non-EVM events
+        return SwapEvent(
+            group_identifier=str(event_dict.get('group_identifier', event_dict.get('link', ''))),
+            sequence_index=event_dict.get('sequence_index'),
             timestamp=TimestampMS(deserialize_timestamp_ms(event_dict['timestamp'])),
-            location=Location.EXTERNAL,  # Default location
-            event_type=event_type,
+            location=Location.deserialize(event_dict.get('location') or 'external'),
             event_subtype=event_subtype,
             asset=asset,
             amount=amount,

@@ -69,6 +69,7 @@ from rotkehlchen.globaldb.handler import GlobalDBHandler
 from rotkehlchen.globaldb.manual_price_oracles import ManualCurrentOracle
 from rotkehlchen.globaldb.asset_updates.manager import AssetsUpdater
 from rotkehlchen.greenlets.manager import GreenletManager
+from rotkehlchen.history.events.structures.swap import SwapEvent
 from rotkehlchen.history.price import PriceHistorian
 from rotkehlchen.history.types import HistoricalPrice, HistoricalPriceOracle
 from rotkehlchen.inquirer import Inquirer
@@ -100,7 +101,6 @@ from buchfink.datatypes import (
     EvmTxReceipt,
     HistoryBaseEntry,
     Nfts,
-    HistoryEvent,
 )
 from buchfink.exceptions import InputError, UnknownAsset
 from buchfink.models import (
@@ -545,32 +545,21 @@ class BuchfinkDB(DBHandler):
             return BlockchainAccounts(eth=[self._active_eth_address])
         return BlockchainAccounts()
 
-    def get_trades_from_file(self, trades_file) -> List[HistoryEvent]:
-        def safe_deserialize_trade(trade):
-            try:
-                return deserialize_trade(trade)
-            except UnknownAsset:
-                logger.warning('Ignoring trade with unknown asset: %s', trade)
-                return None
-
+    def get_trades_from_file(self, trades_file) -> List[SwapEvent]:
         with open(trades_file, 'r') as trades_f:
             exchange = yaml.load(trades_f, Loader=yaml.SafeLoader)
 
-        return [
-            ser_trade
-            for ser_trade in [safe_deserialize_trade(trade) for trade in exchange.get('trades', [])]
-            if ser_trade is not None
-        ] + [
-            ser_trade
-            for ser_trade in [
-                safe_deserialize_trade(trade)
-                for trade in exchange.get('actions', [])
-                if 'buy' in trade or 'sell' in trade
-            ]
-            if ser_trade is not None
-        ]
+        result = []
+        for trade in exchange.get('trades', []) + [
+            t for t in exchange.get('actions', []) if 'buy' in t or 'sell' in t
+        ]:
+            try:
+                result.extend(deserialize_trade(trade))
+            except UnknownAsset:
+                logger.warning('Ignoring trade with unknown asset: %s', trade)
+        return result
 
-    def get_local_trades_for_account(self, account_name: Union[str, Account]) -> List[HistoryEvent]:
+    def get_local_trades_for_account(self, account_name: Union[str, Account]) -> List[SwapEvent]:
         if isinstance(account_name, str):
             account = [a for a in self.accounts if a.name == account_name][0]  # type: Account
         else:
@@ -584,24 +573,17 @@ class BuchfinkDB(DBHandler):
         return []
 
     def get_actions_from_file(self, actions_file, include_trades=True) -> List[HistoryBaseEntry]:
-        def safe_deserialize_event(action):
-            if 'buy' in action or 'sell' in action:
-                # it is a HistoryEvent
-                if not include_trades:
-                    return None
-                return deserialize_trade(action)
-            return deserialize_event(action)
-
         with open(actions_file, 'r') as actions_f:
             exchange = yaml.load(actions_f, Loader=yaml.SafeLoader)
 
-        return [
-            ser_action
-            for ser_action in [
-                safe_deserialize_event(action) for action in exchange.get('actions', [])
-            ]
-            if ser_action is not None
-        ]
+        result = []
+        for action in exchange.get('actions', []):
+            if 'buy' in action or 'sell' in action:
+                if include_trades:
+                    result.extend(deserialize_trade(action))
+            else:
+                result.append(deserialize_event(action))
+        return result
 
     def get_local_ledger_actions_for_account(
         self, account_name: Union[str, Account]

@@ -1,0 +1,8 @@
+accounts:
+  - name: account1
+    ethereum: '0x1234567890123456789012345678901234567890'
+  - name: account2
+    ethereum: '0x2234567890123456789012345678901234567890'
+
+settings:
+  main_currency: USD
