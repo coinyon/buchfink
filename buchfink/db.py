@@ -23,6 +23,10 @@ from rotkehlchen.chain.base.manager import BaseManager
 from rotkehlchen.chain.base.node_inquirer import BaseInquirer
 from rotkehlchen.chain.binance_sc.manager import BinanceSCManager
 from rotkehlchen.chain.binance_sc.node_inquirer import BinanceSCInquirer
+from rotkehlchen.chain.hyperliquid.manager import HyperliquidManager
+from rotkehlchen.chain.hyperliquid.node_inquirer import HyperliquidInquirer
+from rotkehlchen.chain.monad.manager import MonadManager
+from rotkehlchen.chain.monad.node_inquirer import MonadInquirer
 from rotkehlchen.chain.ethereum.decoding.decoder import EthereumTransactionDecoder
 from rotkehlchen.externalapis.etherscan import Etherscan as EthereumEtherscan
 from rotkehlchen.chain.ethereum.manager import EthereumManager
@@ -323,6 +327,22 @@ class BuchfinkDB(DBHandler):
             routescan=self.routescan,
         )
         self.binance_sc_manager = BinanceSCManager(self.binance_sc_inquirer)
+        self.hyperliquid_inquirer = HyperliquidInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+            etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
+        )
+        self.hyperliquid_manager = HyperliquidManager(self.hyperliquid_inquirer)
+        self.monad_inquirer = MonadInquirer(
+            greenlet_manager=self.greenlet_manager,
+            database=self,
+            etherscan=self.etherscan,
+            blockscout=self.blockscout,
+            routescan=self.routescan,
+        )
+        self.monad_manager = MonadManager(self.monad_inquirer)
         self.kusama_manager = SubstrateManager(
             chain=SupportedBlockchain.KUSAMA,
             msg_aggregator=self.msg_aggregator,
@@ -645,6 +665,8 @@ class BuchfinkDB(DBHandler):
             gnosis_manager=self.gnosis_manager,
             scroll_manager=self.scroll_manager,
             binance_sc_manager=self.binance_sc_manager,
+            hyperliquid_manager=self.hyperliquid_manager,
+            monad_manager=self.monad_manager,
             bitcoin_manager=None,  # Not used in buchfink
             bitcoin_cash_manager=None,  # Not used in buchfink
             solana_manager=None,  # Not used in buchfink
