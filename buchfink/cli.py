@@ -299,8 +299,7 @@ def balances(
 
         if total:
             print(
-                f'Total liabilities: '
-                f'{round(float(balance_in_currency_sum), 2)} {currency.symbol}'
+                f'Total liabilities: {round(float(balance_in_currency_sum), 2)} {currency.symbol}'
             )
 
         else:

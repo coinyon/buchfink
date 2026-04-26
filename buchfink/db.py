@@ -634,7 +634,7 @@ class BuchfinkDB(DBHandler):
                 pass
             else:
                 raise ValueError(
-                    'Unable to create chain aggregator for account type: ' '{}'.format(
+                    'Unable to create chain aggregator for account type: {}'.format(
                         account.account_type
                     )
                 )

@@ -177,8 +177,7 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
                     actions.append(event)
                 else:
                     logger.warning(
-                        'Ignoring event %s (summary=%s, event_identifier=0x%s, '
-                        'sequence_index=%s)',
+                        'Ignoring event %s (summary=%s, event_identifier=0x%s, sequence_index=%s)',
                         event.event_type,
                         event,
                         event.group_identifier,

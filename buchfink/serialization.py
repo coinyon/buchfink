@@ -139,7 +139,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
         )
 
     if 'event_type' in action_dict and 'asset' in action_dict:
-        amount, asset = deserialize_amount(f"{action_dict['amount']} {action_dict['asset']}")
+        amount, asset = deserialize_amount(f'{action_dict["amount"]} {action_dict["asset"]}')
         return HistoryEvent(
             group_identifier=str(action_dict.get('group_identifier', action_dict.get('link', ''))),
             sequence_index=action_dict.get('sequence_index', 0),
@@ -164,7 +164,7 @@ def deserialize_trade(trade_dict) -> List[SwapEvent]:
         location = Location.deserialize(trade_dict.get('location') or 'external')
         base_asset = deserialize_asset(trade_dict['pair'].split('/')[0])
         amount = deserialize_fval(trade_dict['amount'])
-        notes = f"Legacy trade {trade_dict['pair']}"
+        notes = f'Legacy trade {trade_dict["pair"]}'
         subtype = (
             HistoryEventSubType.SPEND
             if trade_type == EventDirection.OUT
