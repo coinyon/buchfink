@@ -2,5 +2,5 @@
 
 ## Events
 {% for event in events %}
-* {{ event.to_string(str) }}
+* [{{ get_event_type(event) }}] {{ event.to_string(str) }}
 {% endfor %}

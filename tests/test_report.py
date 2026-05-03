@@ -130,6 +130,7 @@ def test_ethereum_gas_report_tax(tmp_path):
         assert '## Events' in report_contents
         assert '0.0203' in report_contents
         assert '-64.81' in report_contents
+        assert '[transaction_fee]' in report_contents
 
     result = run_report(buchfink_db, [whale2], report)
 
