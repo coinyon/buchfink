@@ -709,9 +709,15 @@ def report_(
         table = []
         for report_name, result in results.items():
             table.append(
-                [report_name, result['pnl_totals']['free'], result['pnl_totals']['taxable']]
+                [
+                    report_name,
+                    result['pnl_totals']['free'],
+                    result['pnl_totals']['taxable'],
+                    result['processed_actions'],
+                    result['total_actions'],
+                ]
             )
-        print(tabulate(table, headers=['Report', 'Free P/L', 'Taxable P/L']))
+        print(tabulate(table, headers=['Report', 'Free P/L', 'Taxable P/L', 'Processed events', 'Total events']))
 
 
 @buchfink.command()
