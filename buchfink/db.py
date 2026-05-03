@@ -597,13 +597,25 @@ class BuchfinkDB(DBHandler):
         with open(actions_file, 'r') as actions_f:
             exchange = yaml.load(actions_f, Loader=yaml.SafeLoader)
 
+        identifiers = set()
         result = []
         for action in exchange.get('actions', []):
             if 'buy' in action or 'sell' in action:
                 if include_trades:
                     result.extend(deserialize_trade(action))
             else:
-                result.append(deserialize_event(action))
+                event = deserialize_event(action)
+                if event.group_identifier is not None:
+                    # If a group_identifier is provided, we require a unique sequence_index for
+                    # each event in the same group.
+                    if (event.group_identifier, event.sequence_index) in identifiers:
+                        logger.warning(
+                            'Duplicate event identifier found in actions file, skipping event: %s',
+                            action,
+                        )
+                        continue
+                    identifiers.add((event.group_identifier, event.sequence_index))
+                result.append(event)
         return result
 
     def get_local_ledger_actions_for_account(
