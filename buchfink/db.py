@@ -597,7 +597,7 @@ class BuchfinkDB(DBHandler):
         with open(actions_file, 'r') as actions_f:
             exchange = yaml.load(actions_f, Loader=yaml.SafeLoader)
 
-        identifiers = set()
+        identifiers: dict[Tuple[str, Optional[int]], HistoryBaseEntry] = {}
         result = []
         for action in exchange.get('actions', []):
             if 'buy' in action or 'sell' in action:
@@ -605,16 +605,20 @@ class BuchfinkDB(DBHandler):
                     result.extend(deserialize_trade(action))
             else:
                 event = deserialize_event(action)
-                if event.group_identifier is not None:
+                if event.group_identifier:
                     # If a group_identifier is provided, we require a unique sequence_index for
                     # each event in the same group.
                     if (event.group_identifier, event.sequence_index) in identifiers:
                         logger.warning(
-                            'Duplicate event identifier found in actions file, skipping event: %s',
-                            action,
+                                'Duplicate event identifier found in actions file, '
+                                'skipping event: %s '
+                                '(original event: %s, group_identifier=%s sequence_index=%s)',
+                                action,
+                                identifiers[(event.group_identifier, event.sequence_index)],
+                                event.group_identifier, event.sequence_index
                         )
                         continue
-                    identifiers.add((event.group_identifier, event.sequence_index))
+                    identifiers[(event.group_identifier, event.sequence_index)] = event
                 result.append(event)
         return result
 

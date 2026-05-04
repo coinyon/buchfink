@@ -71,8 +71,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'income' in action_dict:
         amount, asset = deserialize_amount(action_dict['income'])
         return HistoryEvent(
-            group_identifier=str(action_dict.get('link', '')),
-            sequence_index=0,
+            group_identifier=action_dict.get('group_identifier', str(action_dict.get('link', ''))),
+            sequence_index=action_dict.get('sequence_index', 0),
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             location=Location.EXTERNAL,
             event_type=HistoryEventType.RECEIVE,
@@ -85,8 +85,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'airdrop' in action_dict:
         amount, asset = deserialize_amount(action_dict['airdrop'])
         return HistoryEvent(
-            group_identifier=str(action_dict.get('link', '')),
-            sequence_index=0,
+            group_identifier=action_dict.get('group_identifier', str(action_dict.get('link', ''))),
+            sequence_index=action_dict.get('sequence_index', 0),
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             location=Location.EXTERNAL,
             event_type=HistoryEventType.RECEIVE,
@@ -99,8 +99,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'loss' in action_dict:
         amount, asset = deserialize_amount(action_dict['loss'])
         return HistoryEvent(
-            group_identifier=str(action_dict.get('link', '')),
-            sequence_index=0,
+            group_identifier=action_dict.get('group_identifier', str(action_dict.get('link', ''))),
+            sequence_index=action_dict.get('sequence_index', 0),
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             location=Location.EXTERNAL,
             event_type=HistoryEventType.LOSS,
@@ -113,8 +113,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'gift' in action_dict:
         amount, asset = deserialize_amount(action_dict['gift'])
         return HistoryEvent(
-            group_identifier=str(action_dict.get('link', '')),
-            sequence_index=0,
+            group_identifier=action_dict.get('group_identifier', str(action_dict.get('link', ''))),
+            sequence_index=action_dict.get('sequence_index', 0),
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             location=Location.EXTERNAL,
             event_type=HistoryEventType.RECEIVE,
@@ -127,8 +127,8 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'spend' in action_dict:
         amount, asset = deserialize_amount(action_dict['spend'])
         return HistoryEvent(
-            group_identifier=str(action_dict.get('link', '')),
-            sequence_index=0,
+            group_identifier=action_dict.get('group_identifier', str(action_dict.get('link', ''))),
+            sequence_index=action_dict.get('sequence_index', 0),
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             location=Location.EXTERNAL,
             event_type=HistoryEventType.SPEND,
@@ -141,7 +141,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
     if 'event_type' in action_dict and 'asset' in action_dict:
         amount, asset = deserialize_amount(f'{action_dict["amount"]} {action_dict["asset"]}')
         return HistoryEvent(
-            group_identifier=str(action_dict.get('group_identifier', action_dict.get('link', ''))),
+            group_identifier=action_dict.get('group_identifier', str(action_dict.get('link', ''))),
             sequence_index=action_dict.get('sequence_index', 0),
             timestamp=deserialize_timestamp_ms(action_dict['timestamp']),
             location=Location.deserialize(action_dict.get('location') or 'external'),
