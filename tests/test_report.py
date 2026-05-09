@@ -99,6 +99,7 @@ def test_ethereum_gas_report_tax(tmp_path):
     )
     buchfink_db = BuchfinkDB(os.path.join(tmp_path, 'buchfink/buchfink.yaml'))
     buchfink_db.perform_assets_updates()
+    buchfink_db.sync_manual_prices()
 
     reports = list(buchfink_db.get_all_reports())
 
@@ -116,7 +117,7 @@ def test_ethereum_gas_report_tax(tmp_path):
     assert float(result['pnl_totals']['taxable']) > 0.0
     assert float(result['overview']['trade']['taxable']) == 500.0
     assert float(result['overview']['transaction event']['taxable']) == pytest.approx(
-        -64.816, rel=0.1
+        -64.822, rel=0.01
     )
 
     render_report(buchfink_db, report)
@@ -129,7 +130,7 @@ def test_ethereum_gas_report_tax(tmp_path):
         report_contents = report_handle.read()
         assert '## Events' in report_contents
         assert '0.0203' in report_contents
-        assert '-64.81' in report_contents
+        assert '-64.82' in report_contents
         assert '[transaction_fee]' in report_contents
 
     result = run_report(buchfink_db, [whale2], report)

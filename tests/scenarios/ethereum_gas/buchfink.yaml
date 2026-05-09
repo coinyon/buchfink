@@ -10,6 +10,12 @@ reports:
     to: "2021-12-30"
     template: templates/report.md
 
+prices:
+  - from: ETH
+    to: USD
+    at: '2021-08-19 10:15:50'
+    price: 3185
+
 settings:
   main_currency: USD
   taxfree_after_period: 7776000  # ~3 months

@@ -233,7 +233,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
 
         if event.notes.startswith('Burned'):
             return 'transaction_fee'
-        if re.search(r'^swap|sell|buy', event.notes, re.IGNORECASE):
+        if re.search(r'^swap|^trade|^sell|^buy', event.notes, re.IGNORECASE):
             # Even when doing a buy, the taxable action is the sell of the
             # other asset
             return 'sell'
