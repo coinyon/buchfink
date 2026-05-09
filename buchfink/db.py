@@ -610,12 +610,13 @@ class BuchfinkDB(DBHandler):
                     # each event in the same group.
                     if (event.group_identifier, event.sequence_index) in identifiers:
                         logger.warning(
-                                'Duplicate event identifier found in actions file, '
-                                'skipping event: %s '
-                                '(original event: %s, group_identifier=%s sequence_index=%s)',
-                                action,
-                                identifiers[(event.group_identifier, event.sequence_index)],
-                                event.group_identifier, event.sequence_index
+                            'Duplicate event identifier found in actions file, '
+                            'skipping event: %s '
+                            '(original event: %s, group_identifier=%s sequence_index=%s)',
+                            action,
+                            identifiers[(event.group_identifier, event.sequence_index)],
+                            event.group_identifier,
+                            event.sequence_index,
                         )
                         continue
                     identifiers[(event.group_identifier, event.sequence_index)] = event

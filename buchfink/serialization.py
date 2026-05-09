@@ -775,7 +775,8 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             asset=asset,
             amount=amount,
             location_label=None,
-            notes=' '.join(filter(None, [event_dict.get('notes'), event_dict.get('user_notes')])) or None,
+            notes=' '.join(filter(None, [event_dict.get('notes'), event_dict.get('user_notes')]))
+            or None,
             identifier=None,
             counterparty=event_dict.get('counterparty'),
             address=event_dict.get('address'),

@@ -717,7 +717,12 @@ def report_(
                     result['total_actions'],
                 ]
             )
-        print(tabulate(table, headers=['Report', 'Free P/L', 'Taxable P/L', 'Processed events', 'Total events']))
+        print(
+            tabulate(
+                table,
+                headers=['Report', 'Free P/L', 'Taxable P/L', 'Processed events', 'Total events'],
+            )
+        )
 
 
 @buchfink.command()
