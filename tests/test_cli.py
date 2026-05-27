@@ -179,7 +179,9 @@ def test_events_command():
         assert result.exception is None
         assert 'ETH' in result.output
 
-        result = runner.invoke(buchfink, ['events', '-k', 'whale1', '-a', 'ETH'], catch_exceptions=False)
+        result = runner.invoke(
+            buchfink, ['events', '-k', 'whale1', '-a', 'ETH'], catch_exceptions=False
+        )
         logger.debug('output of %s: %s', 'events -k whale1 -a ETH', result.output)
         assert result.exit_code == 0
         assert result.exception is None
