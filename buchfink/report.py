@@ -249,6 +249,10 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
             r'reward|payout|asset return|settlement|interest|dividend', event.notes, re.IGNORECASE
         ):
             return 'dividend'
+        if event.extra_data.get('direction') == 'in':
+            return 'dividend'
+        if event.extra_data.get('direction') == 'out':
+            return 'sell'
 
         logger.error('Unknown event type: %s', event.notes)
 
