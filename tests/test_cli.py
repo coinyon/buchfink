@@ -9,6 +9,8 @@ import pytest
 from click.testing import CliRunner
 
 from buchfink.cli import buchfink
+from buchfink.db import BuchfinkDB
+from buchfink.tasks import fetch_trades
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +161,65 @@ def test_ethereum_gas_report_cli():
         # assert os.path.exists(os.path.join(d, 'reports/all/all_events.csv'))
         assert os.path.exists(os.path.join(d, 'reports/all/report.log'))
         assert os.path.exists(os.path.join(d, 'reports/all/errors.log'))
+
+
+def test_events_command():
+    """Test the events CLI command with pre-existing action files"""
+    runner = CliRunner()
+    with runner.isolated_filesystem() as d:
+        shutil.copytree(
+            os.path.join(os.path.dirname(__file__), 'scenarios', 'ethereum_gas'),
+            d,
+            dirs_exist_ok=True,
+        )
+
+        result = runner.invoke(buchfink, ['events', '-k', 'whale1'], catch_exceptions=False)
+        logger.debug('output of %s: %s', 'events -k whale1', result.output)
+        assert result.exit_code == 0
+        assert result.exception is None
+        assert 'ETH' in result.output
+
+        result = runner.invoke(buchfink, ['events', '-k', 'whale1', '-a', 'ETH'], catch_exceptions=False)
+        logger.debug('output of %s: %s', 'events -k whale1 -a ETH', result.output)
+        assert result.exit_code == 0
+        assert result.exception is None
+        assert 'ETH' in result.output
+
+
+def test_events_command_with_trade_asset_filter(tmp_path):
+    """Test that events --asset filter works with SwapEvent objects from trades files"""
+    shutil.copytree(
+        os.path.join(os.path.dirname(__file__), 'scenarios', 'bullrun'),
+        os.path.join(tmp_path, 'buchfink'),
+    )
+    config_path = os.path.join(tmp_path, 'buchfink', 'buchfink.yaml')
+    buchfink_db = BuchfinkDB(config_path)
+    accounts = [acc for acc in buchfink_db.get_all_accounts() if acc.name == 'exchange1']
+    fetch_trades(buchfink_db, accounts[0])
+    trades = buchfink_db.get_local_trades_for_account(accounts[0].name)
+    assert len(trades) > 0
+    buchfink_db.__del__()  # pylint: disable=unnecessary-dunder-call
+
+    runner = CliRunner()
+    result = runner.invoke(
+        buchfink,
+        ['--config', config_path, 'events', '-k', 'exchange1'],
+        catch_exceptions=False,
+    )
+    logger.debug('output of %s: %s', 'events -k exchange1', result.output)
+    assert result.exit_code == 0
+    assert result.exception is None
+
+    # Test --asset filter with SwapEvents — this was broken before the fix
+    result = runner.invoke(
+        buchfink,
+        ['--config', config_path, 'events', '-k', 'exchange1', '-a', 'BTC'],
+        catch_exceptions=False,
+    )
+    logger.debug('output of %s: %s', 'events -k exchange1 -a BTC', result.output)
+    assert result.exit_code == 0
+    assert result.exception is None
+    assert 'BTC' in result.output
 
 
 def test_balances_command():

@@ -524,7 +524,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
         events.extend(
             (trade, account)
             for trade in buchfink_db.get_local_trades_for_account(account.name)
-            if filter_asset is None or filter_asset in (trade.base_asset, trade.quote_asset)
+            if filter_asset is None or filter_asset == trade.asset
         )
 
         events.extend(
@@ -551,20 +551,6 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
             #     asset_currency = FVal('0.0')
 
             if isinstance(event, HistoryEvent):
-                trade: HistoryEvent = event
-                table.append(
-                    [
-                        serialize_timestamp(trade.timestamp),
-                        str(trade.trade_type),
-                        serialize_decimal(trade.amount.num),
-                        str(trade.base_asset.symbol),
-                        serialize_decimal((trade.amount * trade.rate).num),
-                        str(trade.quote_asset.symbol),
-                        serialize_decimal(trade.rate.num),
-                        str(account.name),
-                    ]
-                )
-            elif isinstance(event, HistoryEvent):
                 table.append(
                     [
                         serialize_timestamp(ts_ms_to_sec(event.timestamp)),
@@ -573,7 +559,7 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
                         str(event.asset.symbol_or_name()),
                         '',
                         '',
-                        str(''),
+                        '',
                         str(account.name),
                     ]
                 )
