@@ -189,8 +189,6 @@ class BuchfinkDB(DBHandler):
 
         self.greenlet_manager = GreenletManager(msg_aggregator=self.msg_aggregator)
 
-        # Initialize blockchain querying modules
-        self.etherscan = EthereumEtherscan(database=self, msg_aggregator=self.msg_aggregator)
         self.blockscout = Blockscout(database=self, msg_aggregator=self.msg_aggregator)
         self.routescan = Routescan(database=self, msg_aggregator=self.msg_aggregator)
         GlobalDBHandler._GlobalDBHandler__instance = None
@@ -240,6 +238,10 @@ class BuchfinkDB(DBHandler):
             sql_vm_instructions_cb=DEFAULT_SQL_VM_INSTRUCTIONS_CB,
             resume_from_backup=False,
         )
+
+        # EthereumEtherscan.__init__ calls detect_api_key_tier() → needs self.conn.
+        # Must be initialized after super().__init__() provides the DB connection.
+        self.etherscan = EthereumEtherscan(database=self, msg_aggregator=self.msg_aggregator)
 
         if ENABLE_DATA_MIGRATION:
 
