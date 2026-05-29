@@ -471,7 +471,6 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
             if hexstr_to_int(event.topics[1]) == hexstr_to_int(account.address):
                 amount_fei = hexstr_to_int(event.data[2:][64:128])
                 amount_tribe = hexstr_to_int(event.data[2:][128:])
-                print(amount_fei, amount_tribe)
                 actions += [
                     HistoryEvent(
                         group_identifier=txn.tx_hash.hex(),
