@@ -2,6 +2,7 @@ import logging
 import os
 import os.path
 import re
+from decimal import Decimal
 import shutil
 import subprocess
 import sys
@@ -30,6 +31,7 @@ from buchfink.datatypes import (
     FVal,
     HistoryBaseEntry,
     HistoryEvent,
+    HistoryEventSubType,
     Timestamp,
 )
 from buchfink.db import BuchfinkDB
@@ -508,6 +510,26 @@ def format_(buchfink_db: BuchfinkDB, keyword: Optional[str], account_type: Optio
             buchfink_db.write_balances(account, balances_)
 
 
+_OUTGOING_SUBTYPES = {
+    HistoryEventSubType.SPEND,
+    HistoryEventSubType.FEE,
+    HistoryEventSubType.LIQUIDATE,
+    HistoryEventSubType.DONATE,
+    HistoryEventSubType.PAYBACK_DEBT,
+    HistoryEventSubType.RETURN_WRAPPED,
+    HistoryEventSubType.DEPOSIT_ASSET,
+    HistoryEventSubType.BURN,
+}
+
+
+def _signed_amount(event: HistoryBaseEntry) -> Decimal:
+    """Return event amount with sign: negative for outgoing, positive for incoming."""
+    amt = event.amount.num
+    if event.event_subtype in _OUTGOING_SUBTYPES:
+        return -amt
+    return amt
+
+
 @buchfink.command('events')
 @click.option('--keyword', '-k', type=str, default=None, help='Filter by keyword in account name')
 @click.option('--asset', '-a', type=str, default=None, help='Filter by asset')
@@ -542,58 +564,28 @@ def events_(buchfink_db: BuchfinkDB, keyword, asset):
 
     if events:
         table = []
+        balance = Decimal(0)
         for event, account in events:
-            # try:
-            #     asset_currency = historian.query_historical_price(
-            #         from_asset=action.asset, to_asset=currency, timestamp=action.timestamp
-            #     )
-            # except NoPriceForGivenTimestamp:
-            #     asset_currency = FVal('0.0')
-
-            if isinstance(event, HistoryEvent):
-                table.append(
-                    [
-                        serialize_timestamp(ts_ms_to_sec(event.timestamp)),
-                        str(event.event_subtype),
-                        str(event.amount.num),
-                        str(event.asset.symbol_or_name()),
-                        '',
-                        '',
-                        '',
-                        str(account.name),
-                    ]
-                )
-            elif isinstance(event, HistoryBaseEntry):
-                print(event.timestamp)
-                table.append(
-                    [
-                        serialize_timestamp(ts_ms_to_sec(event.timestamp)),
-                        str(event.event_subtype),
-                        serialize_decimal(event.amount.num),
-                        str(event.asset.symbol_or_name()),
-                        serialize_decimal(event.amount.num),
-                        str(event.asset.symbol_or_name()),
-                        str(''),
-                        str(account.name),
-                    ]
-                )
-            else:
-                raise RuntimeError('Unknown event type')
+            signed = _signed_amount(event)
+            if filter_asset is not None:
+                balance += signed
+            table.append(
+                [
+                    serialize_timestamp(ts_ms_to_sec(event.timestamp)),
+                    str(event.event_subtype),
+                    serialize_decimal(signed),
+                    str(event.asset.symbol_or_name()),
+                    str(account.name),
+                ]
+            )
         print(
             tabulate(
                 table,
-                headers=[
-                    'Time',
-                    'Type',
-                    'Amount',
-                    'Quote Asset',
-                    'Amount',
-                    'Base Asset',
-                    'Rate',
-                    'Account',
-                ],
+                headers=['Time', 'Type', 'Amount', 'Asset', 'Account'],
             )
         )
+        if filter_asset is not None:
+            print(f'\nBalance: {serialize_decimal(balance)} {filter_asset}')
 
 
 @buchfink.command('report')
