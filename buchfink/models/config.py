@@ -41,6 +41,14 @@ class BitcoinCashAccountConfig(BaseModel):
     tags: List[str] = []
 
 
+class GnosisAccountConfig(BaseModel):
+    name: str
+    gnosis: str  # Gnosis chain address
+    session_token: Optional[str] = None  # Gnosis Pay API bearer token
+    fetch: Optional[FetchConfig] = None
+    tags: List[str] = []
+
+
 class GenericAccountConfig(BaseModel):
     name: str
     fetch: Optional[FetchConfig] = None
@@ -52,6 +60,7 @@ AccountConfig = Union[
     EthereumAccountConfig,
     BitcoinAccountConfig,
     BitcoinCashAccountConfig,
+    GnosisAccountConfig,
     GenericAccountConfig,
 ]
 

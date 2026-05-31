@@ -38,8 +38,10 @@ from rotkehlchen.chain.evm.contracts import EvmContracts
 from rotkehlchen.chain.evm.nodes import populate_rpc_nodes_in_database
 from rotkehlchen.chain.evm.transactions import EvmTransactionsFilterQuery
 from rotkehlchen.chain.evm.types import NodeName, WeightedNode
+from rotkehlchen.chain.gnosis.decoding.decoder import GnosisTransactionDecoder
 from rotkehlchen.chain.gnosis.manager import GnosisManager
 from rotkehlchen.chain.gnosis.node_inquirer import GnosisInquirer
+from rotkehlchen.chain.gnosis.transactions import GnosisTransactions
 from rotkehlchen.chain.optimism.manager import OptimismManager
 from rotkehlchen.chain.optimism.node_inquirer import OptimismInquirer
 from rotkehlchen.chain.polygon_pos.manager import PolygonPOSManager
@@ -112,6 +114,7 @@ from buchfink.models import (
     Account,
     Config,
     ExchangeAccountConfig,
+    GnosisAccountConfig,
     HistoricalPriceConfig,
     ReportConfig,
 )
@@ -322,6 +325,14 @@ class BuchfinkDB(DBHandler):
             routescan=self.routescan,
         )
         self.gnosis_manager = GnosisManager(self.gnosis_inquirer)
+        self.gnosis_transactions = GnosisTransactions(
+            gnosis_inquirer=self.gnosis_inquirer, database=self
+        )
+        self.gnosis_tx_decoder = GnosisTransactionDecoder(
+            database=self,
+            gnosis_inquirer=self.gnosis_inquirer,
+            transactions=self.gnosis_transactions,
+        )
         self.binance_sc_inquirer = BinanceSCInquirer(
             greenlet_manager=self.greenlet_manager,
             database=self,
@@ -454,9 +465,22 @@ class BuchfinkDB(DBHandler):
 
         return db_settings_from_dict(clean_settings, self.msg_aggregator)
 
+    def _store_gnosis_pay_session_token(self, session_token: str) -> None:
+        with self.user_write() as cursor:
+            cursor.execute(
+                'INSERT OR REPLACE INTO external_service_credentials (name, api_key) VALUES (?, ?)',
+                ('gnosis_pay', session_token),
+            )
+
     def sync_accounts(self, accounts: List[Account]) -> None:
         for account in accounts:
-            if account.account_type != 'ethereum':
+            if account.account_type == 'ethereum':
+                chain = SupportedBlockchain.ETHEREUM
+            elif account.account_type == 'gnosis':
+                chain = SupportedBlockchain.GNOSIS
+                if isinstance(account.config, GnosisAccountConfig) and account.config.session_token:
+                    self._store_gnosis_pay_session_token(account.config.session_token)
+            else:
                 continue
 
             try:
@@ -469,7 +493,7 @@ class BuchfinkDB(DBHandler):
                             BlockchainAccountData(
                                 address=account.address,
                                 label=account.name,
-                                chain=SupportedBlockchain.ETHEREUM,
+                                chain=chain,
                                 tags=[],
                             )
                         ],
@@ -477,14 +501,14 @@ class BuchfinkDB(DBHandler):
             except InputError:
                 pass
 
-    def get_eth_transactions(
+    def get_evm_transactions(
         self,
         account: Account,
         with_receipts: bool = False,
         start_ts: Optional[Timestamp] = None,
         end_ts: Optional[Timestamp] = None,
     ) -> List[Tuple[EvmTransaction, Optional[EvmTxReceipt]]]:
-        assert account.account_type == 'ethereum'
+        assert account.account_type in ('ethereum', 'gnosis')
         address = cast(ChecksumEvmAddress, account.address)
 
         if end_ts is None:
@@ -494,14 +518,22 @@ class BuchfinkDB(DBHandler):
 
         self.sync_accounts([account])
 
+        if account.account_type == 'gnosis':
+            chain_id = ChainID.GNOSIS
+            evm_transactions = self.gnosis_transactions
+        else:
+            chain_id = ChainID.ETHEREUM
+            evm_transactions = self.eth_transactions
+
         logger.info(
-            'Fetching ethereum transactions for %s (start_ts=%s, end_ts=%s)',
+            'Fetching %s transactions for %s (start_ts=%s, end_ts=%s)',
+            account.account_type,
             address,
             start_ts,
             end_ts,
         )
 
-        self.eth_transactions.single_address_query_transactions(
+        evm_transactions.single_address_query_transactions(
             address, start_ts=start_ts, end_ts=end_ts
         )
 
@@ -510,7 +542,7 @@ class BuchfinkDB(DBHandler):
             txs = dbevmtx.get_transactions(
                 cursor=cursor,
                 filter_=EvmTransactionsFilterQuery.make(
-                    accounts=[EvmAccount(address, ChainID.ETHEREUM)],
+                    accounts=[EvmAccount(address, chain_id)],
                     from_ts=start_ts,
                     to_ts=end_ts,
                 ),
@@ -520,10 +552,9 @@ class BuchfinkDB(DBHandler):
         for txn in txs:
             receipt = None
             if with_receipts:
-                receipt = self.eth_transactions.get_or_query_transaction_receipt(
+                receipt = evm_transactions.get_or_query_transaction_receipt(
                     txn.tx_hash,
                 )
-
             result.append((txn, receipt))
 
         return result
@@ -645,6 +676,8 @@ class BuchfinkDB(DBHandler):
         for account in accounts:
             if account.account_type == 'ethereum':
                 accs['eth'] = accs.get('eth', []) + [account.address]
+            elif account.account_type == 'gnosis':
+                accs['gnosis'] = accs.get('gnosis', []) + [account.address]
             elif account.account_type == 'bitcoin':
                 accs['btc'] = accs.get('btc', []) + [account.address]
             elif account.account_type == 'bitcoincash':

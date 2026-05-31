@@ -1,6 +1,6 @@
 import logging
 import os.path
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import pydantic
 import yaml
@@ -13,7 +13,6 @@ from buchfink.serialization import deserialize_timestamp, serialize_timestamp
 
 from .classification import classify_tx
 from .datatypes import (
-    EvmEvent,
     HistoryBaseEntry,
     HistoryEventSubType,
     HistoryEventType,
@@ -128,21 +127,25 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
         actions.extend(existing_actions)
         start_ts = metadata.fetch_timestamp
 
-    if account.account_type == 'ethereum':
-        logger.info('Analyzing ethereum transactions for %s', name)
+    if account.account_type in ('ethereum', 'gnosis'):
+        logger.info('Analyzing %s transactions for %s', account.account_type, name)
 
-        txs_and_receipts = buchfink_db.get_eth_transactions(
+        txs_and_receipts = buchfink_db.get_evm_transactions(
             account, with_receipts=True, start_ts=start_ts, end_ts=now
         )
 
-        for txn, receipt in txs_and_receipts:
-            if receipt is None:
-                raise ValueError('Could not get receipt')
+        is_gnosis = account.account_type == 'gnosis'
+        tx_decoder = buchfink_db.gnosis_tx_decoder if is_gnosis else buchfink_db.evm_tx_decoder
 
-            additional_actions = classify_tx(account, txn, receipt)
-            for act in additional_actions:
-                logger.debug('Found action: %s', act)
-            actions.extend(additional_actions)
+        if not is_gnosis:
+            for txn, receipt in txs_and_receipts:
+                if receipt is None:
+                    raise ValueError('Could not get receipt')
+
+                additional_actions = classify_tx(account, txn, receipt)
+                for act in additional_actions:
+                    logger.debug('Found action: %s', act)
+                actions.extend(additional_actions)
 
         for tx_tuple in txs_and_receipts:
             tx, receipt = tx_tuple
@@ -152,14 +155,11 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
 
             # pylint: disable=protected-access
             buchfink_db._active_eth_address = account.address
-            buchfink_db.evm_tx_decoder.base.tracked_accounts = buchfink_db.get_blockchain_accounts()
             try:
-                ev: Tuple[List[EvmEvent], bool] = (
-                    buchfink_db.evm_tx_decoder._get_or_decode_transaction_events(
-                        tx, receipt, ignore_cache=False
-                    )
+                decoded = tx_decoder._get_or_decode_transaction_events(
+                    tx, receipt, ignore_cache=False
                 )
-                events, _ = ev
+                events = decoded[0]
 
             except (IOError, CannotHandleRequest) as e:
                 logger.warning('Exception while decoding events for tx %s: %s', tx.tx_hash.hex(), e)
@@ -171,9 +171,10 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
                 elif event.event_subtype == HistoryEventSubType.APPROVE:
                     pass
                 elif event.event_type == HistoryEventType.TRADE:
-                    if event.asset.is_nft() or 'eip155:1/erc721:' in event.asset.identifier:
-                        # For now we will ignore NFT events
+                    if event.asset.is_nft():
                         continue
+                    actions.append(event)
+                elif is_gnosis and event.counterparty == 'gnosis_pay':
                     actions.append(event)
                 else:
                     logger.warning(

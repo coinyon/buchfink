@@ -6,5 +6,6 @@ from .config import (
     FetchConfig,  # noqa: F401
     HistoricalPriceConfig,  # noqa: F401
     GenericAccountConfig,  # noqa: F401
+    GnosisAccountConfig,  # noqa: F401
     ReportConfig,  # noqa: F401
 )

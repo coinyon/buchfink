@@ -12,6 +12,7 @@ from .config import (
     EthereumAccountConfig,
     ExchangeAccountConfig,
     GenericAccountConfig,
+    GnosisAccountConfig,
 )
 
 AccountType = Union[
@@ -19,6 +20,7 @@ AccountType = Union[
     Literal['bitcoin'],
     Literal['bitcoincash'],
     Literal['exchange'],
+    Literal['gnosis'],
     Literal['generic'],
 ]
 
@@ -45,6 +47,9 @@ def account_from_config(account_config: AccountConfig):
         address = account_config.bitcoincash
     elif isinstance(account_config, ExchangeAccountConfig):
         account_type = 'exchange'
+    elif isinstance(account_config, GnosisAccountConfig):
+        account_type = 'gnosis'
+        address = account_config.gnosis
     elif isinstance(account_config, GenericAccountConfig):
         account_type = 'generic'
     else:
