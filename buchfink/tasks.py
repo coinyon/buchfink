@@ -6,6 +6,7 @@ import pydantic
 import yaml
 from rotkehlchen.db.filtering import HistoryEventFilterQuery
 from rotkehlchen.db.history_events import DBHistoryEvents
+from rotkehlchen.types import SupportedBlockchain
 from rotkehlchen.utils.misc import ts_now
 from web3.exceptions import CannotHandleRequest
 
@@ -147,15 +148,24 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
                     logger.debug('Found action: %s', act)
                 actions.extend(additional_actions)
 
+        # Set active address and blockchain so get_blockchain_accounts() returns the right thing,
+        # then refresh the decoder's tracked address set (it was empty at init time).
+        active_blockchain = (
+            SupportedBlockchain.GNOSIS if is_gnosis else SupportedBlockchain.ETHEREUM
+        )
+        buchfink_db._active_eth_address = account.address  # pylint: disable=protected-access
+        buchfink_db._active_blockchain = active_blockchain  # pylint: disable=protected-access
+        with buchfink_db.conn.read_ctx() as cursor:
+            tx_decoder.base.refresh_tracked_accounts(cursor)
+
         for tx_tuple in txs_and_receipts:
             tx, receipt = tx_tuple
             if receipt is None:
                 logger.warning('No receipt for %s', tx.tx_hash)
                 continue
 
-            # pylint: disable=protected-access
-            buchfink_db._active_eth_address = account.address
             try:
+                # pylint: disable=protected-access
                 decoded = tx_decoder._get_or_decode_transaction_events(
                     tx, receipt, ignore_cache=False
                 )
@@ -185,7 +195,8 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
                         event.sequence_index,
                     )
 
-            buchfink_db._active_eth_address = None
+        buchfink_db._active_eth_address = None  # pylint: disable=protected-access
+        buchfink_db._active_blockchain = None  # pylint: disable=protected-access
 
     elif account.account_type == 'exchange':
         logger.info('Fetching exhange actions for %s', name)

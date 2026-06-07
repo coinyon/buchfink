@@ -703,6 +703,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             notes=event_dict.get('user_notes'),
             extra_data=event_dict.get('extra_data'),
         )
+
     if 'withdrawal' in event_dict:
         amount, asset = deserialize_amount(event_dict['withdrawal'])
         return AssetMovement(
@@ -714,6 +715,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             notes=event_dict.get('user_notes'),
             extra_data=event_dict.get('extra_data'),
         )
+
     if 'deposit_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['deposit_fee'])
         return AssetMovement(
@@ -725,6 +727,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             notes=event_dict.get('user_notes'),
             extra_data=event_dict.get('extra_data'),
         )
+
     if 'withdrawal_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['withdrawal_fee'])
         return AssetMovement(
@@ -736,6 +739,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             notes=event_dict.get('user_notes'),
             extra_data=event_dict.get('extra_data'),
         )
+
     if 'spend_fee' in event_dict:
         amount, asset = deserialize_amount(event_dict['spend_fee'])
         is_evm_event = True
@@ -755,7 +759,9 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
         event_subtype = HistoryEventSubType.FEE
 
     if not is_evm_event:
-        is_evm_event = event_dict.get('location', '') == 'ethereum'
+        is_evm_event = bool(
+            event_dict.get('location', '') == 'ethereum' and (event_type and event_subtype)
+        )
 
     if is_evm_event:
         if 'sequence_index' not in event_dict:

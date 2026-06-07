@@ -5,7 +5,7 @@ from typing import List
 from rotkehlchen.assets.utils import symbol_to_asset_or_token
 from rotkehlchen.types import ChainID
 from rotkehlchen.utils.misc import (
-    bytes_to_address,
+    bytes32hexstr_to_address,
     hexstr_to_int,
     ts_sec_to_ms,
 )
@@ -384,7 +384,9 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                     location='',
                     event_type=HistoryEventType.RECEIVE,
                     event_subtype=HistoryEventSubType.REWARD,
-                    asset=symbol_to_asset_or_token('yDAI+yUSDC+yUSDT+yTUSD'),
+                    asset=symbol_to_asset_or_token(
+                        'yDAI+yUSDC+yUSDT+yTUSD', chain_id=ChainID.ETHEREUM
+                    ),
                     amount=FVal(amount) / FVal(1e18),
                     notes='rewards from yearn governance',
                 )
@@ -610,9 +612,9 @@ def classify_tx(account: Account, txn: EvmTransaction, receipt: EvmTxReceipt) ->
                 ]
 
         elif event.topics[0] == TRANSFER and same_addr(event.address, ADDR_PIEDAO_DOUGH):
-            if addr_in(bytes_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES) and hexstr_to_int(
-                event.topics[2]
-            ) == hexstr_to_int(account.address):
+            if addr_in(
+                bytes32hexstr_to_address(event.topics[1]), ADDR_PIEDAO_INCENTIVES
+            ) and hexstr_to_int(event.topics[2]) == hexstr_to_int(account.address):
                 amount = hexstr_to_int(event.data)
                 actions += [
                     HistoryEvent(

@@ -160,6 +160,7 @@ class BuchfinkDB(DBHandler):
         self.config = Config(**yaml_config)
         self.accounts = accounts_from_config(self.config)  # type: List[Account]
         self._active_eth_address = None  # type: Optional[ChecksumEvmAddress]
+        self._active_blockchain = None  # type: Optional[SupportedBlockchain]
 
         # Buchfink directories, these include the YAML storage and the reports
         # etc. Basically these are the ones you want version-controlled.
@@ -568,7 +569,7 @@ class BuchfinkDB(DBHandler):
         if not self.config.settings.external_services:
             return None
 
-        api_key: Optional[str] = getattr(self.config.settings.external_services, short_name)
+        api_key: Optional[str] = getattr(self.config.settings.external_services, short_name, None)
         if not api_key:
             return None
 
@@ -595,8 +596,9 @@ class BuchfinkDB(DBHandler):
         )
 
     def get_blockchain_accounts(self, cursor=None) -> BlockchainAccounts:
-        if self._active_eth_address:
-            return BlockchainAccounts(eth=[self._active_eth_address])
+        if self._active_eth_address and self._active_blockchain:
+            chain_key = self._active_blockchain.get_key()
+            return BlockchainAccounts(**{chain_key: (self._active_eth_address,)})
         return BlockchainAccounts()
 
     def get_trades_from_file(self, trades_file) -> List[SwapEvent]:
