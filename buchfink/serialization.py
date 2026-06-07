@@ -469,6 +469,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.FEE
     ):
         ser_event['spend_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -478,6 +479,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.LIQUIDATE
     ):
         ser_event['loss'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -487,6 +489,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.SPEND
     ):
         ser_event['trade_spend'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -496,6 +499,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.NONE
     ):
         ser_event['spend'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -505,6 +509,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.RECEIVE
     ):
         ser_event['trade_receive'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -514,6 +519,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.FEE
     ):
         ser_event['trade_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -529,6 +535,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
             ser_event['income'] = serialize_amount(event.amount, event.asset)
         else:
             ser_event['gift'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -537,6 +544,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         event.event_type in (HistoryEventType.RECEIVE, HistoryEventType.STAKING)
     ) and event.event_subtype == HistoryEventSubType.REWARD:
         ser_event['income'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -546,6 +554,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.AIRDROP
     ):
         ser_event['airdrop'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -555,6 +564,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.DEPOSIT_ASSET
     ):
         ser_event['deposit'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -564,6 +574,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.REMOVE_ASSET
     ):
         ser_event['withdrawal'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -573,6 +584,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.FEE
     ):
         ser_event['deposit_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
@@ -582,6 +594,7 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
         and event.event_subtype == HistoryEventSubType.FEE
     ):
         ser_event['withdrawal_fee'] = serialize_amount(event.amount, event.asset)
+        del ser_event['amount']
         del ser_event['asset']
         del ser_event['event_type']
         del ser_event['event_subtype']
