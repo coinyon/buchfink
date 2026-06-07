@@ -62,6 +62,13 @@ def deserialize_timestamp_ms(timestamp: str) -> Timestamp:
     return deserialize_timestamp(timestamp) * 1000
 
 
+def _notes_from_dict(event_or_action_dict: dict) -> str | None:
+    for notes_key in ['notes', 'user_notes', 'auto_notes']:
+        if event_or_action_dict.get(notes_key):
+            return event_or_action_dict.get(notes_key)
+    return None
+
+
 def deserialize_ledger_action(action_dict) -> HistoryEvent:
     # TODO: incorporate "link" into HistoryEvent
 
@@ -79,7 +86,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_subtype=HistoryEventSubType.REWARD,
             asset=asset,
             amount=amount,
-            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+            notes=_notes_from_dict(action_dict),
         )
 
     if 'airdrop' in action_dict:
@@ -93,7 +100,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_subtype=HistoryEventSubType.AIRDROP,
             asset=asset,
             amount=amount,
-            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+            notes=_notes_from_dict(action_dict),
         )
 
     if 'loss' in action_dict:
@@ -107,7 +114,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_subtype=HistoryEventSubType.LIQUIDATE,
             asset=asset,
             amount=amount,
-            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+            notes=_notes_from_dict(action_dict),
         )
 
     if 'gift' in action_dict:
@@ -121,7 +128,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
             amount=amount,
-            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+            notes=_notes_from_dict(action_dict),
         )
 
     if 'spend' in action_dict:
@@ -135,7 +142,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_subtype=HistoryEventSubType.NONE,
             asset=asset,
             amount=amount,
-            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+            notes=_notes_from_dict(action_dict),
         )
 
     if 'event_type' in action_dict and 'asset' in action_dict:
@@ -149,7 +156,7 @@ def deserialize_ledger_action(action_dict) -> HistoryEvent:
             event_subtype=HistoryEventSubType.deserialize(action_dict.get('event_subtype', 'none')),
             asset=asset,
             amount=amount,
-            notes=str(action_dict.get('notes', '') or action_dict.get('user_notes', '')),
+            notes=_notes_from_dict(action_dict),
         )
 
     raise ValueError(f'Unable to parse ledger action: {action_dict}')
@@ -201,7 +208,7 @@ def deserialize_trade(trade_dict) -> List[SwapEvent]:
                 event_subtype=HistoryEventSubType.RECEIVE,
                 asset=recv_asset,
                 amount=recv_amount,
-                notes=trade_dict.get('user_notes'),
+                notes=_notes_from_dict(trade_dict),
             )
         ]
     elif 'trade_spend' in trade_dict:
@@ -217,7 +224,7 @@ def deserialize_trade(trade_dict) -> List[SwapEvent]:
                 event_subtype=HistoryEventSubType.SPEND,
                 asset=spend_asset,
                 amount=spend_amount,
-                notes=trade_dict.get('user_notes'),
+                notes=_notes_from_dict(trade_dict),
             )
         ]
     else:
@@ -642,6 +649,9 @@ def serialize_event(event: HistoryBaseEntry) -> dict:
     if 'user_notes' in ser_event and not ser_event['user_notes']:
         del ser_event['user_notes']
 
+    if 'auto_notes' in ser_event and not ser_event['auto_notes']:
+        del ser_event['auto_notes']
+
     if not is_evm_event and 'sequence_index' in ser_event and not ser_event['sequence_index']:
         del ser_event['sequence_index']
 
@@ -713,7 +723,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             event_subtype=HistoryEventSubType.RECEIVE,
             asset=asset,
             amount=amount,
-            notes=event_dict.get('user_notes'),
+            notes=_notes_from_dict(event_dict),
             extra_data=event_dict.get('extra_data'),
         )
 
@@ -725,7 +735,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             event_subtype=HistoryEventSubType.SPEND,
             asset=asset,
             amount=amount,
-            notes=event_dict.get('user_notes'),
+            notes=_notes_from_dict(event_dict),
             extra_data=event_dict.get('extra_data'),
         )
 
@@ -737,7 +747,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             event_subtype=HistoryEventSubType.FEE,
             asset=asset,
             amount=amount,
-            notes=event_dict.get('user_notes'),
+            notes=_notes_from_dict(event_dict),
             extra_data=event_dict.get('extra_data'),
         )
 
@@ -749,7 +759,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             event_subtype=HistoryEventSubType.FEE,
             asset=asset,
             amount=amount,
-            notes=event_dict.get('user_notes'),
+            notes=_notes_from_dict(event_dict),
             extra_data=event_dict.get('extra_data'),
         )
 
@@ -794,8 +804,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             asset=asset,
             amount=amount,
             location_label=None,
-            notes=' '.join(filter(None, [event_dict.get('notes'), event_dict.get('user_notes')]))
-            or None,
+            notes=_notes_from_dict(event_dict) or None,
             identifier=None,
             counterparty=event_dict.get('counterparty'),
             address=event_dict.get('address'),
@@ -812,7 +821,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
             event_subtype=event_subtype,
             asset=asset,
             amount=amount,
-            notes=event_dict.get('user_notes'),
+            notes=_notes_from_dict(event_dict),
         )
 
     return deserialize_ledger_action(event_dict)
@@ -826,7 +835,7 @@ def deserialize_event(event_dict) -> HistoryBaseEntry:  # pylint: disable=too-ma
     #     asset=asset,
     #     amount=Balance(amount, 0),
     #     location_label=None,
-    #     notes=event_dict.get('notes'),
+    #     notes=_notes_from_dict(action_dict),
     #     counterparty=event_dict.get('counterparty'),
     #     identifier=None,
     #     extra_data=None
@@ -859,7 +868,7 @@ def deserialize_identifier(val: str) -> str:
     if match is None:
         raise ValueError(f'Could not parse asset: {val}')
 
-    symbol, _identifier_outer, identifier = match.groups()
+    symbol, _, identifier = match.groups()
     if identifier:
         return identifier
     return symbol
@@ -871,7 +880,7 @@ def deserialize_asset(val: str) -> Asset:
     if match is None:
         raise ValueError(f'Could not parse asset: {val}')
 
-    symbol, _identifier_outer, identifier = match.groups()
+    symbol, _, identifier = match.groups()
     if identifier:
         asset = Asset(identifier).resolve()
     elif symbol:
