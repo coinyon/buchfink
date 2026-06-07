@@ -231,7 +231,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     ) -> Literal['buy', 'sell', 'transaction_fee', 'loss', 'receive', 'spend', 'dividend', 'other']:
         # pylint: disable=too-many-return-statements
 
-        if event.notes.startswith('Burned'):
+        if event.notes.startswith('Burn'):
             return 'transaction_fee'
         if re.search(r'^swap|^trade|^sell|^buy', event.notes, re.IGNORECASE):
             # Even when doing a buy, the taxable action is the sell of the
