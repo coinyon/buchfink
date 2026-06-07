@@ -6,8 +6,9 @@ import os.path
 import sys
 from collections import defaultdict
 from functools import reduce
+from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, List, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Generator, Iterable, List, Optional, Tuple, Union, cast
 
 import yaml
 from rotkehlchen.accounting.accountant import Accountant
@@ -601,6 +602,20 @@ class BuchfinkDB(DBHandler):
             return BlockchainAccounts(**{chain_key: (self._active_eth_address,)})
         return BlockchainAccounts()
 
+    @contextmanager
+    def use_account(
+        self,
+        address: ChecksumEvmAddress,
+        blockchain: SupportedBlockchain,
+    ) -> Generator[None, None, None]:
+        self._active_eth_address = address
+        self._active_blockchain = blockchain
+        try:
+            yield
+        finally:
+            self._active_eth_address = None
+            self._active_blockchain = None
+
     def get_trades_from_file(self, trades_file) -> List[SwapEvent]:
         with open(trades_file, 'r') as trades_f:
             exchange = yaml.load(trades_f, Loader=yaml.SafeLoader)
@@ -810,9 +825,8 @@ class BuchfinkDB(DBHandler):
             # This is a little hack because query_balances sometimes hooks back
             # into out get_blockchain_accounts() without providing context (for
             # example from makerdao module).
-            self._active_eth_address = account.address
-            manager.query_balances(blockchain=SupportedBlockchain.ETHEREUM)
-            self._active_eth_address = None
+            with self.use_account(account.address, SupportedBlockchain.ETHEREUM):
+                manager.query_balances(blockchain=SupportedBlockchain.ETHEREUM)
 
             return reduce(operator.add, manager.balances.eth.values(), BalanceSheet())
 

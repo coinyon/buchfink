@@ -153,50 +153,52 @@ def fetch_actions(buchfink_db: BuchfinkDB, account: Account, ignore_fetch_timest
         active_blockchain = (
             SupportedBlockchain.GNOSIS if is_gnosis else SupportedBlockchain.ETHEREUM
         )
-        buchfink_db._active_eth_address = account.address  # pylint: disable=protected-access
-        buchfink_db._active_blockchain = active_blockchain  # pylint: disable=protected-access
-        with buchfink_db.conn.read_ctx() as cursor:
-            tx_decoder.base.refresh_tracked_accounts(cursor)
+        with buchfink_db.use_account(account.address, active_blockchain):
+            with buchfink_db.conn.read_ctx() as cursor:
+                tx_decoder.base.refresh_tracked_accounts(cursor)
 
-        for tx_tuple in txs_and_receipts:
-            tx, receipt = tx_tuple
-            if receipt is None:
-                logger.warning('No receipt for %s', tx.tx_hash)
-                continue
+            for tx_tuple in txs_and_receipts:
+                tx, receipt = tx_tuple
+                if receipt is None:
+                    logger.warning('No receipt for %s', tx.tx_hash)
+                    continue
 
-            try:
-                # pylint: disable=protected-access
-                decoded = tx_decoder._get_or_decode_transaction_events(
-                    tx, receipt, ignore_cache=False
-                )
-                events = decoded[0]
-
-            except (IOError, CannotHandleRequest) as e:
-                logger.warning('Exception while decoding events for tx %s: %s', tx.tx_hash.hex(), e)
-                continue
-
-            for event in events:
-                if event.event_subtype == HistoryEventSubType.FEE and event.counterparty == 'gas':
-                    actions.append(event)
-                elif event.event_subtype == HistoryEventSubType.APPROVE:
-                    pass
-                elif event.event_type == HistoryEventType.TRADE:
-                    if event.asset.is_nft():
-                        continue
-                    actions.append(event)
-                elif is_gnosis and event.counterparty == 'gnosis_pay':
-                    actions.append(event)
-                else:
-                    logger.warning(
-                        'Ignoring event %s (summary=%s, event_identifier=0x%s, sequence_index=%s)',
-                        event.event_type,
-                        event,
-                        event.group_identifier,
-                        event.sequence_index,
+                try:
+                    # pylint: disable=protected-access
+                    decoded = tx_decoder._get_or_decode_transaction_events(
+                        tx, receipt, ignore_cache=False
                     )
+                    events = decoded[0]
 
-        buchfink_db._active_eth_address = None  # pylint: disable=protected-access
-        buchfink_db._active_blockchain = None  # pylint: disable=protected-access
+                except (IOError, CannotHandleRequest) as e:
+                    logger.warning(
+                        'Exception while decoding events for tx %s: %s', tx.tx_hash.hex(), e
+                    )
+                    continue
+
+                for event in events:
+                    if (
+                        event.event_subtype == HistoryEventSubType.FEE
+                        and event.counterparty == 'gas'
+                    ):
+                        actions.append(event)
+                    elif event.event_subtype == HistoryEventSubType.APPROVE:
+                        pass
+                    elif event.event_type == HistoryEventType.TRADE:
+                        if event.asset.is_nft():
+                            continue
+                        actions.append(event)
+                    elif is_gnosis and event.counterparty == 'gnosis_pay':
+                        actions.append(event)
+                    else:
+                        logger.warning(
+                            'Ignoring event %s (summary=%s, event_identifier=0x%s,'
+                            ' sequence_index=%s)',
+                            event.event_type,
+                            event,
+                            event.group_identifier,
+                            event.sequence_index,
+                        )
 
     elif account.account_type == 'exchange':
         logger.info('Fetching exhange actions for %s', name)
