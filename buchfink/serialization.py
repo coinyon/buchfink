@@ -195,7 +195,7 @@ def deserialize_trade(trade_dict) -> List[SwapEvent]:
                 group_identifier=str(
                     trade_dict.get('group_identifier', trade_dict.get('link', ''))
                 ),
-                sequence_index=trade_dict.get('sequence_index', 1),
+                sequence_index=trade_dict.get('sequence_index', 0),
                 timestamp=TimestampMS(deserialize_timestamp_ms(trade_dict['timestamp'])),
                 location=Location.deserialize(trade_dict.get('location') or 'external'),
                 event_subtype=HistoryEventSubType.RECEIVE,
