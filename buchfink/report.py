@@ -263,6 +263,9 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     def get_profit_loss(event: ProcessedAccountingEvent) -> float:
         return float(event.pnl.total)
 
+    def get_taxable_profit_loss(event: ProcessedAccountingEvent) -> float:
+        return float(event.pnl.taxable)
+
     def get_proceeds(event: ProcessedAccountingEvent) -> float:
         return get_cost_basis(event) + get_profit_loss(event)
 
@@ -289,6 +292,7 @@ def render_report(buchfink_db: BuchfinkDB, report_config: ReportConfig):
     env.globals['get_proceeds'] = get_proceeds
     env.globals['get_cost_basis'] = get_cost_basis
     env.globals['get_profit_loss'] = get_profit_loss
+    env.globals['get_taxable_profit_loss'] = get_taxable_profit_loss
 
     template = env.get_template(report_config.template)
 
